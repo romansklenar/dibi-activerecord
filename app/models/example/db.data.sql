@@ -1,0 +1,23 @@
+INSERT INTO Companies VALUES (1, NULL, 1, 'company #1');
+INSERT INTO Companies VALUES (2, 1, 0, 'company #2');
+INSERT INTO Companies VALUES (3, 1, 0, 'company #3');
+INSERT INTO Companies VALUES (4, 1, 0, 'company #4');
+INSERT INTO Companies VALUES (5, NULL, 1, 'company #5');
+INSERT INTO Companies VALUES (6, 5, 0, 'company #6');
+INSERT INTO Companies VALUES (7, 5, 0, 'company #7');
+INSERT INTO Companies VALUES (8, NULL, 1, 'company #8');
+INSERT INTO Companies VALUES (9, 8, 0, 'company #9');
+INSERT INTO Companies VALUES (10, NULL, 1, 'company #10');
+INSERT INTO Companies VALUES (11, 10, 0, 'company #11');
+
+INSERT INTO People VALUES (1, 1, 'person #1');
+INSERT INTO People VALUES (2, 1, 'person #2');
+INSERT INTO People VALUES (3, 1, 'person #3');
+INSERT INTO People VALUES (4, 1, 'person #4');
+INSERT INTO People VALUES (5, 3, 'person #5');
+INSERT INTO People VALUES (6, 3, 'person #6');
+INSERT INTO People VALUES (7, 4, 'person #7');
+INSERT INTO People VALUES (8, 4, 'person #8');
+INSERT INTO People VALUES (9, 8, 'person #9');
+INSERT INTO People VALUES (10, 8, 'person #10');
+INSERT INTO People VALUES (11, 8, 'person #11');

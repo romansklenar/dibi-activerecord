@@ -1,0 +1,14 @@
+# disable directory listing
+Options -Indexes
+
+# configure PHP
+# <IfModule mod_php5.c>
+#    php_flag magic_quotes_gpc off
+#    php_flag register_globals off
+# </IfModule>
+
+# mod_rewrite
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteRule ^.*$ /document_root/$0 [L]
+</IfModule>
