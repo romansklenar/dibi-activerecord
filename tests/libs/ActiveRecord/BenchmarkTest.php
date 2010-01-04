@@ -13,7 +13,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 		'database' => ':memory:',
 	);
 
-	public function _testBenchmarkActiveRecord() {
+	public function testBenchmarkActiveRecord() {
 
 		$connection = new DibiConnection($this->config);
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');
@@ -22,52 +22,55 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 		CacheHelper::cleanCache();
 
 		// kalibrace
-		Debug::$showLocation = FALSE;
+		dump('--- ActiveRecord ---');
+		$showLocation = FALSE;
 		$consumers = Consumer::find(1,2,3,4,5)->toArray();
 
-		Debug::timer('1');
-		Debug::memory('1');
+		timer('1');
+		memory('1');
 		$consumer = Consumer::findOne();
-		$m = Debug::memory('1');
-		$t = Debug::timer('1');
-		Debug::dump(self::formatMemory($m));
-		Debug::dump(self::formatTime($t));
+		$m = memory('1');
+		$t = timer('1');
+		dump(self::formatMemory($m));
+		dump(self::formatTime($t));
 
-		Debug::timer('10');
-		Debug::memory('10');
+		timer('10');
+		memory('10');
 		$consumers = Consumer::find(1,2,3,4,5,6,7,8,9,10);
 		$consumers->load();
-		$m = Debug::memory('10');
-		$t = Debug::timer('10');
-		Debug::dump(self::formatMemory($m));
-		Debug::dump(self::formatTime($t));
+		$m = memory('10');
+		$t = timer('10');
+		dump(self::formatMemory($m));
+		dump(self::formatTime($t));
 
-		Debug::timer('100');
-		Debug::memory('100');
+		timer('100');
+		memory('100');
 		$consumers = Consumer::find()->applyLimit(100);
 		$consumers->load();
-		$m = Debug::memory('100');
-		$t = Debug::timer('100');
-		Debug::dump(self::formatMemory($m));
-		Debug::dump(self::formatTime($t));
+		$m = memory('100');
+		$t = timer('100');
+		dump(self::formatMemory($m));
+		dump(self::formatTime($t));
 
-		Debug::timer('1000');
-		Debug::memory('1000');
+		timer('1000');
+		memory('1000');
 		$consumers = Consumer::find()->applyLimit(1000);
 		$consumers->load();
-		$m = Debug::memory('1000');
-		$t = Debug::timer('1000');
-		Debug::dump(self::formatMemory($m));
-		Debug::dump(self::formatTime($t));
+		$m = memory('1000');
+		$t = timer('1000');
+		dump(self::formatMemory($m));
+		dump(self::formatTime($t));
 
-		Debug::timer('50000');
-		Debug::memory('50000');
+		$this->markTestIncomplete();
+
+		timer('50000');
+		memory('50000');
 		$consumers = Consumer::find();
 		$consumers->load();
-		$m = Debug::memory('50000');
-		$t = Debug::timer('50000');
-		Debug::dump(self::formatMemory($m));
-		Debug::dump(self::formatTime($t));
+		$m = memory('50000');
+		$t = timer('50000');
+		dump(self::formatMemory($m));
+		dump(self::formatTime($t));
 
 		// clean up
 		Mapper::disconnect();
@@ -75,56 +78,59 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 	}
 
 
-	public function _testBenchmarkDibi() {
+	public function testBenchmarkDibi() {
 
-		Debug::$showLocation = FALSE;
+		$showLocation = FALSE;
 		dibi::connect($this->config);
 		dibi::loadFile(APP_DIR . '/models/consumers.structure.sql');
 		dibi::loadFile(APP_DIR . '/models/consumers.data.sql');
 
 		// kalibrace
-		$res = dibi::dataSource('Consumers')->applyLimit(1)->getResult()->detectTypes()->load();
+		dump('--- Dibi ---');
+		$res = dibi::dataSource('Consumers')->applyLimit(1)->getResult()->detectTypes()->fetch();
 
 
-		Debug::timer('1');
-		Debug::memory('1');
-		$row = dibi::dataSource('Consumers')->applyLimit(1)->getResult()->detectTypes()->load();
-		$m = Debug::memory('1');
-		$t = Debug::timer('1');
-		Debug::dump(self::formatMemory($m));
-		Debug::dump(self::formatTime($t));
+		timer('1');
+		memory('1');
+		$row = dibi::dataSource('Consumers')->applyLimit(1)->getResult()->detectTypes()->fetch();
+		$m = memory('1');
+		$t = timer('1');
+		dump(self::formatMemory($m));
+		dump(self::formatTime($t));
 
-		Debug::timer('10');
-		Debug::memory('10');
+		timer('10');
+		memory('10');
 		$rows = dibi::dataSource('Consumers')->applyLimit(10)->getResult()->detectTypes()->fetchAll();
-		$m = Debug::memory('10');
-		$t = Debug::timer('10');
-		Debug::dump(self::formatMemory($m));
-		Debug::dump(self::formatTime($t));
+		$m = memory('10');
+		$t = timer('10');
+		dump(self::formatMemory($m));
+		dump(self::formatTime($t));
 
-		Debug::timer('100');
-		Debug::memory('100');
+		timer('100');
+		memory('100');
 		$rows = dibi::dataSource('Consumers')->applyLimit(100)->getResult()->detectTypes()->fetchAll();
-		$m = Debug::memory('100');
-		$t = Debug::timer('100');
-		Debug::dump(self::formatMemory($m));
-		Debug::dump(self::formatTime($t));
+		$m = memory('100');
+		$t = timer('100');
+		dump(self::formatMemory($m));
+		dump(self::formatTime($t));
 
-		Debug::timer('1000');
-		Debug::memory('1000');
+		timer('1000');
+		memory('1000');
 		$rows = dibi::dataSource('Consumers')->applyLimit(1000)->getResult()->detectTypes()->fetchAll();
-		$m = Debug::memory('1000');
-		$t = Debug::timer('1000');
-		Debug::dump(self::formatMemory($m));
-		Debug::dump(self::formatTime($t));
+		$m = memory('1000');
+		$t = timer('1000');
+		dump(self::formatMemory($m));
+		dump(self::formatTime($t));
 
-		Debug::timer('50000');
-		Debug::memory('50000');
+		$this->markTestIncomplete();
+
+		timer('50000');
+		memory('50000');
 		$rows = dibi::dataSource('Consumers')->applyLimit(50000)->getResult()->detectTypes()->fetchAll();
-		$m = Debug::memory('50000');
-		$t = Debug::timer('50000');
-		Debug::dump(self::formatMemory($m));
-		Debug::dump(self::formatTime($t));
+		$m = memory('50000');
+		$t = timer('50000');
+		dump(self::formatMemory($m));
+		dump(self::formatTime($t));
 
 		dibi::disconnect();
 	}

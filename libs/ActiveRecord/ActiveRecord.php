@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/compatibility.php';
+
 
 /**
  * @author     Roman Sklenář

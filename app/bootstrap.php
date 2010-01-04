@@ -13,7 +13,6 @@
 // you don't have to litter your code with 'require' statements
 require LIBS_DIR . '/Nette/loader.php';
 require LIBS_DIR . '/dibi/dibi.php';
-require LIBS_DIR . '/compatibility.php';
 
 
 // Step 2: Configure environment
@@ -22,6 +21,7 @@ $mode = (!Environment::isProduction() && !Environment::getHttpRequest()->isAjax(
 Debug::enable($mode);
 Debug::enableProfiler();
 Debug::$strictMode = TRUE;
+Debug::$maxDepth = 4;
 
 
 // 2b) load configuration from config.ini file
@@ -36,4 +36,17 @@ if (!is_writable(Environment::getVariable('logDir'))) {
 	die("Make directory '" . realpath(Environment::getVariable('logDir')) . "' writable!");
 }
 
-die('There is nothing to see.');
+
+$connection = new DibiConnection(array(
+	'driver' => 'sqlite3',
+	'database' => ':memory:',
+));
+$connection->loadFile(APP_DIR . '/models/example/db.structure.sql');
+$connection->loadFile(APP_DIR . '/models/example/db.data.sql');
+Mapper::addConnection($connection);
+
+Debug::dump($connection->fetchAll('SELECT * FROM [People] WHERE [companyId] = 1'));
+Debug::dump(Person::objects()->filter('[companyId] = 1')->toArray());
+Debug::dump(strip(dibi::$sql));
+
+Mapper::disconnect();
