@@ -3,8 +3,8 @@
 
 /**
  * The ActiveRecordCollection class represents a list of records identified by a query.
- * A ActiveRecordCollection should act like an array in every way, except that it will attempt to defer loading until the records are needed.
- * A ActiveRecordCollection is typically returned by the ActiveRecord::find() or objects() methods.
+ * An ActiveRecordCollection should act like an array in every way, except that it will attempt to defer loading until the records are needed.
+ * An ActiveRecordCollection is typically returned by the ActiveRecord::find() or objects() methods.
  *
  * @author     Roman Sklenář
  * @copyright  Copyright (c) 2009 Roman Sklenář (http://romansklenar.cz)
@@ -40,7 +40,7 @@ class ActiveRecordCollection extends ArrayList {
 
 	/**
 	 * Loads the Collection from the repository.
-	 * @return ActiveRecordCollection  provides a fluent interface
+	 * @return void
 	 */
 	public function load() {
 		$res = $this->ds->getResult();

@@ -12,24 +12,16 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 		$mapper = new Mapper(new Office);
 		$ds = $mapper->getConnection()->dataSource('SELECT * FROM [Offices]');
 		$rs = new ActiveRecordCollection($ds, $mapper);
-
-		$this->assertType('object', $rs);
-		$this->assertTrue($rs instanceof ActiveRecordCollection);
+		
 		$this->assertFalse($rs->isLoaded());
 	}
 
 	public function testGetItemType() {
 		$offices = Office::objects();
 		$this->assertEquals('Office', $offices->getItemType());
-
-		$this->setExpectedException('InvalidArgumentException');
-		$offices[] = new Employee;
-
-		$this->setExpectedException('InvalidArgumentException');
-		$offices->append(new Employee);
 	}
 
-	public function testisLoaded() {
+	public function testIsLoaded() {
 		$offices = Office::objects();
 		$this->assertFalse($offices->isLoaded());
 
