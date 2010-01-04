@@ -269,6 +269,12 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals('Jack', $this->object->firstname);
 		$this->assertEquals('BLACK', $this->object->lastname);
 	}
+
+	public function testIsEducated() {
+		$this->assertTrue($this->object->isEducated());
+		$this->assertTrue($this->object->educated);
+		$this->assertTrue($this->object['educated']);
+	}
 }
 
 
@@ -282,6 +288,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
  * @property int $credit
  * @property string $fullname
  * @property-read string $initials
+ * @property-read bool $educated
  */
 class MockRecord extends Record {
 	
@@ -350,4 +357,13 @@ class MockRecord extends Record {
 	public function getLastname() {
 		return String::upper($this->storage['lastname']);
 	}
+
+	/**
+	 * MockRecord defined property getter
+	 * @return bool
+	 */
+	public function isEducated() {
+		return TRUE;
+	}
+
 }
