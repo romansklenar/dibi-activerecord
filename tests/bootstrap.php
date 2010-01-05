@@ -16,6 +16,7 @@ define('APP_DIR', realpath(dirname(__FILE__) . '/../app'));
 // load Nette Framework
 require_once LIBS_DIR . '/Nette/loader.php';
 require_once LIBS_DIR . '/dibi/dibi.php';
+require_once LIBS_DIR . '/ActiveRecord/compatibility.php';
 
 // load configuration from config.ini file
 Environment::loadConfig(dirname(__FILE__) . '/config.ini');
