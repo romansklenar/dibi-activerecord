@@ -146,11 +146,11 @@ abstract class ActiveRecord extends Record {
 	 */
 	public function getPrimaryValue() {
 		if (!is_array($this->getPrimaryName()))
-			return $this->getStorage()->backup[$this->getPrimaryName()];
+			return $this->originalValues[$this->getPrimaryName()];
 
 		$values = array();
 		foreach	($this->getPrimaryName() as $field)
-			$values[$field] = $this->getStorage()->backup[$field];
+			$values[$field] = $this->originalValues[$field];
 	
 		return $values;
 	}
@@ -163,7 +163,7 @@ abstract class ActiveRecord extends Record {
 	public function getPrimaryCondition() {
 		$condition = array();
 		foreach	($this->getPrimaryInfo()->columns as $column)
-			$condition[$column->name . '%' . $column->type] = $this->getStorage()->backup[$column->name];
+			$condition[$column->name . '%' . $column->type] = $this->originalValues[$column->name]; // $this->getStorage()->original[$column->name];
 
 		return $condition;
 	}
@@ -191,6 +191,15 @@ abstract class ActiveRecord extends Record {
 			$result[$column . '%' . $types[$column]] = $value;
 
 		return $result;
+	}
+
+
+	/**
+	 * Gets record's original values in array(column => value)
+	 * @return array
+	 */
+	public function getOriginalValues() {
+		return parent::getOriginalValues();
 	}
 
 	
@@ -226,7 +235,7 @@ abstract class ActiveRecord extends Record {
 	 * @return DibiIndexInfo
 	 */
 	public function getPrimaryInfo() {
-		// hook for not supporting database index reflection in specific DibiDriver
+		// hook for database which do not support index reflection (in specific DibiDriver)
 		if (isset(static::$primary) && static::$primary !== NULL) {
 			$primary = $this->getPrimaryName();
 			$info = array(
@@ -352,21 +361,38 @@ abstract class ActiveRecord extends Record {
 	}
 
 
+
+	/********************* record executors *********************/
+
+
+
 	/**
-	 * Checks if all the Record has no changes to save.
+	 * Checks if the Record has unsaved changes.
 	 * @return bool
 	 */
-	public function isClean() {
-		throw new NotImplementedException;
+	public function isDirty() {
+		// TODO: zohlednit asociace
+		return parent::isDirty();
 	}
 
 
 	/**
-	 * Checks if Record has unsaved changes.
+	 * Checks if the Record has no changes to save.
 	 * @return bool
 	 */
-	public function isDirty() {
-		throw new NotImplementedException;
+	public function isClean() {
+		// TODO: zohlednit asociace
+		return parent::isClean();
+	}
+
+
+	/**
+	 * Makes all properties Record's non dirty.
+	 * @return void
+	 */
+	protected function clean() {
+		// TODO: zohlednit asociace
+		parent::clean();
 	}
 	
 
@@ -407,8 +433,9 @@ abstract class ActiveRecord extends Record {
 	 * @return bool  true if Record was destroyed
 	 */
 	public function destroy() {
-		$this->getMapper()->delete($this);
+		$deleted = (bool) $this->getMapper()->delete($this);
 		parent::destroy();
+		return $deleted;
 	}
 
 

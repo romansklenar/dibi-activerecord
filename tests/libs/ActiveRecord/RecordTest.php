@@ -79,6 +79,9 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(2, $this->object['id']);
 		$this->assertEquals('jack.doe@example.com', $this->object['email']);
 		$this->assertEquals('Jack', $this->object['firstname']);
+
+		$this->setExpectedException('MemberAccessException');
+		$this->object['undeclared'] = '***';
 	}
 
 	public function testPropertySet() {
@@ -109,12 +112,12 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function testOffsetUnset() {
-		$this->setExpectedException('MemberAccessException');
+		$this->setExpectedException('NotSupportedException');
 		unset($this->object['id']);
 	}
 
 	public function testPropertyUnset() {
-		$this->setExpectedException('MemberAccessException');
+		$this->setExpectedException('NotSupportedException');
 		unset($this->object->id);
 	}
 
@@ -159,12 +162,12 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals('DOE', $this->object->modifiedValues['lastname']);
 	}
 
-	public function testGetGetStorage() {
+	public function testGetStorage() {
 		$storage = $this->object->storage;
 		$this->assertTrue($storage instanceof DataStorage);
 	}
 
-	public function testGetState() {
+	public function testState() {
 		$values = array(
 			'id' => NULL, // not defined value
 			'login' => 'john007',
@@ -226,6 +229,489 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 
 
 
+	/********************* Executors tests *********************/
+
+
+
+	public function testIsClean() {
+		$record = new MockRecord($this->values, MockRecord::STATE_NEW);
+		$this->assertFalse($record->isClean());
+
+		$record->credit = 5;
+		$this->assertFalse($record->isClean());
+		$record->discard();
+		$this->assertFalse($record->isClean());
+
+
+		$record = new MockRecord($this->values, MockRecord::STATE_EXISTING);
+		$this->assertTrue($record->isClean());
+
+		$record->credit = 5;
+		$this->assertFalse($record->isClean());
+		$record->discard();
+		$this->assertTrue($record->isClean());
+	}
+
+	public function testIsDirty() {
+		$record = new MockRecord($this->values, MockRecord::STATE_EXISTING);
+		$this->assertFalse($record->isDirty());
+
+		$record->credit = 5;
+		$this->assertTrue($record->isDirty());
+		$record->discard();
+		$this->assertFalse($record->isDirty());
+
+
+		$record = new MockRecord($this->values, MockRecord::STATE_NEW);
+		$this->assertTrue($record->isDirty());
+
+		$record->credit = 5;
+		$this->assertTrue($record->isDirty());
+		$record->discard();
+		$this->assertTrue($record->isDirty());
+	}
+
+	public function testDestroy() {
+		$record = new MockRecord($this->values, MockRecord::STATE_EXISTING);
+
+		$orig = $cmp = array(
+			'id' => NULL,
+			'login' => 'john007',
+			'email' => 'john.doe@example.com',
+			'firstname' => NULL,
+			'lastname' => 'DOE',
+			'credit' => 0,
+		);
+		$orig['lastname'] = 'Doe';
+
+		$this->assertTrue($record->isRecordExisting());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+
+		$record->destroy();
+		
+		$cmp = array(
+			'id' => NULL,
+			'login' => NULL,
+			'email' => NULL,
+			'firstname' => NULL,
+			'lastname' => NULL,
+			'credit' => NULL,
+		);
+
+		$this->assertTrue($record->isRecordDeleted());
+		$this->assertTrue($record->isFrozen());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($cmp, $record->originalValues);
+
+
+
+		$record = new MockRecord($this->values, MockRecord::STATE_NEW);
+
+		$orig = $cmp = array(
+			'id' => NULL,
+			'login' => 'john007',
+			'email' => 'john.doe@example.com',
+			'firstname' => NULL,
+			'lastname' => 'DOE',
+			'credit' => 0,
+		);
+		$orig['lastname'] = 'Doe';
+
+		$this->assertTrue($record->isRecordNew());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals($cmp, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+		$this->assertEquals($record->values, $record->modifiedValues);
+
+		$record->destroy();
+
+		$cmp = array(
+			'id' => NULL,
+			'login' => NULL,
+			'email' => NULL,
+			'firstname' => NULL,
+			'lastname' => NULL,
+			'credit' => NULL,
+		);
+
+		$this->assertTrue($record->isRecordDeleted());
+		$this->assertTrue($record->isFrozen());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($cmp, $record->originalValues);
+	}
+
+	public function testSave() {
+		$record = new MockRecord($this->values, MockRecord::STATE_EXISTING);
+
+		$orig = $cmp = array(
+			'id' => NULL,
+			'login' => 'john007',
+			'email' => 'john.doe@example.com',
+			'firstname' => NULL,
+			'lastname' => 'DOE',
+			'credit' => 0,
+		);
+		$orig['lastname'] = 'Doe';
+
+		$this->assertTrue($record->isRecordExisting());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+
+		$record->credit = 5;
+		$cmp['credit'] = 5;
+
+		$this->assertTrue($record->isRecordExisting());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array('credit' => 5), $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+		
+		$record->save();
+
+		$this->assertTrue($record->isRecordExisting());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($cmp, $record->originalValues);
+
+
+
+		$record = new MockRecord($this->values, MockRecord::STATE_NEW);
+
+		$orig = $cmp = array(
+			'id' => NULL,
+			'login' => 'john007',
+			'email' => 'john.doe@example.com',
+			'firstname' => NULL,
+			'lastname' => 'DOE',
+			'credit' => 0,
+		);
+		$orig['lastname'] = 'Doe';
+
+		$this->assertTrue($record->isRecordNew());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals($cmp, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+		$this->assertEquals($record->values, $record->modifiedValues);
+
+		$record->credit = 5;
+		$cmp['credit'] = 5;
+
+		$this->assertTrue($record->isRecordNew());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals($cmp, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+
+		$record->save();
+
+		$this->assertTrue($record->isRecordExisting());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($cmp, $record->originalValues);
+	}
+
+	public function testDiscard() {
+		$record = new MockRecord($this->values, MockRecord::STATE_NEW);
+
+		$orig = $cmp = array(
+			'id' => NULL,
+			'login' => 'john007',
+			'email' => 'john.doe@example.com',
+			'firstname' => NULL,
+			'lastname' => 'DOE',
+			'credit' => 0,
+		);
+		$orig['lastname'] = 'Doe';
+
+		$this->assertTrue($record->isRecordNew());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals($cmp, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+		$this->assertEquals($record->values, $record->modifiedValues);
+
+		$record->credit = 5;
+		$cmp['credit'] = 5;
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals($cmp, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+		$this->assertEquals($record->values, $record->modifiedValues);
+
+		$record->discard();
+		$cmp['credit'] = 0;
+		$this->assertTrue($record->isRecordNew());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals($cmp, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+		$this->assertEquals($record->values, $record->modifiedValues);
+
+
+
+		$record = new MockRecord($this->values, MockRecord::STATE_EXISTING);
+
+		$orig = $cmp = array(
+			'id' => NULL,
+			'login' => 'john007',
+			'email' => 'john.doe@example.com',
+			'firstname' => NULL,
+			'lastname' => 'DOE',
+			'credit' => 0,
+		);
+		$orig['lastname'] = 'Doe';
+
+		$this->assertTrue($record->isRecordExisting());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+
+		$record->credit = 5;
+		$cmp['credit'] = 5;
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array('credit' => 5), $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+
+		$record->discard();
+		$cmp['credit'] = 0;
+		$this->assertTrue($record->isRecordExisting());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+	}
+
+
+
+	/********************* Scenario tests *********************/
+
+
+
+	public function testNewRecord() {
+		$record = new MockRecord($this->values, MockRecord::STATE_NEW);
+
+		$orig = $cmp = array(
+			'id' => NULL,
+			'login' => 'john007',
+			'email' => 'john.doe@example.com',
+			'firstname' => NULL,
+			'lastname' => 'DOE',
+			'credit' => 0,
+		);
+		$orig['lastname'] = 'Doe';
+
+		$this->assertTrue($record->isRecordNew());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals($cmp, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+		$this->assertEquals($record->values, $record->modifiedValues);
+
+		$record->credit = 5;
+		$cmp['credit'] = 5;
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals($cmp, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+		$this->assertEquals($record->values, $record->modifiedValues);
+
+		$record->discard();
+		$cmp['credit'] = 0;
+		$this->assertTrue($record->isRecordNew());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals($cmp, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+		$this->assertEquals($record->values, $record->modifiedValues);
+
+		$record->credit = 5;
+		$cmp['credit'] = 5;
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals($cmp, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+		$this->assertEquals($record->values, $record->modifiedValues);
+
+		$record->save();
+		$this->assertTrue($record->isRecordExisting());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($cmp, $record->originalValues);
+		$this->assertEquals($record->values, $record->originalValues);
+	}
+
+	public function testExistingRecord() {
+		$record = new MockRecord($this->values, MockRecord::STATE_EXISTING);
+
+		$orig = $cmp = array(
+			'id' => NULL,
+			'login' => 'john007',
+			'email' => 'john.doe@example.com',
+			'firstname' => NULL,
+			'lastname' => 'DOE',
+			'credit' => 0,
+		);
+		$orig['lastname'] = 'Doe';
+
+		$this->assertTrue($record->isRecordExisting());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+
+		$record->credit = 5;
+		$cmp['credit'] = 5;
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array('credit' => 5), $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+
+		$record->firstname = 'John';
+		$cmp['firstname'] = 'John';
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array('credit' => 5, 'firstname' => 'John'), $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+
+		$record->save();
+		$this->assertTrue($record->isRecordExisting());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($cmp, $record->originalValues);
+		$this->assertEquals($record->values, $record->originalValues);
+	}
+
+	public function testBlankRecord() {
+		// allmost same as new record test
+		$record = new MockRecord(array(), MockRecord::STATE_NEW);
+
+		$orig = $cmp = array(
+			'id' => NULL,
+			'login' => NULL,
+			'email' => NULL,
+			'firstname' => NULL,
+			'lastname' => NULL,
+			'credit' => 0,
+		);
+
+		$this->assertTrue($record->isRecordNew());
+		$this->assertEquals($orig, $record->values);
+		$this->assertEquals($orig, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+
+		$record->credit = 5;
+		$cmp['credit'] = 5;
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals($cmp, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+
+		$record->discard();
+		$this->assertEquals($orig, $record->values);
+		$this->assertEquals($orig, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+		$this->assertEquals($record->values, $record->originalValues);
+		$this->assertTrue($record->isRecordNew());
+	}
+
+	public function testNewRecordWithNonExistingAtributes() {
+		// allmost same as new record test
+		$record = new MockRecord(array('non-existing-column' => '****'), MockRecord::STATE_NEW);
+
+		$orig = $cmp = array(
+			'id' => NULL,
+			'login' => NULL,
+			'email' => NULL,
+			'firstname' => NULL,
+			'lastname' => NULL,
+			'credit' => 0,
+		);
+
+		$this->assertTrue($record->isRecordNew());
+		$this->assertEquals($orig, $record->values);
+		$this->assertEquals($orig, $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+	}
+
+	public function testPrimaryUpdate() {
+		$record = new MockRecord($this->values + array('id' => 1), MockRecord::STATE_EXISTING);
+
+		$orig = $cmp = array(
+			'id' => 1,
+			'login' => 'john007',
+			'email' => 'john.doe@example.com',
+			'firstname' => NULL,
+			'lastname' => 'DOE',
+			'credit' => 0,
+		);
+		$orig['lastname'] = 'Doe';
+
+		$this->assertTrue($record->isRecordExisting());
+		$this->assertEquals($cmp, $record->values);
+		$this->assertEquals(array(), $record->modifiedValues);
+		$this->assertEquals($orig, $record->originalValues);
+
+		$this->assertEquals(1, $record->id);
+		$this->assertEquals(1, $record->originalValues['id']);
+		$this->assertTrue(empty($record->modifiedValues));
+
+		$record->id = 2;
+
+		$this->assertEquals(2, $record->id);
+		$this->assertEquals(1, $record->originalValues['id']);
+		$this->assertEquals(2, $record->modifiedValues['id']);
+
+		$record->save();
+
+		$this->assertEquals(2, $record->id);
+		$this->assertEquals(2, $record->originalValues['id']);
+		$this->assertTrue(empty($record->modifiedValues));
+
+		$record->id = 3;
+
+		$this->assertEquals(3, $record->id);
+		$this->assertEquals(2, $record->originalValues['id']);
+		$this->assertFalse(empty($record->modifiedValues));
+		$this->assertEquals(3, $record->modifiedValues['id']);
+
+		$record->save();
+
+		$this->assertEquals(3, $record->id);
+		$this->assertEquals(3, $record->originalValues['id']);
+		$this->assertTrue(empty($record->modifiedValues));
+
+		$record->id = 3;
+
+		$this->assertEquals(3, $record->id);
+		$this->assertEquals(3, $record->originalValues['id']);
+		$this->assertTrue(empty($record->modifiedValues));
+
+		// nothing changed, update will not be executed
+		$record->save();
+
+		$record->id = 4;
+
+		$this->assertEquals(4, $record->id);
+		$this->assertEquals(3, $record->originalValues['id']);
+		$this->assertFalse(empty($record->modifiedValues));
+		$this->assertEquals(4, $record->modifiedValues['id']);
+
+		$record->discard();
+
+		$this->assertEquals(3, $record->id);
+		$this->assertEquals(3, $record->originalValues['id']);
+		$this->assertTrue(empty($record->modifiedValues));
+	}
+
+	public function testConflictProperties() {
+		$values = array(
+			'state' => 'Czech Republic',
+			'storage' => 'storage#1',
+			'defaults' => 'default#1',
+			'columns' => 'column#1',
+		);
+
+		$record = new ConflictRecord($values, MockRecord::STATE_EXISTING);
+		$this->assertEquals($values, $record->values);
+
+		$record = new ConflictRecord($values, MockRecord::STATE_NEW);
+		$this->assertEquals($values, $record->values);
+		$this->assertEquals($values, $record->modifiedValues);
+	}
+
+	
+
 	/********************* MockRecord additional methods *********************/
 
 
@@ -278,6 +764,22 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 }
 
 
+class ConflictRecord extends Record {
+
+	/** @var array  internal default data storage*/
+	protected $defaults = array();
+
+	/** @var array  internal column name storage */
+	protected $columns = array('state', 'storage', 'defaults', 'columns');
+
+	/**
+	 * @return array
+	 */
+	public function getModifiedValues() {
+		return parent::getModifiedValues();
+	}
+}
+
 
 /**
  * @property int $id
@@ -318,6 +820,19 @@ class MockRecord extends Record {
 		return parent::getDefaultValues();
 	}
 
+	/**
+	 * @return array
+	 */
+	public function getModifiedValues() {
+		return parent::getModifiedValues();
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getOriginalValues() {
+		return parent::getOriginalValues();
+	}
 	
 	/**
 	 * @retrun DataStorage

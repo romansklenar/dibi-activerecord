@@ -537,7 +537,6 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());
 		$this->assertEquals($cmp, $author->values);
-		$this->assertEquals($cmp, $author->backupValues);
 		$this->assertEquals(4, Author::count());
 
 		$author->id = 55;

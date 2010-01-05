@@ -9,23 +9,26 @@
  * 
  * @property-read array $values
  * @property-read array $modifiedValues
- * @property-read array $backupValues
+ * @property-read array $originalValues
  */
 class Record extends FreezableObject implements ArrayAccess {
 
-	/** @var DataStorage */
-	protected $storage;
-
-	/** @var array  internal default values storage*/
-	protected $defaults = array();
+	/** @var DataStorage internal record data storage */
+	private $storage;
 
 	/** @var array  internal column name storage */
 	protected $columns = array();
 
+	/** @var array  internal default values storage */
+	protected $defaults = array();
+
+	/** @var bool  record state sign */
+	private $state;
+
 	/**#@+ Record state */
-	const STATE_EXISTING = DataStorage::STATE_EXISTING;
-	const STATE_NEW = DataStorage::STATE_NEW;
-	const STATE_DELETED = DataStorage::STATE_DELETED;
+	const STATE_EXISTING = '%E';
+	const STATE_NEW = '%N';
+	const STATE_DELETED = '%D';
 	/**#@-*/
 
 	
@@ -40,8 +43,27 @@ class Record extends FreezableObject implements ArrayAccess {
 
 		if ($state === NULL)
 			$state = $this->detectState((array) $input);
+		if ($state != self::STATE_NEW && $state != self::STATE_EXISTING)
+			throw new InvalidArgumentException("Unknow record state '$state' given");
 		
-		$this->storage = new DataStorage($this->getColumnNames(), (array) $input, $this->getDefaultValues(), $state);
+		$this->state = $state;
+		$this->storage = new DataStorage;
+		
+		$values = (array) $input + $this->getDefaultValues();
+		foreach ($this->getColumnNames() as $column)
+			$this->storage->original[$column] = isset($values[$column]) ? $values[$column] : NULL;
+
+		if ($this->isRecordNew())
+			$this->storage->modified = $this->storage->original;
+	}
+
+
+	/**
+	 * Gets record's internal data stroge object
+	 * @retrun DataStorage
+	 */
+	protected function getStorage() {
+		return $this->storage;
 	}
 
 	
@@ -64,21 +86,26 @@ class Record extends FreezableObject implements ArrayAccess {
 	}
 
 
+
+	/********************* values exchange *********************/
+
+
+
 	/**
 	 * Gets record's values in array(column => value)
 	 * @retrun array
 	 */
 	public function getValues() {
-		$output = array();
-		foreach ($this->getStorage()->values as $field => $value)
-			$output[$field] = $this->$field;
-		
-		return $output;
+		return RecordHelper::getValues($this, $this->getColumnNames());
 	}
 
+
+	/**
+	 * Sets record's values in array(column => value)
+	 * @param array $input
+	 */
 	public function setValues(array $input) {
-		foreach ($input as $field => $value)
-			$this->$field = $value;
+		RecordHelper::setValues($this, $input);
 	}
 
 
@@ -86,21 +113,17 @@ class Record extends FreezableObject implements ArrayAccess {
 	 * Gets record's modified values in array(column => value)
 	 * @return array
 	 */
-	public function getModifiedValues() {
-		$output = array();
-		foreach ($this->getStorage()->modified as $field => $value)
-			$output[$field] = $this->$field;
-
-		return $output;
+	protected function getModifiedValues() {
+		return RecordHelper::getValues($this, array_keys($this->storage->modified));
 	}
 
 
 	/**
-	 * Gets record's backup values in array(column => value)
+	 * Gets record's original values in array(column => value)
 	 * @return array
 	 */
-	public function getBackupValues() {
-		return $this->getStorage()->backup;
+	protected function getOriginalValues() {
+		return $this->getStorage()->original;
 	}
 
 
@@ -111,15 +134,11 @@ class Record extends FreezableObject implements ArrayAccess {
 	protected function getDefaultValues() {
 		return $this->defaults;
 	}
-	
 
-	/**
-	 * Gets record's internal data stroge object
-	 * @retrun DataStorage
-	 */
-	protected function getStorage() {
-		return $this->storage;
-	}
+
+
+	/********************* record state *********************/
+
 
 
 	/**
@@ -127,7 +146,7 @@ class Record extends FreezableObject implements ArrayAccess {
 	 * @return bool
 	 */
 	public function isRecordExisting() {
-		return $this->getStorage()->getState() === self::STATE_EXISTING;
+		return $this->state === self::STATE_EXISTING;
 	}
 
 
@@ -136,7 +155,7 @@ class Record extends FreezableObject implements ArrayAccess {
 	 * @return bool
 	 */
 	public function isRecordNew() {
-		return $this->getStorage()->getState() === self::STATE_NEW;
+		return $this->state === self::STATE_NEW;
 	}
 
 
@@ -145,16 +164,54 @@ class Record extends FreezableObject implements ArrayAccess {
 	 * @return bool
 	 */
 	public function isRecordDeleted() {
-		return $this->getStorage()->getState() === self::STATE_DELETED;
+		return $this->state === self::STATE_DELETED;
+	}
+
+
+
+	/********************* record executors *********************/
+
+
+
+	/**
+	 * Checks if the Record has unsaved changes.
+	 * @return bool
+	 */
+	public function isDirty() {
+		return (bool) count($this->storage->modified);
 	}
 
 
 	/**
-	 * Save the instance.
+	 * Checks if the Record has no changes to save.
+	 * @return bool
+	 */
+	public function isClean() {
+		return !$this->isDirty();
+	}
+
+
+	/**
+	 * Makes all properties Record's non dirty.
+	 * @return void
+	 */
+	protected function clean() {
+		$this->storage->modified = array();
+	}
+
+
+	/**
+	 * Saves the Record.
 	 * @return Record
 	 */
 	public function save() {
-		$this->getStorage()->save();
+		$this->updating();
+
+		if ($this->isDirty()) {
+			$this->storage->original = $this->getValues();
+			$this->storage->modified = array(); // $this->clean();
+			$this->state = self::STATE_EXISTING;
+		}
 		return $this;
 	}
 
@@ -164,7 +221,12 @@ class Record extends FreezableObject implements ArrayAccess {
 	 * @return bool  true if Record was destroyed
 	 */
 	public function destroy() {
-		$this->getStorage()->destroy();
+		$this->updating();
+
+		$this->storage->modified = array(); // $this->clean();
+		foreach ($this->storage->original as & $v)
+			$v = NULL;
+		$this->state = self::STATE_DELETED;
 		$this->freeze();
 	}
 
@@ -174,18 +236,16 @@ class Record extends FreezableObject implements ArrayAccess {
 	 * @return Record
 	 */
 	public function discard() {
-		$this->getStorage()->discard();
+		$this->updating();
+		
+		$this->storage->modified = $this->isRecordNew() ? $this->storage->original : array();
+		/** alternate:
+		if ($this->isRecordNew())
+			$this->storage->modified = $this->storage->original;
+		else
+			$this->clean();
+		*/
 		return $this;
-	}
-
-
-     /**
-	  * Makes the object unmodifiable.
-	  * @return void
-	  */
-	public function freeze() {
-		$this->getStorage()->freeze();
-		parent::freeze();
 	}
 
 
@@ -207,11 +267,12 @@ class Record extends FreezableObject implements ArrayAccess {
 			return parent::__get($name);
 			
 		} catch(MemberAccessException $e) {
-			if (isset($this->storage[$name])) {
-				$value = $this->storage[$name];
+			if (isset($this->storage->$name)) {
+				$value = $this->storage->$name;
 				return $value; // PHP work-around (Only variable references should be returned by reference)
-			} else
+			} else {
 				throw $e;
+			}
 		}
 	}
 
@@ -229,9 +290,10 @@ class Record extends FreezableObject implements ArrayAccess {
 		
 		try {
 			parent::__set($name, $value);
+			
 		} catch(MemberAccessException $e) {
-			if (isset($this->storage[$name]) && $this->storage[$name] !== $value)
-				$this->storage[$name] = $value;
+			if (isset($this->storage->$name))
+				$this->storage->$name = $value;
 			else
 				throw $e;
 		}
@@ -245,7 +307,7 @@ class Record extends FreezableObject implements ArrayAccess {
 	 * @return bool
 	 */
 	public function __isset($name) {
-		return parent::__isset($name) ? TRUE : isset($this->storage[$name]);
+		return parent::__isset($name) ? TRUE : (array_key_exists($name, $this->values) || array_key_exists($name, $this->modified));
 	}
 
 
@@ -257,7 +319,7 @@ class Record extends FreezableObject implements ArrayAccess {
 	 * @throws MemberAccessException
 	 */
 	public function __unset($name) {
-		parent::__unset($name);
+		throw new NotSupportedException("Cannot unset the property $this->class::\$$name.");
 	}
 
 
