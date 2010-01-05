@@ -48,7 +48,7 @@ class ActiveRecordCollection extends ArrayList {
 		$res->setTypes($this->mapper->getTypes()); // $res->detectTypes()
 
 		$this->import($res->fetchAll());
-		//$this->fetched = TRUE;
+		//$this->loaded = TRUE;
 
 		if ($this->reversed)
 			$this->reverse();
@@ -61,6 +61,24 @@ class ActiveRecordCollection extends ArrayList {
 	 */
 	public function isLoaded() {
 		return (bool) $this->loaded;
+	}
+
+
+	/**
+	 * Public getter.
+	 * @return DibiDataSource
+	 */
+	public function getDataSource() {
+		return $this->ds;
+	}
+
+
+	/**
+	 * Public setter.
+	 * @param  DibiDataSource $ds
+	 */
+	public function setDataSource(DibiDataSource $ds) {
+		$this->ds = $ds;
 	}
 
 
@@ -195,8 +213,15 @@ class ActiveRecordCollection extends ArrayList {
 	 * @return mixed
 	 */
 	public function first() {
-		$tmp = $this->getArrayCopy();
-		$el = reset($tmp);
+		if (!$this->isLoaded() && !$this->reversed) {
+			$clone = clone $this;
+			$clone->dataSource = $clone->dataSource->toDataSource()->applyLimit(1);
+			$clone->load();
+			return $clone->first();
+		}
+
+		$copy = $this->getArrayCopy();
+		$el = reset($copy);
 		return $el === FALSE ? NULL : $el;
 	}
 
@@ -206,8 +231,15 @@ class ActiveRecordCollection extends ArrayList {
 	 * @return mixed
 	 */
 	public function last() {
-		$tmp = $this->getArrayCopy();
-		$el = end($tmp);
+		if (!$this->isLoaded() && !$this->reversed) {
+			$clone = clone $this;
+			$clone->dataSource = $clone->dataSource->toDataSource()->applyLimit(1, $this->count()-1);
+			$clone->load();
+			return $clone->last();
+		}
+
+		$copy = $this->getArrayCopy();
+		$el = end($copy);
 		return $el === FALSE ? NULL : $el;
 	}
 
@@ -217,6 +249,7 @@ class ActiveRecordCollection extends ArrayList {
 	 * @return ActiveRecordCollection
 	 */
 	public function reverse() {
+		// TODO: optimalizace na nenactene kolekci
 		$this->import(array_reverse($this->getArrayCopy()));
 		$this->loaded = TRUE;
 		$this->reversed = TRUE;
@@ -282,8 +315,13 @@ class ActiveRecordCollection extends ArrayList {
 	 * @throws NotSupportedException
 	 */
 	public function remove($item) {
-		$item->destroy();
-		return parent::remove($item);
+		$this->typeCheck($item);
+		$removed = parent::remove($item);
+
+		if ($removed)
+			$item->destroy();
+
+		return $removed;
 		//neni treba -> fetchne se v search ktere vola rekurzivne getArrayCopy()
 	}
 
@@ -343,25 +381,22 @@ class ActiveRecordCollection extends ArrayList {
 
 
 	/**
-	 * Responds when the item is about to be added to the collection.
-	 * @param  mixed
-	 * @return void
-	 * @throws InvalidArgumentException, NotSupportedException
-	 */
-	protected function _beforeAdd($item) {
-		//neni treba, pokud se do updating() prida load()
-		$this->fetchCheck();
-		parent::beforeAdd($item);
-	}
-
-
-
-	/**
 	 * @return void
 	 */
 	protected function fetchCheck() {
 		if (!$this->isLoaded())
 			$this->load();
+	}
+
+
+	/**
+	 * @param  mixed
+	 * @return void
+	 * @throws InvalidArgumentException
+	 */
+	protected function typeCheck($item) {
+		if ($this->itemType !== NULL && !($item instanceof $this->itemType))
+			throw new InvalidArgumentException("Item must be '$this->itemType' object.");
 	}
 
 
@@ -491,6 +526,9 @@ class ActiveRecordCollection extends ArrayList {
 	 */
 	public function offsetUnset($index) {
 		$this->fetchCheck();
+		if ($this->offsetExists($index))
+			$this->offsetGet($index)->destroy();
+		
 		parent::offsetUnset($index);
 	}
 	

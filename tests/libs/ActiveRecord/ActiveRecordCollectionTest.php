@@ -27,7 +27,7 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 
 		$offices = Office::objects();
 		$offices->count();
-		$this->assertFalse($offices->isLoaded()); // fetch on count or not?
+		$this->assertFalse($offices->isLoaded());
 
 		$offices = Office::objects()->filter('[officeCode] > 2');
 		$this->assertFalse($offices->isLoaded());
@@ -37,13 +37,21 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 
 		$offices = Office::objects();
 		$offices->first();
-		$this->assertTrue($offices->isLoaded());
+		$this->assertFalse($offices->isLoaded());
 
 		$offices = Office::objects();
 		$offices->last();
+		$this->assertFalse($offices->isLoaded());
+
+		$offices = Office::objects()->reverse();
 		$this->assertTrue($offices->isLoaded());
 
 		$offices = Office::objects()->reverse();
+		$offices->first();
+		$this->assertTrue($offices->isLoaded());
+
+		$offices = Office::objects()->reverse();
+		$offices->last();
 		$this->assertTrue($offices->isLoaded());
 
 		$offices = Office::objects();
@@ -305,66 +313,29 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 	public function testFirst() {
 		$offices = Office::objects();
 		$this->assertEquals(8, $offices->count());
+		$this->assertFalse($offices->isLoaded());
 
-		if ($offices instanceof ArrayList) {
-			$this->assertEquals(1, $offices->first()->officeCode);
-			unset($offices[0]);
-			$this->assertEquals(2, $offices->first()->officeCode);
-			unset($offices[0]);
-			$this->assertEquals(3, $offices->first()->officeCode);
-			unset($offices[0]);
-			$this->assertEquals(4, $offices->first()->officeCode);
-			unset($offices[0]);
-			$this->assertEquals(5, $offices->first()->officeCode);
-			unset($offices[0]);
-			$this->assertEquals(6, $offices->first()->officeCode);
+		$this->assertEquals(1, $offices->first()->officeCode);
+		$this->assertFalse($offices->isLoaded());
+		$this->assertEquals('SELECT * FROM ( SELECT * FROM [Offices] ) t LIMIT 1', strip(dibi::$sql));
+		$offices->remove($offices->first());
+		$this->assertTrue($offices->isLoaded());
 
-			unset($offices[0], $offices[0], $offices[0]);
-			$this->assertEquals(0, $offices->count());
-			$this->assertEquals(NULL, $offices->first());
+		$this->assertEquals(2, $offices->first()->officeCode);
+		$offices->remove($offices->first());
+		$this->assertEquals(3, $offices->first()->officeCode);
+		$offices->remove($offices->first());
+		$this->assertEquals(4, $offices->first()->officeCode);
+		$offices->remove($offices->first());
+		$this->assertEquals(5, $offices->first()->officeCode);
+		$offices->remove($offices->first());
+		$this->assertEquals(6, $offices->first()->officeCode);
 
-
-			$offices = Office::objects();
-			$this->assertEquals(8, $offices->count());
-
-			$this->assertEquals(1, $offices->first()->officeCode);
-			$offices->remove($offices->first());
-			$this->assertEquals(2, $offices->first()->officeCode);
-			$offices->remove($offices->first());
-			$this->assertEquals(3, $offices->first()->officeCode);
-			$offices->remove($offices->first());
-			$this->assertEquals(4, $offices->first()->officeCode);
-			$offices->remove($offices->first());
-			$this->assertEquals(5, $offices->first()->officeCode);
-			$offices->remove($offices->first());
-			$this->assertEquals(6, $offices->first()->officeCode);
-
-			$offices->remove($offices->first());
-			$offices->remove($offices->first());
-			$offices->remove($offices->first());
-			$this->assertEquals(0, $offices->count());
-			$this->assertEquals(NULL, $offices->first());
-
-		} else {
-			$offices = Office::objects();
-			$this->assertEquals(8, $offices->count());
-
-			$this->assertEquals(1, $offices->first()->officeCode);
-			unset($offices[0]);
-			$this->assertEquals(2, $offices->first()->officeCode);
-			unset($offices[1]);
-			$this->assertEquals(3, $offices->first()->officeCode);
-			unset($offices[2]);
-			$this->assertEquals(4, $offices->first()->officeCode);
-			unset($offices[3]);
-			$this->assertEquals(5, $offices->first()->officeCode);
-			unset($offices[4]);
-			$this->assertEquals(6, $offices->first()->officeCode);
-
-			unset($offices[5], $offices[6], $offices[7]);
-			$this->assertEquals(0, $offices->count());
-			$this->assertEquals(NULL, $offices->first());
-		}
+		$offices->remove($offices->first());
+		$offices->remove($offices->first());
+		$offices->remove($offices->first());
+		$this->assertEquals(0, $offices->count());
+		$this->assertEquals(NULL, $offices->first());
 	}
 
 	public function testFirstWithReverse() {
@@ -393,20 +364,26 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals(8, $offices->count());
 
 		$this->assertEquals(8, $offices->last()->officeCode);
-		unset($offices[7]);
+		$this->assertFalse($offices->isLoaded());
+		$this->assertEquals('SELECT * FROM ( SELECT * FROM [Offices] ) t LIMIT 1 OFFSET 7', strip(dibi::$sql));
+		$offices->remove($offices->last());
+		$this->assertTrue($offices->isLoaded());
+		
 		$this->assertEquals(7, $offices->last()->officeCode);
-		unset($offices[6]);
+		$offices->remove($offices->last());
 		$this->assertEquals(6, $offices->last()->officeCode);
-		unset($offices[5]);
+		$offices->remove($offices->last());
 		$this->assertEquals(5, $offices->last()->officeCode);
-		unset($offices[4]);
+		$offices->remove($offices->last());
 		$this->assertEquals(4, $offices->last()->officeCode);
-		unset($offices[3]);
+		$offices->remove($offices->last());
 		$this->assertEquals(3, $offices->last()->officeCode);
 
-		unset($offices[2], $offices[1], $offices[0]);
+		$offices->remove($offices->last());
+		$offices->remove($offices->last());
+		$offices->remove($offices->last());
 		$this->assertEquals(0, $offices->count());
-		$this->assertSame(NULL, $offices->last());
+		$this->assertEquals(NULL, $offices->last());
 	}
 
 	public function testLastWithReverse() {
@@ -427,7 +404,7 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 
 		unset($offices[2], $offices[1], $offices[0]);
 		$this->assertEquals(0, $offices->count());
-		$this->assertSame(NULL, $offices->last());
+		$this->assertEquals(NULL, $offices->last());
 	}
 
 	public function testAppend() {
