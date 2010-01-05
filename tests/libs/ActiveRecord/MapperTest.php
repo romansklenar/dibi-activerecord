@@ -181,7 +181,7 @@ class MapperTest extends ActiveRecordDatabaseTestCase {
 		$office = $mapper->find(8);
 		$office->officeCode = 555;
 		$mapper->update($office);
-		$this->assertEquals("UPDATE  [Offices] SET [officeCode]='555' WHERE ([officeCode] = '8')", dibi::$sql);
+		$this->assertEquals("UPDATE [Offices] SET [officeCode]='555' WHERE ([officeCode] = '8')", strip(dibi::$sql));
 		$this->assertEquals(1, $mapper->count(555));
 
 		$office = new Office(array(
@@ -197,7 +197,7 @@ class MapperTest extends ActiveRecordDatabaseTestCase {
 
 		$office->officeCode = 555;
 		$mapper->update($office);
-		$this->assertEquals("UPDATE  [Offices] SET [officeCode]='555' WHERE ([officeCode] = '8')", dibi::$sql);
+		$this->assertEquals("UPDATE [Offices] SET [officeCode]='555' WHERE ([officeCode] = '8')", strip(dibi::$sql));
 		$this->assertEquals(1, $mapper->count(555));
 
 		$this->setExpectedException('InvalidStateException');
@@ -220,7 +220,7 @@ class MapperTest extends ActiveRecordDatabaseTestCase {
 		));
 
 		$mapper->insert($office);
-		$this->assertEquals("INSERT  INTO [Offices] ([officeCode], [city], [phone], [addressLine1], [addressLine2], [state], [country], [postalCode], [territory], [position]) VALUES ('9', 'Ostrava', '+420 595 846 854', 'Ostravska 69', NULL, 'Czech Republic', 'NA', '708 00', 'NA', 0)", dibi::$sql);
+		$this->assertEquals("INSERT INTO [Offices] ([officeCode], [city], [phone], [addressLine1], [addressLine2], [state], [country], [postalCode], [territory], [position]) VALUES ('9', 'Ostrava', '+420 595 846 854', 'Ostravska 69', NULL, 'Czech Republic', 'NA', '708 00', 'NA', 0)", strip(dibi::$sql));
 		$this->assertEquals(1, $mapper->count(9));
 
 		$office = new Office(array(
@@ -235,7 +235,7 @@ class MapperTest extends ActiveRecordDatabaseTestCase {
 		));
 
 		$mapper->insert($office);
-		$this->assertEquals("INSERT  INTO [Offices] ([officeCode], [city], [phone], [addressLine1], [addressLine2], [state], [country], [postalCode], [territory], [position]) VALUES ('10', 'Ostrava', '+420 595 846 854', 'Ostravska 69', NULL, 'Czech Republic', 'NA', '708 00', 'NA', 0)", dibi::$sql);
+		$this->assertEquals("INSERT INTO [Offices] ([officeCode], [city], [phone], [addressLine1], [addressLine2], [state], [country], [postalCode], [territory], [position]) VALUES ('10', 'Ostrava', '+420 595 846 854', 'Ostravska 69', NULL, 'Czech Republic', 'NA', '708 00', 'NA', 0)", strip(dibi::$sql));
 		$this->assertEquals(1, $mapper->count(10));
 
 		$this->setExpectedException('InvalidStateException');
@@ -257,7 +257,7 @@ class MapperTest extends ActiveRecordDatabaseTestCase {
 		));
 
 		$last = $mapper->insert($employee);
-		$this->assertEquals("INSERT  INTO [Employees] ([lastName], [firstName], [extension], [email], [officeCode], [reportsTo], [jobTitle]) VALUES ('Murphy', 'Diane', 'x5800', 'dmurphy@classicmodelcars.com', '8', NULL, 'President')", dibi::$sql);
+		$this->assertEquals("INSERT INTO [Employees] ([lastName], [firstName], [extension], [email], [officeCode], [reportsTo], [jobTitle]) VALUES ('Murphy', 'Diane', 'x5800', 'dmurphy@classicmodelcars.com', '8', NULL, 'President')", strip(dibi::$sql));
 		$this->assertEquals(1, $mapper->count($last));
 	}
 
@@ -267,7 +267,7 @@ class MapperTest extends ActiveRecordDatabaseTestCase {
 		$deleted = $mapper->delete($office);
 
 		$this->assertEquals(1, $deleted);
-		$this->assertEquals("DELETE  FROM [Offices] WHERE ([officeCode] = '8')", dibi::$sql);
+		$this->assertEquals("DELETE FROM [Offices] WHERE ([officeCode] = '8')", strip(dibi::$sql));
 		$this->assertEquals(0, $mapper->count(8));
 	}
 
