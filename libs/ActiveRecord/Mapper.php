@@ -327,13 +327,49 @@ class Mapper extends Object implements IMapper {
 
 
 	/**
+	 * Saves the instance and loaded, dirty associations to the database.
+	 * @param ActiveRecord $record
+	 * @return void
+	 */
+	public function save(ActiveRecord $record) {
+		// TODO: do transakce
+		if ($record->isDirty()) {
+			if ($record->isRecordNew()) {
+				$value = $this->insert($record);
+
+				$pk = $record->getPrimaryInfo();
+				if (count($pk->columns) == 1) {
+					if ($pk->columns[0]->isAutoincrement())
+						$record->{$record->getPrimaryName()} = $value;
+					else if ($value = $record->getMapper()->getConnection()->getDriver()->getInsertId(NULL))
+						$record = $this->find($value);
+					else
+						throw new InvalidStateException("Unable to refresh record's primary key value after INSERT.");
+
+				} else {
+					$cond = array();
+					foreach ($pk->columns as $column) {
+						$cond[] = array("%n = {$column->type}". $column->name, $record->$column);
+					}
+					$record = $this->find($cond, array(), 1);
+				}
+
+			} else {
+				$record->getMapper()->update($record);
+			}
+		}
+		return $record;
+	}
+
+
+	/**
 	 * Updates database row(s).
 	 * @param ActiveRecord $record
 	 * @return int  number of updated rows
 	 */
 	public function update(ActiveRecord $record) {
 		if ($record->isRecordNew())
-			throw new InvalidStateException("Cannot update non existing record.");
+			throw new InvalidStateException("Cannot update non-existing record.");
 		
 		$record->getConnection()
 			->update($record->getTableName(), $record->getModifiedValues())

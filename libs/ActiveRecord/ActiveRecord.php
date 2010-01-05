@@ -401,29 +401,8 @@ abstract class ActiveRecord extends Record {
 	 * @return ActiveRecord
 	 */
 	public function save() {
-		// TODO: do transakce
-		if (empty($this->modifiedValues))
-			return $this;
-
-		if ($this->isRecordNew()) {
-			$value = $this->getMapper()->insert($this);
-
-			$pk = $this->getPrimaryInfo();
-			if (count($pk->columns) == 1) {
-				if ($pk->columns[0]->isAutoincrement()) 
-					$this->{$this->getPrimaryName()} = $value;
-				else if ($value = $this->getMapper()->getConnection()->getDriver()->getInsertId(NULL))
-					return $this->getMapper()->find($value);
-				
-			} else {
-				throw new NotImplementedException;
-			}
-
-		} else {
-			$this->getMapper()->update($this);
-		}
-
-		$this->getStorage()->save();
+		$this->getMapper()->save($this);
+		parent::save();
 		return $this;
 	}
 
