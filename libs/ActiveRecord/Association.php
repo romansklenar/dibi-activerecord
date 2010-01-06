@@ -71,24 +71,31 @@ class Association extends Object {
 	 * @param  string $table  table name
 	 * @return array of Association
 	 */
-	public static function getAssotiations(ReflectionClass $r, $table) {
+	public static function getAssotiations(ObjectReflection $r, $table) {
 		$cache = CacheHelper::getCache();
 		$key = $table . '.assotiations';
 
 		if (isset($cache[$key]))
 			return $cache[$key];
 
-		$arr = Association::parseAssotiations($r);
-		$assc = array();
+		$ann = $r->getAnnotations();
+		$arr = array(
+			Association::BELONGS_TO => $ann[Association::BELONGS_TO],
+			Association::HAS_ONE => $ann[Association::HAS_ONE],
+			Association::HAS_MANY => $ann[Association::HAS_MANY],
+			Association::HAS_AND_BELONGS_TO_MANY => $ann[Association::HAS_AND_BELONGS_TO_MANY],
+		);
 
-		foreach ($arr as $type => $tables)
-			foreach ($tables as $col => $tbl)
-				if (isset($assc[$tbl]))
-					throw new InvalidStateException(
-						"Ambiguous assotiations '$type' and '{$assc[$tbl]->type}' from $table to table $tbl found."
-					);
-				else
-					$assc[$type][] = new Association($type, $table, $tbl, !is_numeric($col) ? $col : NULL);
+		$assc = array();
+		foreach ($arr as $type => $annotations)
+			foreach ($annotations as $annotation)
+				foreach ($annotation->getValues() as $col => $tbl)
+					if (isset($assc[$tbl]))
+						throw new InvalidStateException(
+							"Ambiguous assotiations '$type' and '{$assc[$tbl]->type}' from $table to table $tbl found."
+						);
+					else
+						$assc[$type][] = new Association($type, $table, $tbl, !is_numeric($col) ? $col : NULL);
 
 		$cache->save($key, $assc, array(
 			'files' => array($r->getFileName())
@@ -98,38 +105,6 @@ class Association extends Object {
 		return $assc;
 	}
 
-
-	/**
-	 * Gets class assotiations meta.
-	 * @return array
-	 */
-	public static function parseAssotiations(Reflector $reflection) {
-		if (self::$inheritance) {
-			$tmp[Association::BELONGS_TO] = Annotations::getAll($reflection, Association::BELONGS_TO, TRUE);
-			$tmp[Association::HAS_ONE] = Annotations::getAll($reflection, Association::HAS_ONE, TRUE);
-			$tmp[Association::HAS_MANY] = Annotations::getAll($reflection, Association::HAS_MANY, TRUE);
-			$tmp[Association::HAS_AND_BELONGS_TO_MANY] = Annotations::getAll($reflection, Association::HAS_AND_BELONGS_TO_MANY, TRUE);
-
-		} else {
-			$tmp[Association::BELONGS_TO] = Annotations::getAll($reflection, Association::BELONGS_TO);
-			$tmp[Association::HAS_ONE] = Annotations::getAll($reflection, Association::HAS_ONE);
-			$tmp[Association::HAS_MANY] = Annotations::getAll($reflection, Association::HAS_MANY);
-			$tmp[Association::HAS_AND_BELONGS_TO_MANY] = Annotations::getAll($reflection, Association::HAS_AND_BELONGS_TO_MANY);
-
-		}
-
-		foreach ($tmp as $assotiation => & $values) {
-			$res[$assotiation] = array();
-			foreach ($values as & $tables) {
-				$tables = $tables instanceof ArrayObject || is_array($tables) ? (array) $tables : array($tables);
-				foreach ($tables as $key => & $table)
-					if (String::startsWith($table, '> '))
-						$table = ltrim($table, '> ');
-				$res[$assotiation] = array_merge($res[$assotiation], $tables);
-			}
-		}
-		return $res;
-	}
 
 	/**
 	 * Detects local column name(s).

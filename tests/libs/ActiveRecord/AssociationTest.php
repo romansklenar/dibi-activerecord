@@ -27,51 +27,63 @@ class AssociationTest extends ActiveRecordDatabaseTestCase {
 		CacheHelper::cleanCache();
 	}
 
-	public function testHasAnnotations() {
-		$this->assertFalse(Annotations::has(new ReflectionClass('A'), 'hasOne'));
-		$this->assertTrue(Annotations::has(new ReflectionClass('A'), 'hasMany'));
-		$this->assertFalse(Annotations::has(new ReflectionClass('A'), 'belongsTo'));
-		$this->assertFalse(Annotations::has(new ReflectionClass('A'), 'hasAndBelongsToMany'));
+	public function testHasAnnotation() {
+		$a = new A;
+		$b = new B;
+		$c = new C;
+		$d = new D;
 
-		$this->assertTrue(Annotations::has(new ReflectionClass('B'), 'hasOne'));
-		$this->assertFalse(Annotations::has(new ReflectionClass('B'), 'hasMany'));
-		$this->assertTrue(Annotations::has(new ReflectionClass('B'), 'belongsTo'));
-		$this->assertTrue(Annotations::has(new ReflectionClass('B'), 'hasAndBelongsToMany'));
+		$this->assertFalse($a->getReflection()->hasAnnotation('hasOne'));
+		$this->assertTrue($a->getReflection()->hasAnnotation('hasMany'));
+		$this->assertFalse($a->getReflection()->hasAnnotation('belongsTo'));
+		$this->assertFalse($a->getReflection()->hasAnnotation('hasAndBelongsToMany'));
 
-		$this->assertTrue(Annotations::has(new ReflectionClass('C'), 'hasOne'));
-		$this->assertFalse(Annotations::has(new ReflectionClass('C'), 'hasMany'));
-		$this->assertFalse(Annotations::has(new ReflectionClass('C'), 'belongsTo'));
-		$this->assertFalse(Annotations::has(new ReflectionClass('C'), 'hasAndBelongsToMany'));
+		$this->assertTrue($b->getReflection()->hasAnnotation('hasOne'));
+		$this->assertFalse($b->getReflection()->hasAnnotation('hasMany'));
+		$this->assertTrue($b->getReflection()->hasAnnotation('belongsTo'));
+		$this->assertTrue($b->getReflection()->hasAnnotation('hasAndBelongsToMany'));
 
-		$this->assertFalse(Annotations::has(new ReflectionClass('D'), 'hasOne'));
-		$this->assertTrue(Annotations::has(new ReflectionClass('D'), 'hasMany'));
-		$this->assertFalse(Annotations::has(new ReflectionClass('D'), 'belongsTo'));
-		$this->assertFalse(Annotations::has(new ReflectionClass('D'), 'hasAndBelongsToMany'));
+		$this->assertTrue($c->getReflection()->hasAnnotation('hasOne'));
+		$this->assertFalse($c->getReflection()->hasAnnotation('hasMany'));
+		$this->assertFalse($c->getReflection()->hasAnnotation('belongsTo'));
+		$this->assertFalse($c->getReflection()->hasAnnotation('hasAndBelongsToMany'));
+
+		$this->assertFalse($d->getReflection()->hasAnnotation('hasOne'));
+		$this->assertTrue($d->getReflection()->hasAnnotation('hasMany'));
+		$this->assertFalse($d->getReflection()->hasAnnotation('belongsTo'));
+		$this->assertFalse($d->getReflection()->hasAnnotation('hasAndBelongsToMany'));
 	}
 
-	public function testGetAnnotations() {
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('A'), 'hasOne'));
-		$this->assertEquals('Milestones', Annotations::get(new ReflectionClass('A'), 'hasMany'));
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('A'), 'belongsTo'));
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('A'), 'hasAndBelongsToMany'));
+	public function testGetAnnotation() {
+		$a = new A;
+		$b = new B;
+		$c = new C;
+		$d = new D;
 
-		$this->assertEquals(array('ProjectManager', 'bossId' => '> Author'), (array) Annotations::get(new ReflectionClass('B'), 'hasOne'));
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('B'), 'hasMany'));
-		$this->assertEquals(new ArrayObject(array('Portfolio', 'House')), Annotations::get(new ReflectionClass('B'), 'belongsTo'));
-		$this->assertEquals('Categories', Annotations::get(new ReflectionClass('B'), 'hasAndBelongsToMany'));
+		$this->assertEquals(NULL, $a->getReflection()->getAnnotation('hasOne'));
+		$this->assertEquals(new HasManyAnnotation(array('Milestones')), $a->getReflection()->getAnnotation('hasMany'));
+		$this->assertEquals(NULL, $a->getReflection()->getAnnotation('belongsTo'));
+		$this->assertEquals(NULL, $a->getReflection()->getAnnotation('hasAndBelongsToMany'));
 
-		$this->assertEquals('Milestones', Annotations::get(new ReflectionClass('C'), 'hasOne'));
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('C'), 'hasMany'));
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('C'), 'belongsTo'));
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('C'), 'hasAndBelongsToMany'));
+		$this->assertEquals(new HasOneAnnotation(array('ProjectManager', 'bossId' => '> Author')), $b->getReflection()->getAnnotation('hasOne'));
+		$this->assertEquals(NULL, $b->getReflection()->getAnnotation('hasMany'));
+		$this->assertEquals(new BelongsToAnnotation(array('Portfolio', 'House')), $b->getReflection()->getAnnotation('belongsTo'));
+		$this->assertEquals(new HasAndBelongsToManyAnnotation(array('Categories')), $b->getReflection()->getAnnotation('hasAndBelongsToMany'));
 
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('D'), 'hasOne'));
-		$this->assertEquals('ProjectManager', Annotations::get(new ReflectionClass('D'), 'hasMany'));
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('D'), 'belongsTo'));
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('D'), 'hasAndBelongsToMany'));
+		$this->assertEquals(new HasOneAnnotation(array('Milestones')), $c->getReflection()->getAnnotation('hasOne'));
+		$this->assertEquals(NULL, $c->getReflection()->getAnnotation('hasMany'));
+		$this->assertEquals(NULL, $c->getReflection()->getAnnotation('belongsTo'));
+		$this->assertEquals(NULL, $c->getReflection()->getAnnotation('hasAndBelongsToMany'));
+
+		$this->assertEquals(NULL, $d->getReflection()->getAnnotation('hasOne'));
+		$this->assertEquals(new HasManyAnnotation(array('ProjectManager')), $d->getReflection()->getAnnotation('hasMany'));
+		$this->assertEquals(NULL, $d->getReflection()->getAnnotation('belongsTo'));
+		$this->assertEquals(NULL, $d->getReflection()->getAnnotation('hasAndBelongsToMany'));
 	}
 
 	public function testGetAllAnnotations() {
+		$this->markTestSkipped('Je treba nejdrive vyresit ze strany Nette');
+		
 		$this->assertEquals(array(), Annotations::getAll(new ReflectionClass('A'), 'hasOne'));
 		$this->assertEquals(array('Milestones'), Annotations::getAll(new ReflectionClass('A'), 'hasMany'));
 		$this->assertEquals(array(), Annotations::getAll(new ReflectionClass('A'), 'belongsTo'));
@@ -95,50 +107,55 @@ class AssociationTest extends ActiveRecordDatabaseTestCase {
 
 	public function testHasAnnotationsWithInheritance() {
 		$this->markTestSkipped('Dedicnost je treba nejdrive vyresit ze strany Nette');
+		
+		$a = new A;
+		$b = new B;
+		$c = new C;
+		$d = new D;
 
-		$this->assertFalse(Annotations::has(new ReflectionClass('A'), 'hasOne', TRUE));
-		$this->assertTrue(Annotations::has(new ReflectionClass('A'), 'hasMany', TRUE));
-		$this->assertFalse(Annotations::has(new ReflectionClass('A'), 'belongsTo', TRUE));
-		$this->assertFalse(Annotations::has(new ReflectionClass('A'), 'hasAndBelongsToMany', TRUE));
+		$this->assertFalse($a->getReflection()->hasAnnotation('hasOne'));
+		$this->assertTrue($a->getReflection()->hasAnnotation('hasMany'));
+		$this->assertFalse($a->getReflection()->hasAnnotation('belongsTo'));
+		$this->assertFalse($a->getReflection()->hasAnnotation('hasAndBelongsToMany'));
 
-		$this->assertTrue(Annotations::has(new ReflectionClass('B'), 'hasOne', TRUE));
-		$this->assertTrue(Annotations::has(new ReflectionClass('B'), 'hasMany', TRUE));
-		$this->assertTrue(Annotations::has(new ReflectionClass('B'), 'belongsTo', TRUE));
-		$this->assertTrue(Annotations::has(new ReflectionClass('B'), 'hasAndBelongsToMany', TRUE));
+		$this->assertTrue($b->getReflection()->hasAnnotation('hasOne'));
+		$this->assertTrue($b->getReflection()->hasAnnotation('hasMany'));
+		$this->assertTrue($b->getReflection()->hasAnnotation('belongsTo'));
+		$this->assertTrue($b->getReflection()->hasAnnotation('hasAndBelongsToMany'));
 
-		$this->assertTrue(Annotations::has(new ReflectionClass('C'), 'hasOne', TRUE));
-		$this->assertTrue(Annotations::has(new ReflectionClass('C'), 'hasMany', TRUE));
-		$this->assertTrue(Annotations::has(new ReflectionClass('C'), 'belongsTo', TRUE));
-		$this->assertTrue(Annotations::has(new ReflectionClass('C'), 'hasAndBelongsToMany', TRUE));
+		$this->assertTrue($c->getReflection()->hasAnnotation('hasOne'));
+		$this->assertTrue($c->getReflection()->hasAnnotation('hasMany'));
+		$this->assertTrue($c->getReflection()->hasAnnotation('belongsTo'));
+		$this->assertTrue($c->getReflection()->hasAnnotation('hasAndBelongsToMany'));
 
-		$this->assertTrue(Annotations::has(new ReflectionClass('D'), 'hasOne', TRUE));
-		$this->assertTrue(Annotations::has(new ReflectionClass('D'), 'hasMany', TRUE));
-		$this->assertTrue(Annotations::has(new ReflectionClass('D'), 'belongsTo', TRUE));
-		$this->assertTrue(Annotations::has(new ReflectionClass('D'), 'hasAndBelongsToMany', TRUE));
+		$this->assertTrue($d->getReflection()->hasAnnotation('hasOne'));
+		$this->assertTrue($d->getReflection()->hasAnnotation('hasMany'));
+		$this->assertTrue($d->getReflection()->hasAnnotation('belongsTo'));
+		$this->assertTrue($d->getReflection()->hasAnnotation('hasAndBelongsToMany'));
 	}
 
 	public function testGetAnnotationsWithInheritance() {
 		$this->markTestSkipped('Dedicnost je treba nejdrive vyresit ze strany Nette');
 
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('A'), 'hasOne', TRUE));
-		$this->assertEquals('Milestones', Annotations::get(new ReflectionClass('A'), 'hasMany', TRUE));
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('A'), 'belongsTo', TRUE));
-		$this->assertEquals(NULL, Annotations::get(new ReflectionClass('A'), 'hasAndBelongsToMany', TRUE));
+		$this->assertEquals(NULL, $a->getReflection()->getAnnotation('hasOne', TRUE));
+		$this->assertEquals('Milestones', $a->getReflection()->getAnnotation('hasMany', TRUE));
+		$this->assertEquals(NULL, $a->getReflection()->getAnnotation('belongsTo', TRUE));
+		$this->assertEquals(NULL, $a->getReflection()->getAnnotation('hasAndBelongsToMany', TRUE));
 
-		$this->assertEquals(array('ProjectManager', 'bossId' => '> Author'), (array) Annotations::get(new ReflectionClass('B'), 'hasOne', TRUE));
-		$this->assertEquals('Milestones', Annotations::get(new ReflectionClass('B'), 'hasMany', TRUE));
-		$this->assertEquals(new ArrayObject(array('Portfolio', 'House')), Annotations::get(new ReflectionClass('B'), 'belongsTo', TRUE));
-		$this->assertEquals('Categories', Annotations::get(new ReflectionClass('B'), 'hasAndBelongsToMany', TRUE));
+		$this->assertEquals(array('ProjectManager', 'bossId' => '> Author'), (array) $b->getReflection()->getAnnotation('hasOne', TRUE));
+		$this->assertEquals('Milestones', $b->getReflection()->getAnnotation('hasMany', TRUE));
+		$this->assertEquals(new ArrayObject(array('Portfolio', 'House')), $b->getReflection()->getAnnotation('belongsTo', TRUE));
+		$this->assertEquals('Categories', $b->getReflection()->getAnnotation('hasAndBelongsToMany', TRUE));
 
-		$this->assertEquals('Milestones', Annotations::get(new ReflectionClass('C'), 'hasOne', TRUE));
-		$this->assertEquals('Milestones', Annotations::get(new ReflectionClass('C'), 'hasMany', TRUE));
-		$this->assertEquals(new ArrayObject(array('Portfolio', 'House')), Annotations::get(new ReflectionClass('C'), 'belongsTo', TRUE));
-		$this->assertEquals('Categories', Annotations::get(new ReflectionClass('C'), 'hasAndBelongsToMany', TRUE));
+		$this->assertEquals('Milestones', $c->getReflection()->getAnnotation('hasOne', TRUE));
+		$this->assertEquals('Milestones', $c->getReflection()->getAnnotation('hasMany', TRUE));
+		$this->assertEquals(new ArrayObject(array('Portfolio', 'House')), $c->getReflection()->getAnnotation('belongsTo', TRUE));
+		$this->assertEquals('Categories', $c->getReflection()->getAnnotation('hasAndBelongsToMany', TRUE));
 
-		$this->assertEquals(new ArrayObject(array('ProjectManager', 'bossId' => '> Author')), Annotations::get(new ReflectionClass('D'), 'hasOne', TRUE));
-		$this->assertEquals('ProjectManager', Annotations::get(new ReflectionClass('D'), 'hasMany', TRUE));
-		$this->assertEquals(new ArrayObject(array('Portfolio', 'House')), Annotations::get(new ReflectionClass('D'), 'belongsTo', TRUE));
-		$this->assertEquals('Categories', Annotations::get(new ReflectionClass('D'), 'hasAndBelongsToMany', TRUE));
+		$this->assertEquals(new ArrayObject(array('ProjectManager', 'bossId' => '> Author')), $d->getReflection()->getAnnotation('hasOne', TRUE));
+		$this->assertEquals('ProjectManager', $d->getReflection()->getAnnotation('hasMany', TRUE));
+		$this->assertEquals(new ArrayObject(array('Portfolio', 'House')), $d->getReflection()->getAnnotation('belongsTo', TRUE));
+		$this->assertEquals('Categories', $d->getReflection()->getAnnotation('hasAndBelongsToMany', TRUE));
 	}
 
 	public function testGetAllAnnotationsWithInheritance() {
@@ -165,87 +182,24 @@ class AssociationTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals(array('Categories'), Annotations::getAll(new ReflectionClass('D'), 'hasAndBelongsToMany', TRUE));
 	}
 
-	public function testParseAssotiations() {
-		Association::$inheritance = FALSE;
-
-		$cmp = array(
-			'belongsTo' => array('Portfolio', 'House'),
-			'hasOne' => array('ProjectManager', 'bossId' => 'Author'),
-			'hasMany' => array(),
-			'hasAndBelongsToMany' => array('Categories'),
-		);
-
-		$this->assertEquals($cmp, Association::parseAssotiations(new ReflectionClass('B')));
-
-		$cmp = array(
-			'belongsTo' => array(),
-			'hasOne' => array('Milestones'),
-			'hasMany' => array(),
-			'hasAndBelongsToMany' => array(),
-		);
-
-		$this->assertEquals($cmp, Association::parseAssotiations(new ReflectionClass('C')));
-
-		$cmp = array(
-			'belongsTo' => array(),
-			'hasOne' => array(),
-			'hasMany' => array('Payments', 'Pencils', 'Cabinets', 'Cars', 'ProjectManager'),
-			'hasAndBelongsToMany' => array(),
-		);
-
-		$this->assertEquals($cmp, Association::parseAssotiations(new ReflectionClass('D')));
-	}
-
-	public function testParseAssotiationsWithInheritance() {
-		$this->markTestSkipped('Dedicnost je treba nejdrive vyresit ze strany Nette');
-		Association::$inheritance = TRUE;
-		
-		$cmp = array(
-			'belongsTo' => array('Portfolio', 'House'),
-			'hasOne' => array('ProjectManager', 'bossId' => 'Author'),
-			'hasMany' => array('Milestones'),
-			'hasAndBelongsToMany' => array('Categories'),
-		);
-
-		$this->assertEquals($cmp, Association::parseAssotiations(new ReflectionClass('B')));
-
-		$cmp = array(
-			'belongsTo' => array('Portfolio', 'House'),
-			'hasOne' => array('Milestones', 'ProjectManager', 'bossId' => 'Author'),
-			'hasMany' => array('Milestones'),
-			'hasAndBelongsToMany' => array('Categories'),
-		);
-
-		$this->assertEquals($cmp, Association::parseAssotiations(new ReflectionClass('C')));
-
-		$cmp = array(
-			'belongsTo' => array('Portfolio', 'House'),
-			'hasOne' => array('ProjectManager', 'bossId' => 'Author'),
-			'hasMany' => array('Payments', 'Pencils', 'Cabinets', 'Cars', 'ProjectManager', 'Milestones'),
-			'hasAndBelongsToMany' => array('Categories'),
-		);
-
-		$this->assertEquals($cmp, Association::parseAssotiations(new ReflectionClass('D')));
-	}
-
-	public function test__construct() {
-		$this->markTestSkipped();
-		$assoc = new Association(Association::HAS_ONE, 'C', $foreignTable);
-	}
-
-
 	public function testGetAssotiations() {
-		$record = new E;
-		$assc = Association::getAssotiations(new ReflectionClass('E'), 'Es');
+		$a = new A;
+		$b = new B;
+		$c = new C;
+		$d = new D;
+		$e = new E;
+
+		$assc = Association::getAssotiations($e->getReflection(), 'Es');
 		$this->assertType('array', $assc[Association::HAS_ONE]);
 		$this->assertType('array', $assc[Association::HAS_MANY]);
 		$this->assertType('array', $assc[Association::BELONGS_TO]);
 		$this->assertType('array', $assc[Association::HAS_AND_BELONGS_TO_MANY]);
 
-		$this->assertEquals(1, count($assc[Association::HAS_ONE]));
+		$this->assertEquals(2, count($assc[Association::HAS_ONE]));
 		$this->assertEquals(1, count($assc[Association::HAS_MANY]));
 		$this->assertEquals(1, count($assc[Association::BELONGS_TO]));
 		$this->assertEquals(1, count($assc[Association::HAS_AND_BELONGS_TO_MANY]));
+
 
 		$this->assertTrue($assc[Association::HAS_ONE][0]->localTable instanceof DibiTableInfo);
 		$this->assertTrue($assc[Association::HAS_MANY][0]->localTable instanceof DibiTableInfo);
@@ -267,6 +221,51 @@ class AssociationTest extends ActiveRecordDatabaseTestCase {
 		$this->assertTrue($assc[Association::HAS_MANY][0]->foreignColumn instanceof DibiColumnInfo);
 		$this->assertTrue($assc[Association::BELONGS_TO][0]->foreignColumn instanceof DibiColumnInfo);
 		$this->assertTrue($assc[Association::HAS_AND_BELONGS_TO_MANY][0]->foreignColumn instanceof DibiColumnInfo);
+	}
+
+	public function testGetAssotiations2() {
+		$a = new A;
+		$b = new B;
+		$c = new C;
+		$d = new D;
+		$e = new E;
+
+		$assc = Association::getAssotiations($e->getReflection(), 'Es');
+		$this->assertType('array', $assc[Association::HAS_ONE]);
+		$this->assertType('array', $assc[Association::HAS_MANY]);
+		$this->assertType('array', $assc[Association::BELONGS_TO]);
+		$this->assertType('array', $assc[Association::HAS_AND_BELONGS_TO_MANY]);
+
+		$this->assertEquals(2, count($assc[Association::HAS_ONE]));
+		$this->assertEquals(1, count($assc[Association::HAS_MANY]));
+		$this->assertEquals(1, count($assc[Association::BELONGS_TO]));
+		$this->assertEquals(1, count($assc[Association::HAS_AND_BELONGS_TO_MANY]));
+
+
+		$this->assertTrue($assc[Association::HAS_ONE][0]->localTable instanceof DibiTableInfo);
+		$this->assertTrue($assc[Association::HAS_ONE][0]->foreignTable instanceof DibiTableInfo);
+		$this->assertTrue($assc[Association::HAS_ONE][0]->localColumn instanceof DibiColumnInfo);
+		$this->assertTrue($assc[Association::HAS_ONE][0]->foreignColumn instanceof DibiColumnInfo);
+
+		$this->assertTrue($assc[Association::HAS_MANY][0]->localTable instanceof DibiTableInfo);
+		$this->assertTrue($assc[Association::HAS_MANY][0]->foreignTable instanceof DibiTableInfo);
+		$this->assertTrue($assc[Association::HAS_MANY][0]->localColumn instanceof DibiTableInfo);
+		$this->assertTrue($assc[Association::HAS_MANY][0]->foreignColumn instanceof DibiColumnInfo);
+
+		$this->assertTrue($assc[Association::BELONGS_TO][0]->localTable instanceof DibiTableInfo);
+		$this->assertTrue($assc[Association::BELONGS_TO][0]->foreignTable instanceof DibiTableInfo);
+		$this->assertTrue($assc[Association::BELONGS_TO][0]->localColumn instanceof DibiColumnInfo);
+		$this->assertTrue($assc[Association::BELONGS_TO][0]->foreignColumn instanceof DibiColumnInfo);
+
+		$this->assertTrue($assc[Association::HAS_AND_BELONGS_TO_MANY][0]->localTable instanceof DibiTableInfo);
+		$this->assertTrue($assc[Association::HAS_AND_BELONGS_TO_MANY][0]->foreignTable instanceof DibiTableInfo);
+		$this->assertTrue($assc[Association::HAS_AND_BELONGS_TO_MANY][0]->localColumn instanceof DibiColumnInfo);
+		$this->assertTrue($assc[Association::HAS_AND_BELONGS_TO_MANY][0]->foreignColumn instanceof DibiColumnInfo);
+	}
+	
+	public function test__construct() {
+		$this->markTestSkipped();
+		$assoc = new Association(Association::HAS_ONE, 'C', $foreignTable);
 	}
 }
 
@@ -299,6 +298,7 @@ class D extends B {}
 
 /**
  * @hasOne(A)
+ * @hasOne(B)
  * @hasMany(B)
  * @belongsTo(C)
  * @hasAndBelongsToMany(D)

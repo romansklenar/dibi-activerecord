@@ -10,13 +10,24 @@
 abstract class AssociationAnnotation extends Annotation {
 
 	/** @var array */
-	public $values = array();
+	protected $values = array();
 	
 
 	public function __construct(array $values) {
+		if (count($values) == 1 && array_key_exists('value', $values))
+			$values = array($values['value']);
+
 		foreach ($values as $k => $v) {
 			$this->values[$k] = ltrim($v, '> ');
 		}
+	}
+
+
+	/**
+	 * @return array
+	 */
+	public function getValues() {
+		return $this->values;
 	}
 
 }

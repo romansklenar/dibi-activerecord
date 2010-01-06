@@ -278,7 +278,7 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	protected function getAssotiations() {
-		return Association::getAssotiations($this->getTableName(), $this->getClass());
+		return Association::getAssotiations($this->getReflection(), $this->getClass());
 	}
 
 
@@ -351,6 +351,7 @@ abstract class ActiveRecord extends Record {
 	 */
 	public function isValid() {
 		throw new NotImplementedException;
+		
 		try {
 			$this->validate();
 			return TRUE;
