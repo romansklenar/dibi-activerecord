@@ -11,11 +11,14 @@ require_once __DIR__ . '/compatibility.php';
  */
 abstract class ActiveRecord extends Record {
 
-	/** @var string  table name */
+	/** @var string  table name, if not set uses Inflector::tableize() to detect table name */
 	protected static $table;
 
-	/** @var string|array  primary key name */
+	/** @var string|array  primary key name, if not set uses DibiTableInfo::getPrimaryKey() to detect primary key(s) */
 	protected static $primary;
+
+	/** @var string  foreign key mask, if not set uses Inflector::foreignKey() to detect foreign key names */
+	protected static $foreingMask;
 
 	/** @var string  used connection name */
 	protected static $connection = Mapper::DEFAULT_CONNECTION;
@@ -46,7 +49,7 @@ abstract class ActiveRecord extends Record {
 			$state = $this->detectState((array) $input);
 		
 		parent::__construct($input, $state);
-		unset($this->columns, $this->defaults);
+		unset($this->columns, $this->defaults, $this->types);
 	}
 
 
