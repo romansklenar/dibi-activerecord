@@ -15,6 +15,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 		'login' => 'john007',
 		'email' => 'john.doe@example.com',
 		'lastname' => 'Doe',
+		'registered' => '2010-01-01 12:00:00',
 	);
 
 
@@ -33,18 +34,19 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'DOE',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 
 		$this->object = new MockRecord(new ArrayObject($this->values));
 		$this->assertType('array', $this->object->values);
-		$this->assertEquals(6, count($this->object->values));
+		$this->assertEquals(7, count($this->object->values));
 		$this->assertEquals(0, $this->object->credit); // default value should be known
 		$this->assertEquals($cmp, $this->object->values);
 
 		
 		$this->object = new MockRecord($this->values);
 		$this->assertType('array', $this->object->values);
-		$this->assertEquals(6, count($this->object->values));
+		$this->assertEquals(7, count($this->object->values));
 		$this->assertEquals($cmp, $this->object->values);
 
 		$this->setExpectedException('InvalidArgumentException');
@@ -122,7 +124,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function testGetColumnNames() {
-		$cmp = array('id', 'login', 'email', 'firstname', 'lastname', 'credit');
+		$cmp = array('id', 'login', 'email', 'firstname', 'lastname', 'credit', 'registered');
 		$this->assertEquals($cmp, $this->object->columnNames);
 	}
 
@@ -139,18 +141,19 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'DOE',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 
 		$this->object = new MockRecord($this->values);
 		$this->assertType('array', $this->object->values);
-		$this->assertEquals(6, count($this->object->values));
+		$this->assertEquals(7, count($this->object->values));
 		$this->assertEquals(0, $this->object->credit); // default value should be known
 		$this->assertEquals($cmp, $this->object->values);
 
 		$this->object->lastname = 'Moe';
 		$cmp['lastname'] = 'MOE';
 		$this->assertType('array', $this->object->modifiedValues);
-		$this->assertEquals(6, count($this->object->modifiedValues));
+		$this->assertEquals(7, count($this->object->modifiedValues));
 		$this->assertEquals('MOE', $this->object->modifiedValues['lastname']); // default value should be known
 		$this->assertEquals($cmp, $this->object->modifiedValues);
 
@@ -175,6 +178,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'Doe',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 		
 		$record = new MockRecord($values);
@@ -189,6 +193,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'Doe',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 
 		$record = new MockRecord($values);
@@ -281,8 +286,10 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'DOE',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 		$orig['lastname'] = 'Doe';
+		$orig['registered'] = '2010-01-01 12:00:00';
 
 		$this->assertTrue($record->isRecordExisting());
 		$this->assertEquals($cmp, $record->values);
@@ -298,6 +305,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => NULL,
 			'credit' => NULL,
+			'registered' => NULL,
 		);
 
 		$this->assertTrue($record->isRecordDeleted());
@@ -317,8 +325,10 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'DOE',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 		$orig['lastname'] = 'Doe';
+		$orig['registered'] = '2010-01-01 12:00:00';
 
 		$this->assertTrue($record->isRecordNew());
 		$this->assertEquals($cmp, $record->values);
@@ -335,6 +345,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => NULL,
 			'credit' => NULL,
+			'registered' => NULL,
 		);
 
 		$this->assertTrue($record->isRecordDeleted());
@@ -354,8 +365,10 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'DOE',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 		$orig['lastname'] = 'Doe';
+		$orig['registered'] = '2010-01-01 12:00:00';
 
 		$this->assertTrue($record->isRecordExisting());
 		$this->assertEquals($cmp, $record->values);
@@ -388,8 +401,10 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'DOE',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 		$orig['lastname'] = 'Doe';
+		$orig['registered'] = '2010-01-01 12:00:00';
 
 		$this->assertTrue($record->isRecordNew());
 		$this->assertEquals($cmp, $record->values);
@@ -423,8 +438,10 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'DOE',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 		$orig['lastname'] = 'Doe';
+		$orig['registered'] = '2010-01-01 12:00:00';
 
 		$this->assertTrue($record->isRecordNew());
 		$this->assertEquals($cmp, $record->values);
@@ -458,8 +475,10 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'DOE',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 		$orig['lastname'] = 'Doe';
+		$orig['registered'] = '2010-01-01 12:00:00';
 
 		$this->assertTrue($record->isRecordExisting());
 		$this->assertEquals($cmp, $record->values);
@@ -496,8 +515,10 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'DOE',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 		$orig['lastname'] = 'Doe';
+		$orig['registered'] = '2010-01-01 12:00:00';
 
 		$this->assertTrue($record->isRecordNew());
 		$this->assertEquals($cmp, $record->values);
@@ -545,8 +566,10 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'DOE',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 		$orig['lastname'] = 'Doe';
+		$orig['registered'] = '2010-01-01 12:00:00';
 
 		$this->assertTrue($record->isRecordExisting());
 		$this->assertEquals($cmp, $record->values);
@@ -584,6 +607,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => NULL,
 			'credit' => 0,
+			'registered' => NULL,
 		);
 
 		$this->assertTrue($record->isRecordNew());
@@ -616,6 +640,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => NULL,
 			'credit' => 0,
+			'registered' => NULL,
 		);
 
 		$this->assertTrue($record->isRecordNew());
@@ -634,8 +659,10 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 			'firstname' => NULL,
 			'lastname' => 'DOE',
 			'credit' => 0,
+			'registered' => new DateTime('2010-01-01 12:00:00'),
 		);
 		$orig['lastname'] = 'Doe';
+		$orig['registered'] = '2010-01-01 12:00:00';
 
 		$this->assertTrue($record->isRecordExisting());
 		$this->assertEquals($cmp, $record->values);
@@ -761,16 +788,33 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 		$this->assertTrue($this->object->educated);
 		$this->assertTrue($this->object['educated']);
 	}
+
+	public function testCasting() {
+		$this->assertTrue($this->object->registered instanceof DateTime);
+
+		$this->markTestSkipped('TODO: Bug or feature?');
+		// zpusobem jako je ukazano v metode getBypassedAttribute() se da pretypovani obejit
+		// otazka je jestli to brat jako chtene ci nechtene chovani
+		// v pripade ze nechtene, muselo by se pretypovani presunout primo do tridy DataStorage
+		// ale spojecne i s datavymi typy/reference na Record, ktera by byla u kazde instance DataStorage,
+		// coz by byla rezie navic
+		$this->assertTrue($this->object->getBypassedAttribute('registered') instanceof DateTime);
+	}
 }
 
 
 class ConflictRecord extends Record {
 
-	/** @var array  internal default data storage*/
 	protected $defaults = array();
 
-	/** @var array  internal column name storage */
 	protected $columns = array('state', 'storage', 'defaults', 'columns');
+
+	protected $types = array(
+		'state' => dibi::TEXT,
+		'storage' => dibi::TEXT,
+		'defaults' => dibi::TEXT,
+		'columns' => dibi::TEXT,
+	);
 
 	/**
 	 * @return array
@@ -788,20 +832,29 @@ class ConflictRecord extends Record {
  * @property string $firstname
  * @property string $lastname
  * @property int $credit
+ * @property DataTime $registered
  * @property string $fullname
  * @property-read string $initials
  * @property-read bool $educated
  */
 class MockRecord extends Record {
 	
-	/** @var array  internal default data storage*/
 	protected $defaults = array(
 		'credit' => 0,
 	);
 
-	/** @var array  internal column name storage */
 	protected $columns = array(
-		'id', 'login', 'email', 'firstname', 'lastname', 'credit'
+		'id', 'login', 'email', 'firstname', 'lastname', 'credit', 'registered'
+	);
+
+	protected $types = array(
+		'id' => dibi::INTEGER,
+		'login' => dibi::TEXT,
+		'email' => dibi::TEXT,
+		'firstname' => dibi::TEXT,
+		'lastname' => dibi::TEXT,
+		'credit' => dibi::INTEGER,
+		'registered' => dibi::DATETIME,
 	);
 
 
@@ -879,6 +932,15 @@ class MockRecord extends Record {
 	 */
 	public function isEducated() {
 		return TRUE;
+	}
+
+	/**
+	 * Gets bypassed property (direct from storage).
+	 * @param string $atribute  property name
+	 * @return mixed
+	 */
+	public function getBypassedAttribute($atribute) {
+		return $this->storage[$atribute];
 	}
 
 }

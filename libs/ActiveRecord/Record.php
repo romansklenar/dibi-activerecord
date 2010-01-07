@@ -22,6 +22,9 @@ class Record extends FreezableObject implements ArrayAccess {
 	/** @var array  internal default values storage */
 	protected $defaults = array();
 
+	/** @var array (column => type)  internal values data types storage */
+	protected $types = array();
+
 	/** @var bool  record state sign */
 	private $state;
 
@@ -255,6 +258,33 @@ class Record extends FreezableObject implements ArrayAccess {
 
 
 	/**
+	 *
+	 *
+	 * @param  string $name
+	 * @param  mixed $value
+	 * @return mixed
+	 */
+	private function cast($name, $value) {
+		if ($value === NULL)
+			return $value;
+
+		switch ($this->types[$name]) {
+			case dibi::TEXT: $value = (string) $value; break;
+			case dibi::BOOL: $value = (bool) $value; break;
+			case dibi::INTEGER: $value = (int) $value; break;
+			case dibi::FLOAT: $value = (float) $value; break;
+			case dibi::DATE:
+			case dibi::TIME:
+			case dibi::DATETIME: $value = ($value instanceof DateTime) ? $value : new DateTime($value); break;
+			case dibi::BINARY:
+			default: break;
+		}
+		return $value;
+	}
+
+
+
+	/**
 	 * Returns property value. Do not call directly.
 	 *
 	 * @param  string  property name
@@ -269,6 +299,7 @@ class Record extends FreezableObject implements ArrayAccess {
 		} catch(MemberAccessException $e) {
 			if (isset($this->storage->$name)) {
 				$value = $this->storage->$name;
+				$value = $this->cast($name, $value);
 				return $value; // PHP work-around (Only variable references should be returned by reference)
 			} else {
 				throw $e;
@@ -292,10 +323,12 @@ class Record extends FreezableObject implements ArrayAccess {
 			parent::__set($name, $value);
 			
 		} catch(MemberAccessException $e) {
-			if (isset($this->storage->$name))
+			if (isset($this->storage->$name)) {
+				$value = $this->cast($name, $value);
 				$this->storage->$name = $value;
-			else
+			} else {
 				throw $e;
+			}
 		}
 	}
 
