@@ -340,7 +340,7 @@ class Record extends FreezableObject implements ArrayAccess {
 	 * @return bool
 	 */
 	public function __isset($name) {
-		return parent::__isset($name) ? TRUE : (array_key_exists($name, $this->values) || array_key_exists($name, $this->modified));
+		return parent::__isset($name) ? TRUE : (array_key_exists($name, $this->storage->original) || array_key_exists($name, $this->storage->modified));
 	}
 
 
