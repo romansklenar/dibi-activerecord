@@ -53,9 +53,11 @@ final class HasManyAssociation extends Association {
 	public function retreiveReferenced(ActiveRecord $record) {
 		if ($this->through == NULL) {
 			$key = $record->foreignMask;
-			$type = '%' . $record->types[$key];
+			$referenced = new $this->referenced;
+			$type = '%' . $referenced->types[$key];
 			$class = $this->referenced;
-			return $class::objects()->filter("%n = {$type}", $key, $record->$key);
+			return $class::objects()->filter("%n = {$type}", $key, $record[$record->primaryName]);
+			
 		} else {
 			$referenced = new $this->referenced;
 			$through = new $this->through;

@@ -27,8 +27,9 @@ final class HasOneAssociation extends Association {
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
 		$key = $record->foreignMask;
-		$type = '%' . $record->types[$key];
+		$referenced = new $this->referenced;
+		$type = '%' . $referenced->types[$key];
 		$class = $this->referenced;
-		return $class::objects()->filter("%n = {$type}", $key, $record->$key)->first();
+		return $class::objects()->filter("%n = {$type}", $key, $record[$record->primaryName])->first();
 	}
 }
