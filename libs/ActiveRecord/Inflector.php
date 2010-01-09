@@ -13,7 +13,7 @@
  * @license    New BSD License
  * @example    http://addons.nettephp.com/inflector
  * @package    Nette\Extras\Inflector
- * @version    0.3
+ * @version    0.4
  */
 class Inflector {
 
@@ -81,6 +81,9 @@ class Inflector {
 	public static $uncountable = array(
 		'equipment', 'information', 'rice', 'money', 'species', 'series', 'fish', 'sheep',
 	);
+
+	/** @var bool  use Ruby on Rails ActiveRecord naming conventions? */
+	public static $railsStyle = FALSE;
 
 
 	/**
@@ -230,7 +233,7 @@ class Inflector {
 	 * @return string
 	 */
 	public static function camelize($word, $firstUpper = TRUE) {
-		$word = preg_replace(array('/(^|_)(.)/e', '/(\/)(.)/e'), array("strtoupper('\\2')", "strtoupper('\\\2')"), strval($word));
+		$word = preg_replace(array('/(^|_)(.)/e', '/(\/)(.)/e'), array("strtoupper('\\2')", "strtoupper('\\2')"), strval($word));
 		return $firstUpper ? ucfirst($word) : lcfirst($word);
 	}
 
@@ -254,7 +257,7 @@ class Inflector {
 	 * @return string
 	 */
 	public static function titleize($word) {
-		return preg_replace("/\b('?[a-z])/", "ucfirst('\\1')", self::humanize(self::underscore($word)));
+		return preg_replace(array("/\b('?[a-z])/e"), array("ucfirst('\\1')"), self::humanize(self::underscore($word)));
 	}
 
 
@@ -266,7 +269,7 @@ class Inflector {
 	 * @return string
 	 */
 	public static function underscore($word) {
-		return strtolower(preg_replace('/([A-Z]+)([A-Z])/','\1_\2', preg_replace('/([a-z\d])([A-Z])/','\1_\2', strval($word))));
+		return strtolower(preg_replace('/([A-Z]+)([A-Z])/','\1_\2', preg_replace('/([a-z\d])([A-Z])/','\1_\2', $word)));
 	}
 
 
@@ -285,7 +288,7 @@ class Inflector {
 	/**
 	 * Removes the namespace part from the expression in the string.
 	 *
-	 * @param  string $class  class name in namespace
+	 * @param  string|object $class  class name in namespace
 	 * @return string
 	 */
 	public static function demodulize($class) {
@@ -303,9 +306,10 @@ class Inflector {
 	 * @param  string $class  class name
 	 * @return string
 	 */
-	public static function tableize($class, $camelize = FALSE) {
+	public static function tableize($class) {
+		$class = substr_count($class, 'Model', 1) ? preg_replace('/Model$/', '', $class) : $class;
 		$table = self::pluralize($class);
-		return $camelize ? self::camelize($table) : self::underscore($table);
+		return self::$railsStyle ? self::underscore($table) : self::camelize($table);
 	}
 
 
@@ -326,11 +330,21 @@ class Inflector {
 	 * Creates a foreign key name from a class name.
 	 * Second parametr sets whether the method should put '_' between the name and 'id'/'Id'.
 	 *
-	 * @param  string $class     class name
-	 * @param  bool   $separete  separate class name and id with underscore?
+	 * @param  string $class  class name
 	 * @return string
 	 */
-	public static function foreignKey($class, $separete = TRUE) {
-		return self::underscore((self::isPlural($class) ? self::singularize($class) : self::demodulize($class))) . ($separete ? "_id" : "Id");
+	public static function foreignKey($class) {
+		return self::underscore((self::isPlural($class) ? self::singularize($class) : self::demodulize($class))) . (self::$railsStyle ? "_id" : "Id");
+	}
+
+
+	/**
+	 * Create a name of intersect entity of M:N relation of given tables.
+	 * @param string $local
+	 * @param string $referenced
+	 * @return string
+	 */
+	public static function intersectEntity($local, $referenced) {
+		return self::tableize(self::demodulize($local)) . (self::$railsStyle ? '_' : '') . self::tableize(self::demodulize($referenced));
 	}
 }
