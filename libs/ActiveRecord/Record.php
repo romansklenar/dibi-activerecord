@@ -264,7 +264,7 @@ class Record extends FreezableObject implements ArrayAccess {
 	 * @param  mixed $value
 	 * @return mixed
 	 */
-	private function cast($name, $value) {
+	protected function cast($name, $value) {
 		if ($value === NULL)
 			return $value;
 
