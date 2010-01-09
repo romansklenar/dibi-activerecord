@@ -7,6 +7,6 @@
  * @license    New BSD License
  * @example    http://wiki.github.com/romansklenar/dibi-activerecord
  */
-class HasOneAnnotation extends AssociationAnnotation {
+final class HasOneAnnotation extends AssociationAnnotation {
 
 }
