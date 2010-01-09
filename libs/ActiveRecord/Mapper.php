@@ -271,20 +271,10 @@ class Mapper extends Object implements IMapper {
 
 
 	/**
-	 * DibiDataSource finder factory.
-	 * @return DibiDataSource
-	 */
-	protected function getDataSource() {
-		return $this->record->getConnection()->dataSource($this->record->getTableName());
-	}
-
-
-	/**
 	 * Find occurrences matching conditions.
 	 * @return ActiveRecordCollection|ActiveRecord
 	 */
 	public function find($conditions = array(), $order = array(), $limit = NULL, $offset = NULL) {
-
 		if (!is_array($conditions) && !is_string($conditions)) {
 			$params = func_get_args();
 			$conditions = self::formatConditions($this->record->getPrimaryInfo(), $params);
@@ -303,7 +293,7 @@ class Mapper extends Object implements IMapper {
 			$order = array();
 		}
 
-		$ds = $this->getDataSource()->orderBy($order)->applyLimit($limit, $offset);
+		$ds = $this->record->getDataSource()->orderBy($order)->applyLimit($limit, $offset);
 
 		if (!empty($conditions)) {
 			if (is_string($conditions))
@@ -348,9 +338,8 @@ class Mapper extends Object implements IMapper {
 
 				} else {
 					$cond = array();
-					foreach ($pk->columns as $column) {
-						$cond[] = array("%n = {$column->type}". $column->name, $record->$column);
-					}
+					foreach ($pk->columns as $column)
+						$cond[] = array("%n = {$column->type}", $column->name, $record->$column);
 					$record = $this->find($cond, array(), 1);
 				}
 
