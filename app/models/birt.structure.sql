@@ -23,6 +23,9 @@ CREATE TABLE Employees (
 	jobTitle VARCHAR(50) NOT NULL
 );
 
+CREATE VIEW Managers AS
+	SELECT * FROM Employees WHERE reportsTo IS NULL;
+
 CREATE TABLE Customers (
 	customerNumber INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
 	customerName VARCHAR(50) NOT NULL,
@@ -35,7 +38,7 @@ CREATE TABLE Customers (
 	state VARCHAR(50) NULL,
 	postalCode VARCHAR(15) NULL,
 	country VARCHAR(50) NOT NULL,
-	salesRepEmployeeNumber INTEGER NULL REFERENCES Employees ON DELETE RESTRICT,
+	employeeNumber INTEGER NULL REFERENCES Employees ON DELETE RESTRICT,
 	creditLimit DOUBLE NULL
 );
 
