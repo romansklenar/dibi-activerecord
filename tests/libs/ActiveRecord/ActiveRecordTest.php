@@ -15,72 +15,16 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	);
 
 
-	public function testGetTableName() {
-		$this->assertEquals('Products', Product::create()->tableName);
-		$this->assertEquals('Offices', Office::create()->tableName);
-		$this->assertEquals('Offices', MockOffice::create()->tableName);
-		$this->assertEquals('Orders', Order::create()->tableName);
-		$this->assertEquals('Customers', Customer::create()->tableName);
-		$this->assertEquals('Employees', Employee::create()->tableName);
-		$this->assertEquals('Payments', Payment::create()->tableName);
-
-		$order = Order::create();
-		$product = Product::create();
-		$office = Office::create();
-		$mock = MockOffice::create();
-		$customer = Customer::create();
-		$employee = Employee::create();
-		$payment = Payment::create();
-		$author = Author::create();
-
-		$this->assertEquals('Orders', $order->tableName);
-		$this->assertEquals('Products', $product->tableName);
-		$this->assertEquals('Offices', $office->tableName);
-		$this->assertEquals('Offices', $mock->tableName);
-		$this->assertEquals('Customers', $customer->tableName);
-		$this->assertEquals('Employees', $employee->tableName);
-		$this->assertEquals('Payments', $payment->tableName);
-		$this->assertEquals('Authors', $author->tableName);
-	}
-
-	public function testGetPrimaryName() {
-		$this->assertEquals('productCode', Product::create()->primaryName);
-		$this->assertEquals('officeCode', Office::create()->primaryName);
-		$this->assertEquals('officeCode', MockOffice::create()->primaryName);
-		$this->assertEquals('orderNumber', Order::create()->primaryName);
-		$this->assertEquals('customerNumber', Customer::create()->primaryName);
-		$this->assertEquals('employeeNumber', Employee::create()->primaryName);
-		$this->assertEquals(array('customerNumber', 'checkNumber'), Payment::create()->primaryName);
-
-		$order = Order::create();
-		$product = Product::create();
-		$office = Office::create();
-		$mock = MockOffice::create();
-		$customer = Customer::create();
-		$employee = Employee::create();
-		$payment = Payment::create();
-		$author = Author::create();
-
-		$this->assertEquals('orderNumber', $order->primaryName);
-		$this->assertEquals('productCode', $product->primaryName);
-		$this->assertEquals('officeCode', $office->primaryName);
-		$this->assertEquals('officeCode', $mock->primaryName);
-		$this->assertEquals('customerNumber', $customer->primaryName);
-		$this->assertEquals('employeeNumber', $employee->primaryName);
-		$this->assertEquals(array('customerNumber', 'checkNumber'), $payment->primaryName);
-		$this->assertEquals('id', $author->primaryName);
-	}
-
 	public function testGetMapper() {
-		$order = Order::create();
-		$product = Product::create();
-		$office = Office::create();
-		$mock = MockOffice::create();
-		$customer = Customer::create();
-		$employee = Employee::create();
-		$payment = Payment::create();
-		$author = Author::create();
-		
+		$order = new Order;
+		$product = new Product;
+		$office = new Office;
+		$mock = new MockOffice;
+		$customer = new Customer;
+		$employee = new Employee;
+		$payment = new Payment;
+		$author = new Author;
+
 		$this->assertTrue($order->mapper instanceof IMapper);
 		$this->assertTrue($product->mapper instanceof IMapper);
 		$this->assertTrue($office->mapper instanceof IMapper);
@@ -89,7 +33,6 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertTrue($employee->mapper instanceof IMapper);
 		$this->assertTrue($payment->mapper instanceof IMapper);
 		$this->assertTrue($author->mapper instanceof IMapper);
-
 
 		$this->assertTrue($order->mapper instanceof Mapper);
 		$this->assertTrue($product->mapper instanceof Mapper);
@@ -127,7 +70,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertFalse($customer->getConnection()->getDatabaseInfo()->hasTable($consumer->tableName));
 		$this->assertFalse($consumer->getConnection()->getDatabaseInfo()->hasTable($customer->tableName));
 
-		
+
 		$order = Order::create();
 		$product = Product::create();
 		$office = Office::create();
@@ -138,7 +81,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$author = Author::create();
 
 		$tables = array(
-			'Offices', 'Employees', 'Customers', 'Payments',
+			'Offices', 'Employees', 'Managers', 'Customers', 'Payments',
 			'ProductLines', 'Products', 'Orders', 'OrderDetails'
 		);
 		$this->assertEquals($tables, $order->getConnection()->getDatabaseInfo()->getTableNames());
@@ -154,25 +97,15 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		Mapper::disconnect('connection #2');
 	}
 
-	public function testCount() {
-		$this->assertEquals(326, Order::count());
-		$this->assertEquals(110, Product::count());
-		$this->assertEquals(8, Office::count());
-		$this->assertEquals(8, MockOffice::count());
-		$this->assertEquals(122, Customer::count());
-		$this->assertEquals(23, Employee::count());
-		$this->assertEquals(273, Payment::count());
-		$this->assertEquals(3, Author::count());
-		
-		$this->assertEquals(1, Office::count(1));
-		$this->assertEquals(1, MockOffice::count(1));
-		$this->assertEquals(1, Author::count(1));
+	public function testGetTableName() {
+		$this->assertEquals('Products', Product::create()->tableName);
+		$this->assertEquals('Offices', Office::create()->tableName);
+		$this->assertEquals('Offices', MockOffice::create()->tableName);
+		$this->assertEquals('Orders', Order::create()->tableName);
+		$this->assertEquals('Customers', Customer::create()->tableName);
+		$this->assertEquals('Employees', Employee::create()->tableName);
+		$this->assertEquals('Payments', Payment::create()->tableName);
 
-		$this->markTestIncomplete();
-		// TODO: ostatni varianty
-	}
-
-	public function testMapperCount() {
 		$order = Order::create();
 		$product = Product::create();
 		$office = Office::create();
@@ -182,43 +115,72 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$payment = Payment::create();
 		$author = Author::create();
 
-		$this->assertEquals(326, $order->mapper->count());
-		$this->assertEquals(110, $product->mapper->count());
-		$this->assertEquals(8, $office->mapper->count());
-		$this->assertEquals(8, $mock->mapper->count());
-		$this->assertEquals(122, $customer->mapper->count());
-		$this->assertEquals(23, $employee->mapper->count());
-		$this->assertEquals(273, $payment->mapper->count());
-		$this->assertEquals(3, $author->mapper->count());
-
-		$this->assertEquals(1, $office->mapper->count(1));
-		$this->assertEquals(1, $mock->mapper->count(1));
-		$this->assertEquals(1, $author->mapper->count(1));
-
-		$this->markTestIncomplete();
-		// TODO: ostatni varianty
+		$this->assertEquals('Orders', $order->tableName);
+		$this->assertEquals('Products', $product->tableName);
+		$this->assertEquals('Offices', $office->tableName);
+		$this->assertEquals('Offices', $mock->tableName);
+		$this->assertEquals('Customers', $customer->tableName);
+		$this->assertEquals('Employees', $employee->tableName);
+		$this->assertEquals('Payments', $payment->tableName);
+		$this->assertEquals('Authors', $author->tableName);
 	}
 
-	public function testStaticObjectsCount() {
-		$this->assertEquals(326, Order::objects()->count());
-		$this->assertEquals(110, Product::objects()->count());
-		$this->assertEquals(8, Office::objects()->count());
-		$this->assertEquals(8, MockOffice::objects()->count());
-		$this->assertEquals(122, Customer::objects()->count());
-		$this->assertEquals(23, Employee::objects()->count());
-		$this->assertEquals(273, Payment::objects()->count());
-		$this->assertEquals(3, Author::objects()->count());
+	public function testGetPrimaryName() {
+		$this->assertEquals('productCode', Product::create()->primaryName);
+		$this->assertEquals('officeCode', Office::create()->primaryName);
+		$this->assertEquals('officeCode', MockOffice::create()->primaryName);
+		$this->assertEquals('orderNumber', Order::create()->primaryName);
+		$this->assertEquals('customerNumber', Customer::create()->primaryName);
+		$this->assertEquals('employeeNumber', Employee::create()->primaryName);
+		$this->assertEquals(array('customerNumber', 'checkNumber'), Payment::create()->primaryName);
+		$this->assertEquals('id', Author::create()->primaryName);
+
+		$order = Order::create();
+		$product = Product::create();
+		$office = Office::create();
+		$mock = MockOffice::create();
+		$customer = Customer::create();
+		$employee = Employee::create();
+		$payment = Payment::create();
+		$author = Author::create();
+
+		$this->assertEquals('orderNumber', $order->primaryName);
+		$this->assertEquals('productCode', $product->primaryName);
+		$this->assertEquals('officeCode', $office->primaryName);
+		$this->assertEquals('officeCode', $mock->primaryName);
+		$this->assertEquals('customerNumber', $customer->primaryName);
+		$this->assertEquals('employeeNumber', $employee->primaryName);
+		$this->assertEquals(array('customerNumber', 'checkNumber'), $payment->primaryName);
+		$this->assertEquals('id', $author->primaryName);
 	}
 
-	public function testStaticObjects() {
-		$this->assertTrue(Order::objects()->first() instanceof Order);
-		$this->assertTrue(Product::objects()->first() instanceof Product);
-		$this->assertTrue(Office::objects()->first() instanceof Office);
-		$this->assertTrue(MockOffice::objects()->first() instanceof MockOffice);
-		$this->assertTrue(Customer::objects()->first() instanceof Customer);
-		$this->assertTrue(Employee::objects()->first() instanceof Employee);
-		$this->assertTrue(Payment::objects()->first() instanceof Payment);
-		$this->assertTrue(Author::objects()->first() instanceof Author);
+	public function testGetForeignMask() {
+		$this->assertEquals('productCode', Product::create()->foreignMask);
+		$this->assertEquals('officeCode', Office::create()->foreignMask);
+		$this->assertEquals('officeCode', MockOffice::create()->foreignMask);
+		$this->assertEquals('orderNumber', Order::create()->foreignMask);
+		$this->assertEquals('customerNumber', Customer::create()->foreignMask);
+		$this->assertEquals('employeeNumber', Employee::create()->foreignMask);
+		//$this->assertEquals(array('customerNumber', 'checkNumber'), Payment::create()->foreignMask);
+		$this->assertEquals('authorId', Author::create()->foreignMask);
+
+		$order = Order::create();
+		$product = Product::create();
+		$office = Office::create();
+		$mock = MockOffice::create();
+		$customer = Customer::create();
+		$employee = Employee::create();
+		//$payment = Payment::create();
+		$author = Author::create();
+
+		$this->assertEquals('orderNumber', $order->foreignMask);
+		$this->assertEquals('productCode', $product->foreignMask);
+		$this->assertEquals('officeCode', $office->foreignMask);
+		$this->assertEquals('officeCode', $mock->foreignMask);
+		$this->assertEquals('customerNumber', $customer->foreignMask);
+		$this->assertEquals('employeeNumber', $employee->foreignMask);
+		//$this->assertEquals(array('customerNumber', 'checkNumber'), $payment->foreignMask);
+		$this->assertEquals('authorId', $author->foreignMask);
 	}
 
 	public function testGetState() {
@@ -353,7 +315,300 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$author = new Office($this->authorValues, '*** invalid ***');
 	}
 
+
+
+	/********************* Read assotiation tests *********************/
+
+
+
+	public function testReadAssotiationHasOne() {
+		ActiveRecordCollection::$loadImmediately = TRUE;
+		
+		Inflector::$railsStyle = FALSE;
+		$student = Student::find(1);
+		$this->assertTrue(isset($student->assignment));
+		$this->assertTrue($student->assignment instanceof Assignment);
+		$this->assertEquals(1, $student->assignment->id);
+
+
+		Inflector::$railsStyle = TRUE;
+		$guest = Guest::find(1);
+		$this->assertTrue(isset($guest->car));
+		$this->assertTrue($guest->car instanceof Car);
+		$this->assertEquals(1, $guest->car->id);
+	}
+
+	public function testReadAssotiationBelongsTo() {
+		ActiveRecordCollection::$loadImmediately = TRUE;
+
+		Inflector::$railsStyle = FALSE;
+		$assignment = Assignment::find(2);
+		$this->assertTrue(isset($assignment->studentId));
+		$this->assertTrue(isset($assignment->student));
+		$this->assertTrue($assignment->student instanceof Student);
+		$this->assertEquals(2, $assignment->student->id);
+
+		// referenced by attribute
+		$student = Student::find(1);
+		$this->assertTrue(isset($student->reportsTo));
+		$this->assertTrue(isset($student->supervisor));
+		$this->assertTrue($student->supervisor instanceof Supervisor);
+		$this->assertEquals(3, $student->supervisor->id);
+
+
+
+		Inflector::$railsStyle = TRUE;
+
+		$car = Car::find(1);
+		$this->assertFalse(isset($car->car_id));
+		$this->assertTrue(isset($car->guest));
+		$this->assertTrue($car->guest instanceof Guest);
+		$this->assertEquals(1, $car->guest->id);
+
+		// referenced by attribute
+		$guest = Guest::find(1);
+		$this->assertTrue(isset($guest->belongs_to));
+		$this->assertTrue(isset($guest->guide));
+		$this->assertTrue($guest->guide instanceof Guide);
+		$this->assertEquals(1, $guest->guide->id);
+	}
+	
+	public function testReadAssotiationHasMany() {
+		ActiveRecordCollection::$loadImmediately = TRUE;
+
+		Inflector::$railsStyle = FALSE;
+
+		$programmer = Programmer::find(4);
+		$this->assertTrue($programmer->tasks instanceof ActiveRecordCollection);
+		$this->assertEquals(2, count($programmer->tasks));
+		$this->assertTrue(($task = $programmer->tasks->first()) instanceof Task);
+		$this->assertEquals(1003, $task->id);
+		$this->assertTrue(($task = $programmer->tasks->last()) instanceof Task);
+		$this->assertEquals(1009, $task->id);
+
+		$project = Project::find(1);
+		$this->assertTrue($project->tasks instanceof ActiveRecordCollection);
+		$this->assertEquals(5, count($project->tasks));
+		$this->assertTrue(($task = $project->tasks->first()) instanceof Task);
+		$this->assertEquals(1001, $task->id);
+		$this->assertTrue(($task = $project->tasks->last()) instanceof Task);
+		$this->assertEquals(1005, $task->id);
+
+
+
+		Inflector::$railsStyle = TRUE;
+
+		$food = Food::find(3);
+		$this->assertTrue($food->compositions instanceof ActiveRecordCollection);
+		$this->assertEquals(6, count($food->compositions));
+		$this->assertTrue(($composition = $food->compositions->first()) instanceof Composition);
+		$this->assertEquals(105, $composition->id);
+		$this->assertTrue(($composition = $food->compositions->last()) instanceof Composition);
+		$this->assertEquals(110, $composition->id);
+
+		$ingredient = Ingredient::find(7);
+		$this->assertTrue($ingredient->compositions instanceof ActiveRecordCollection);
+		$this->assertEquals(3, count($ingredient->compositions));
+		$this->assertTrue(($composition = $ingredient->compositions->first()) instanceof Composition);
+		$this->assertEquals(102, $composition->id);
+		$this->assertTrue(($composition = $ingredient->compositions->last()) instanceof Composition);
+		$this->assertEquals(110, $composition->id);
+	}
+
+	public function testReadAssotiationHasManyViaThrough() {
+		ActiveRecordCollection::$loadImmediately = TRUE;
+
+		Inflector::$railsStyle = FALSE;
+
+		$programmer = Programmer::find(4);
+		$this->assertTrue($programmer->projects instanceof ActiveRecordCollection);
+		$this->assertEquals(2, count($programmer->projects));
+		$this->assertTrue(($project = $programmer->projects->first()) instanceof Project);
+		$this->assertEquals(1, $project->id);
+		$this->assertTrue(($project = $programmer->projects->last()) instanceof Project);
+		$this->assertEquals(3, $project->id);
+
+		$project = Project::find(1);
+		$this->assertTrue($project->programmers instanceof ActiveRecordCollection);
+		$this->assertEquals(5, count($project->programmers));
+		$this->assertTrue(($programmer = $project->programmers->first()) instanceof Programmer);
+		$this->assertEquals(1, $programmer->id);
+		$this->assertTrue(($programmer = $project->programmers->last()) instanceof Programmer);
+		$this->assertEquals(7, $programmer->id);
+
+
+
+		Inflector::$railsStyle = TRUE;
+
+		$food = Food::find(3);
+		$this->assertTrue($food->ingredients instanceof ActiveRecordCollection);
+		$this->assertEquals(6, count($food->ingredients));
+		$this->assertTrue(($ingredient = $food->ingredients->first()) instanceof Ingredient);
+		$this->assertEquals(2, $ingredient->id);
+		$this->assertTrue(($ingredient = $food->ingredients->last()) instanceof Ingredient);
+		$this->assertEquals(8, $ingredient->id);
+
+		$ingredient = Ingredient::find(7);
+		$this->assertTrue($ingredient->foods instanceof ActiveRecordCollection);
+		$this->assertEquals(3, count($ingredient->foods));
+		$this->assertTrue(($food = $ingredient->foods->first()) instanceof Food);
+		$this->assertEquals(1, $food->id);
+		$this->assertTrue(($food = $ingredient->foods->last()) instanceof Food);
+		$this->assertEquals(3, $food->id);
+	}
+
+	public function testReadAssotiationHasManyAndBelongsTo() {
+		ActiveRecordCollection::$loadImmediately = TRUE;
+
+		Inflector::$railsStyle = FALSE;
+
+		$post = Post::find(4);
+		$this->assertTrue($post->tags instanceof ActiveRecordCollection);
+		$this->assertEquals(2, count($post->tags));
+		$this->assertTrue(($tag = $post->tags->first()) instanceof Tag);
+		$this->assertEquals(1, $tag->id);
+		$this->assertTrue(($tag = $post->tags->last()) instanceof Tag);
+		$this->assertEquals(3, $tag->id);
+
+		$tag = Tag::find(1);
+		$this->assertTrue($tag->posts instanceof ActiveRecordCollection);
+		$this->assertEquals(5, count($tag->posts));
+		$this->assertTrue(($post = $tag->posts->first()) instanceof Post);
+		$this->assertEquals(1, $post->id);
+		$this->assertTrue(($post = $tag->posts->last()) instanceof Post);
+		$this->assertEquals(7, $post->id);
+
+
+
+		Inflector::$railsStyle = TRUE;
+
+		$album = Album::find(3);
+		$this->assertTrue($album->songs instanceof ActiveRecordCollection);
+		$this->assertEquals(6, count($album->songs));
+		$this->assertTrue(($song = $album->songs->first()) instanceof Song);
+		$this->assertEquals(2, $song->id);
+		$this->assertTrue(($song = $album->songs->last()) instanceof Song);
+		$this->assertEquals(8, $song->id);
+
+		$song = Song::find(7);
+		$this->assertTrue($song->albums instanceof ActiveRecordCollection);
+		$this->assertEquals(3, count($song->albums));
+		$this->assertTrue(($album = $song->albums->first()) instanceof Album);
+		$this->assertEquals(1, $album->id);
+		$this->assertTrue(($album = $song->albums->last()) instanceof Album);
+		$this->assertEquals(3, $album->id);
+	}
+
+
+
+	/********************* Write assotiation tests *********************/
+
+
+
+	public function testWriteAssotiationHasOne() {
+		$this->markTestIncomplete();
+	}
+
+	public function testWriteAssotiationHasMany() {
+		$this->markTestIncomplete();
+	}
+
+	public function testWriteAssotiationHasManyViaThrough() {
+		$this->markTestIncomplete();
+	}
+
+	public function testWriteAssotiationBelongsTo() {
+		$this->markTestIncomplete();
+	}
+
+	public function testWriteAssotiationHasManyAndBelongsTo() {
+		$this->markTestIncomplete();
+	}
+
+
+	/********************* Executors tests *********************/
+
+
+	public function testCount() {
+		if (!TestHelper::isPhpVersion('5.3'))
+			$this->markTestSkipped("Test is only for PHP 5.3.*");
+
+		$this->assertEquals(326, Order::count());
+		$this->assertEquals(110, Product::count());
+		$this->assertEquals(8, Office::count());
+		$this->assertEquals(8, MockOffice::count());
+		$this->assertEquals(122, Customer::count());
+		$this->assertEquals(23, Employee::count());
+		$this->assertEquals(273, Payment::count());
+		$this->assertEquals(3, Author::count());
+		
+		$this->assertEquals(1, Office::count(1));
+		$this->assertEquals(1, MockOffice::count(1));
+		$this->assertEquals(1, Author::count(1));
+
+		$this->markTestIncomplete();
+		// TODO: ostatni varianty
+	}
+
+	public function testMapperCount() {
+		$order = new Order;
+		$product = new Product;
+		$office = new Office;
+		$mock = new MockOffice;
+		$customer = new Customer;
+		$employee = new Employee;
+		$payment = new Payment;
+		$author = new Author;
+
+		$this->assertEquals(326, $order->mapper->count());
+		$this->assertEquals(110, $product->mapper->count());
+		$this->assertEquals(8, $office->mapper->count());
+		$this->assertEquals(8, $mock->mapper->count());
+		$this->assertEquals(122, $customer->mapper->count());
+		$this->assertEquals(23, $employee->mapper->count());
+		$this->assertEquals(273, $payment->mapper->count());
+		$this->assertEquals(3, $author->mapper->count());
+
+		$this->assertEquals(1, $office->mapper->count(1));
+		$this->assertEquals(1, $mock->mapper->count(1));
+		$this->assertEquals(1, $author->mapper->count(1));
+
+		$this->markTestIncomplete();
+		// TODO: ostatni varianty
+	}
+
+	public function testStaticObjectsCount() {
+		if (!TestHelper::isPhpVersion('5.3'))
+			$this->markTestSkipped("Test is only for PHP 5.3.*");
+		
+		$this->assertEquals(326, Order::objects()->count());
+		$this->assertEquals(110, Product::objects()->count());
+		$this->assertEquals(8, Office::objects()->count());
+		$this->assertEquals(8, MockOffice::objects()->count());
+		$this->assertEquals(122, Customer::objects()->count());
+		$this->assertEquals(23, Employee::objects()->count());
+		$this->assertEquals(273, Payment::objects()->count());
+		$this->assertEquals(3, Author::objects()->count());
+	}
+
+	public function testStaticObjects() {
+		if (!TestHelper::isPhpVersion('5.3'))
+			$this->markTestSkipped("Test is only for PHP 5.3.*");
+		
+		$this->assertTrue(Order::objects()->first() instanceof Order);
+		$this->assertTrue(Product::objects()->first() instanceof Product);
+		$this->assertTrue(Office::objects()->first() instanceof Office);
+		$this->assertTrue(MockOffice::objects()->first() instanceof MockOffice);
+		$this->assertTrue(Customer::objects()->first() instanceof Customer);
+		$this->assertTrue(Employee::objects()->first() instanceof Employee);
+		$this->assertTrue(Payment::objects()->first() instanceof Payment);
+		$this->assertTrue(Author::objects()->first() instanceof Author);
+	}
+
 	public function testStaticCreate() {
+		if (!TestHelper::isPhpVersion('5.3'))
+			$this->markTestSkipped("Test is only for PHP 5.3.*");
+
 		$cmp = array(
 			'id' => NULL,
 			'login' => NULL,
@@ -428,6 +683,9 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testStaticFind() {
+		if (!TestHelper::isPhpVersion('5.3'))
+			$this->markTestSkipped("Test is only for PHP 5.3.*");
+
 		$authors = Author::find();
 		$this->assertTrue($authors instanceof ActiveRecordCollection);
 		$this->assertEquals(3, count($authors));
@@ -483,6 +741,9 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testStaticFindOne() {
+		if (!TestHelper::isPhpVersion('5.3'))
+			$this->markTestSkipped("Test is only for PHP 5.3.*");
+
 		$author = Author::findOne();
 		$this->assertTrue($author instanceof Author);
 		$this->assertFalse($author->isRecordNew());
@@ -503,6 +764,9 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testStaticCount() {
+		if (!TestHelper::isPhpVersion('5.3'))
+			$this->markTestSkipped("Test is only for PHP 5.3.*");
+
 		$this->assertEquals(3, Author::count());
 		$this->assertEquals(2, Author::count(array(
 			array('%n > %i', 'credit', 100),
@@ -621,6 +885,9 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testMagicFind() {
+		if (!TestHelper::isPhpVersion('5.3'))
+			$this->markTestSkipped("Test is only for PHP 5.3.*");
+
 		$author = Author::findOneByLogin('john007');
 		$this->assertTrue($author instanceof Author);
 		$this->assertEquals('john007', $author->login);
