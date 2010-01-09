@@ -371,6 +371,11 @@ abstract class ActiveRecord extends Record {
 	}
 
 
+
+	/********************* validation *********************/
+
+
+
 	/**
 	 * Gets record's validator.
 	 * @return Validator
@@ -411,7 +416,7 @@ abstract class ActiveRecord extends Record {
 
 
 
-	/********************* record executors *********************/
+	/********************* executors *********************/
 
 
 
@@ -465,6 +470,20 @@ abstract class ActiveRecord extends Record {
 		parent::destroy();
 		return $deleted;
 	}
+
+
+	/**
+	 * Active Record factory
+	 * @return ActiveRecord
+	 */
+	public static function create($data = array()) {
+		return new static($data, Record::STATE_NEW);
+	}
+
+
+
+	/********************* finders *********************/
+
 
 
 	/**
@@ -526,15 +545,6 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Active Record factory
-	 * @return ActiveRecord
-	 */
-	public static function create($data = array()) {
-		return new static($data, Record::STATE_NEW);
-	}
-
-
-	/**
 	 * Magic find.
 	 * - $rec = Page::findOneByUrl('about-us');
 	 * - $col = Page::findByCategoryIdAndVisibility(5, TRUE);
@@ -571,4 +581,137 @@ abstract class ActiveRecord extends Record {
 		return $method == 'findOne' ? $mapper->find($cond, array(), 1)->first() : $mapper->find($cond);
 	}
 
+
+
+	/********************* assotiation handling *********************/
+
+
+
+	/**
+	 * Has record assotiation to another record?
+	 * @param string $name  researched records's class name
+	 * @return bool|Association
+	 */
+	protected function hasAssotiation($name) {
+		if (Inflector::isSingular($name)) {
+			$assotiations = array_merge($this->getAssotiations(Association::BELONGS_TO), $this->getAssotiations(Association::HAS_ONE));
+			$name = Inflector::pluralize($name);
+		} else {
+			$assotiations = array_merge($this->getAssotiations(Association::HAS_MANY), $this->getAssotiations(Association::HAS_AND_BELONGS_TO_MANY));
+		}
+
+		foreach ($assotiations as $assotiation)
+			if ($assotiation->isInRelation(Inflector::classify($name)))
+				return $assotiation;
+
+		return FALSE;
+	}
+
+
+
+	/********************* attributes handling *********************/
+
+
+
+	protected function getAttributes() {
+		return $this->getStorage();
+	}
+
+	protected function hasAttribute($name) {
+		return isset($this->getAttributes()->$name);
+	}
+
+	protected function getAttribute($name) {
+		$value = $this->getAttributes()->$name;
+		return $this->cast($name, $value);
+	}
+
+	protected function setAttribute($name, $value) {
+		$value = $this->cast($name, $value);
+		$this->getAttributes()->$name = $value;
+	}
+
+
+
+	/********************* magic getters & setters *********************/
+
+
+
+	/**
+	 * Returns property value. Do not call directly.
+	 *
+	 * @param  string  property name
+	 * @return mixed   property value
+	 * @throws MemberAccessException if the property is not defined.
+	 */
+	public function &__get($name) {
+		try {
+			$value = ObjectMixin::get($this, $name);
+			return $value;
+
+		} catch(MemberAccessException $e) {
+			if ($assotiation = $this->hasAssotiation($name)) {
+				$value = $assotiation->retreiveReferenced($this);
+				return $value;
+
+			} else if ($this->hasAttribute($name)) {
+				$value = $this->getAttribute($name);
+				return $value;
+
+			} else {
+				throw $e;
+			}
+		}
+	}
+
+
+	/**
+	 * Sets value of a property. Do not call directly.
+	 *
+	 * @param  string  property name
+	 * @param  mixed   property value
+	 * @return void
+	 * @throws MemberAccessException if the property is not defined or is read-only
+	 */
+	public function __set($name, $value) {
+		$this->updating();
+
+		try {
+			ObjectMixin::set($this, $name, $value);
+
+		} catch(MemberAccessException $e) {
+			if ($assotiation = $this->hasAssotiation($name)) {
+				// TODO: implement
+
+			} else if ($this->hasAttribute($name)) {
+				$this->setAttribute($name, $value);
+
+			} else {
+				throw $e;
+			}
+		}
+	}
+
+
+	/**
+	 * Is property defined?
+	 *
+	 * @param  string  property name
+	 * @return bool
+	 */
+	public function __isset($name) {
+		return ObjectMixin::has($this, $name) ? TRUE : ($this->hasAssotiation($name) || $this->hasAttribute($name) ? TRUE : FALSE);
+	}
+
+
+	/**
+	 * Unset of property.
+	 *
+	 * @param  string  property name
+	 * @return void
+	 * @throws MemberAccessException
+	 */
+	public function __unset($name) {
+		throw new NotSupportedException("Cannot unset the property $this->class::\$$name.");
+	}
 }
