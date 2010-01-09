@@ -9,5 +9,6 @@
  */
 class Manager extends Employee {
 
+	protected static $primary = 'employeeNumber';
 	protected static $foreingMask = '%primary%';
 }

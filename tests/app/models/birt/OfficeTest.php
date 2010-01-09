@@ -68,7 +68,7 @@ class OfficeTest extends BirtBaseTestCase {
 		$this->assertEquals(NULL, $a->through);
 	}
 
-	public function testGetEmployees() {
+	public function testRelationEmployees() {
 		ActiveRecordCollection::$loadImmediately = TRUE;
 		$office = Office::find(1);
 		$this->assertTrue($office->employees instanceof ActiveRecordCollection);
@@ -77,9 +77,6 @@ class OfficeTest extends BirtBaseTestCase {
 		$this->assertEquals(1002, $employee->employeeNumber);
 		$this->assertTrue(($employee = $office->employees->last()) instanceof Employee);
 		$this->assertEquals(1166, $employee->employeeNumber);
-
-		Debug::dump($employee->reportsTo);
-		Debug::dump($employee->manager);
 	}
 	
 }
