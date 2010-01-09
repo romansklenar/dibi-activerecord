@@ -41,7 +41,7 @@ class EmployeeTest extends BirtBaseTestCase {
 		$this->assertTrue($a instanceof BelongsToAssociation);
 		$this->assertEquals('Employee', $a->local);
 		$this->assertEquals('Office', $a->referenced);
-		$this->assertEquals(NULL, $a->referringAttribute);
+		$this->assertEquals('officeCode', $a->referringAttribute);
 		
 		$a = $asc[Association::BELONGS_TO][1];
 		$this->assertTrue($a instanceof BelongsToAssociation);
@@ -50,13 +50,23 @@ class EmployeeTest extends BirtBaseTestCase {
 		$this->assertEquals('reportsTo', $a->referringAttribute);
 	}
 
-	public function testGetOffice() {
+	public function testRelationOffice() {
 		$employee = Employee::find(1056);
 		$this->assertTrue($employee->office instanceof Office);
 		$this->assertEquals(1, $employee->office->officeCode);
 	}
 
-	public function _testGetManager() {
+	public function testRelationCustomers() {
+		$employee = Employee::find(1370);
+		$this->assertTrue($employee->customers instanceof ActiveRecordCollection);
+		$this->assertEquals(7, count($employee->customers));
+		$this->assertTrue(($customer = $employee->customers->first()) instanceof Customer);
+		$this->assertEquals(103, $customer->customerNumber);
+		$this->assertTrue(($customer = $employee->customers->last()) instanceof Customer);
+		$this->assertEquals(256, $customer->customerNumber);
+	}
+
+	public function testRelationManager() {
 		// self reference
 		$employee = Employee::find(1056);
 		$this->assertTrue($employee->manager instanceof Manager);
