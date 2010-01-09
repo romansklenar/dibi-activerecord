@@ -21,14 +21,9 @@ class AssociationAnnotationTest extends PHPUnit_Framework_TestCase {
 
 
 
-class MockAnnotation extends AssociationAnnotation {
-	
-}
-
+class MockAnnotation extends AssociationAnnotation {}
 
 /**
  * @mock(Clients, Invoices, clientOf => Firm)
  */
-class TestAnnotatedClass {
-
-}
+class TestAnnotatedClass {}
