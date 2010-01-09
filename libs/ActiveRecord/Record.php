@@ -283,6 +283,16 @@ class Record extends FreezableObject implements ArrayAccess {
 	}
 
 
+	/**
+	 * Has record given attribute?
+	 * @param string $name
+	 * @return bool
+	 */
+	protected function hasAttribute($name) {
+		return isset($this->storage->$name);
+	}
+
+
 
 	/**
 	 * Returns property value. Do not call directly.
@@ -297,7 +307,7 @@ class Record extends FreezableObject implements ArrayAccess {
 			return parent::__get($name);
 			
 		} catch(MemberAccessException $e) {
-			if (isset($this->storage->$name)) {
+			if ($this->hasAttribute($name)) {
 				$value = $this->storage->$name;
 				$value = $this->cast($name, $value);
 				return $value; // PHP work-around (Only variable references should be returned by reference)
@@ -323,7 +333,7 @@ class Record extends FreezableObject implements ArrayAccess {
 			parent::__set($name, $value);
 			
 		} catch(MemberAccessException $e) {
-			if (isset($this->storage->$name)) {
+			if ($this->hasAttribute($name)) {
 				$value = $this->cast($name, $value);
 				$this->storage->$name = $value;
 			} else {
@@ -340,7 +350,7 @@ class Record extends FreezableObject implements ArrayAccess {
 	 * @return bool
 	 */
 	public function __isset($name) {
-		return parent::__isset($name) ? TRUE : (array_key_exists($name, $this->storage->original) || array_key_exists($name, $this->storage->modified));
+		return parent::__isset($name) ? TRUE : $this->hasAttribute($name);
 	}
 
 
