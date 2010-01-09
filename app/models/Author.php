@@ -4,12 +4,6 @@
 /**
  * Author active record model
  *
- * @belongsTo(Portfolio, House)
- * @hasOne(ProjectManager, bossId => Author)
- * @hasMany(Milestones)
- * @hasAndBelongsToMany(Categories)
- *
- *
  * @property int $id
  * @property string $login
  * @property string $email
