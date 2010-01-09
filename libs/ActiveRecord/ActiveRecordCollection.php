@@ -25,6 +25,9 @@ class ActiveRecordCollection extends ArrayList {
 	/** @var bool */
 	private $reversed = FALSE;
 
+	/** @var bool */
+	public static $loadImmediately = FALSE;
+
 
 	/**
 	 * @param DibiDataSource $ds
@@ -35,12 +38,15 @@ class ActiveRecordCollection extends ArrayList {
 		$this->mapper = $mapper;
 
 		parent::__construct(NULL, $mapper->getRowClass());
+
+		if (self::$loadImmediately)
+			$this->load();
 	}
 
 
 	/**
 	 * Loads the Collection from the repository.
-	 * @return void
+	 * @return ActiveRecordCollection  provides a fluent interface
 	 */
 	public function load() {
 		$res = $this->ds->getResult();
@@ -52,6 +58,8 @@ class ActiveRecordCollection extends ArrayList {
 
 		if ($this->reversed)
 			$this->reverse();
+
+		return $this;
 	}
 
 
