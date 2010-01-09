@@ -25,12 +25,25 @@ abstract class ActiveRecordDatabaseTestCase extends PHPUnit_Framework_TestCase {
 		$connection->loadFile(APP_DIR . '/models/authors.data.sql');
 		Mapper::addConnection($connection, '#authors');
 
+		$connection = new DibiConnection($this->config);
+		$connection->loadFile(APP_DIR . '/models/many-to-many/m2m_nette.structure.sql');
+		//$connection->loadFile(APP_DIR . '/models/many-to-many/m2m_nette.data.sql');
+		Mapper::addConnection($connection, '#nette_style');
+
+		$connection = new DibiConnection($this->config);
+		$connection->loadFile(APP_DIR . '/models/many-to-many/m2m_rails.structure.sql');
+		//$connection->loadFile(APP_DIR . '/models/many-to-many/m2m_rails.data.sql');
+		Mapper::addConnection($connection, '#rails_style');
+
 		CacheHelper::cleanCache();
+		Inflector::$railsStyle = FALSE;
 	}
 
 	public function tearDown() {
 		Mapper::disconnect();
 		Mapper::disconnect('#authors');
+		Mapper::disconnect('#nette_style');
+		Mapper::disconnect('#rails_style');
 		CacheHelper::cleanCache();
 	}
 
