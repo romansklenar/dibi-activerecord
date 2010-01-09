@@ -18,7 +18,7 @@ abstract class ActiveRecord extends Record {
 	protected static $primary;
 
 	/** @var string  foreign key mask, if not set uses Inflector::foreignKey() to detect foreign key names */
-	protected static $foreingMask;
+	protected static $foreingMask; # i.e. '%table%Id', '%table%_id', '%table%_%primary%', '%primary%'
 
 	/** @var string  used connection name */
 	protected static $connection = Mapper::DEFAULT_CONNECTION;
@@ -47,7 +47,7 @@ abstract class ActiveRecord extends Record {
 
 		if ($state === NULL)
 			$state = $this->detectState((array) $input);
-		
+
 		parent::__construct($input, $state);
 		unset($this->columns, $this->defaults, $this->types);
 	}
@@ -77,7 +77,7 @@ abstract class ActiveRecord extends Record {
 				}
 			}
 		}
-			
+
 		return $state;
 	}
 
@@ -98,11 +98,31 @@ abstract class ActiveRecord extends Record {
 	public function getTableName() {
 		if (isset(static::$table) && static::$table !== NULL) {
 			return static::$table;
-			
+
 		} else {
 			if (!isset(self::$cache[$this->class]['table']))
-				self::$cache[$this->class]['table'] = Inflector::tableize($this->class, TRUE);
+				self::$cache[$this->class]['table'] = Inflector::tableize($this->class);
 			return self::$cache[$this->class]['table'];
+		}
+	}
+
+
+	/**
+	 * Gets record's foreign key mask
+	 * @return string
+	 */
+	public function getForeignMask() {
+		if (isset(static::$foreingMask) && static::$foreingMask !== NULL) {
+			return str_replace(
+				array('%table%', '%primary%'),
+				array($this->getTableName(), $this->getPrimaryName()),
+				static::$foreingMask
+			);
+
+		} else {
+			if (!isset(self::$cache[$this->class]['foreign']))
+				self::$cache[$this->class]['foreign'] = Inflector::foreignKey($this->class);
+			return self::$cache[$this->class]['foreign'];
 		}
 	}
 
@@ -121,7 +141,7 @@ abstract class ActiveRecord extends Record {
 				$info = $this->getPrimaryInfo();
 				foreach ($info->getColumns() as $column)
 					$primary[] = $column->getName();
-				
+
 				self::$cache[$this->class]['primary'] = count($primary) == 1 ? $primary[0] : $primary;
 			}
 			return self::$cache[$this->class]['primary'];
@@ -144,6 +164,15 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
+	 * DibiDataSource finder factory.
+	 * @return DibiDataSource
+	 */
+	public function getDataSource() {
+		return $this->getConnection()->dataSource($this->getTableName());
+	}
+
+
+	/**
 	 * Gets record's primary key column(s) value(s)
 	 * @return string|array
 	 */
@@ -154,7 +183,7 @@ abstract class ActiveRecord extends Record {
 		$values = array();
 		foreach	($this->getPrimaryName() as $field)
 			$values[$field] = $this->originalValues[$field];
-	
+
 		return $values;
 	}
 
@@ -173,12 +202,27 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
+	 * Gets current primary key(s) formated for use in array-style-condition.
+	 * @return array
+	 */
+	public function getForeignCondition() {
+		if (is_array($this->getPrimaryName()))
+			throw new InvalidStateException("You cannot use this format of conditions when table has primary key composed from more then one column.");
+
+		$column = $this->getPrimaryInfo()->columns[0];
+		$condition = array();
+		$condition[$this->getForeignMask() . '%' . $column->type] = $this->getPrimaryValue(); // $this->getStorage()->original[$column->name];
+		return $condition;
+	}
+
+
+	/**
 	 * Gets record's modified values in array(column%type => value)
 	 * @return array
 	 */
 	public function getModifiedValues() {
 		$modified = parent::getModifiedValues();
-		
+
 		if ($this->isRecordNew()) {
 			foreach ($this->getPrimaryInfo()->getColumns() as $column) {
 				if ($column->isAutoIncrement() && array_key_exists($column->getName(), $modified)) {
@@ -189,7 +233,7 @@ abstract class ActiveRecord extends Record {
 
 		$types = $this->getTypes();
 		$result = array();
-		
+
 		foreach ($modified as $column => $value)
 			$result[$column . '%' . $types[$column]] = $value;
 
@@ -205,7 +249,7 @@ abstract class ActiveRecord extends Record {
 		return parent::getOriginalValues();
 	}
 
-	
+
 	/**
 	 * Gets record's columns default values in array(column => defaultValue)
 	 * @retrun array
@@ -255,10 +299,10 @@ abstract class ActiveRecord extends Record {
 			}
 			return new DibiIndexInfo($info);
 		}
-		
+
 		// detect
 		$primary = Mapper::getPrimaryInfo($this->getTableName(), $this->getConnectionName());
-		
+
 		if ($primary instanceof  DibiIndexInfo)
 			return $primary;
 		else
@@ -319,10 +363,10 @@ abstract class ActiveRecord extends Record {
 	 */
 	protected function getEvents() {
 		throw new NotImplementedException;
-		
+
 		if (static::$events === NULL)
 			static::$events = new Events;
-	
+
 		return static::$events;
 	}
 
@@ -355,11 +399,11 @@ abstract class ActiveRecord extends Record {
 	 */
 	public function isValid() {
 		throw new NotImplementedException;
-		
+
 		try {
 			$this->validate();
 			return TRUE;
-			
+
 		} catch (ValdationException $e) {
 			return FALSE;
 		}
@@ -399,7 +443,7 @@ abstract class ActiveRecord extends Record {
 		// TODO: zohlednit asociace
 		parent::clean();
 	}
-	
+
 
 	/**
 	 * Save the instance and loaded, dirty associations to the repository.
@@ -430,7 +474,7 @@ abstract class ActiveRecord extends Record {
 	 */
 	public static function count($conditions = array(), $limit = NULL, $offset = NULL) {
 		$record = self::create();
-		
+
 		if (!is_array($conditions) && (is_numeric($conditions) || (is_string($conditions) && str_word_count($conditions) == 1)))
 			$conditions = array(Mapper::formatConditions($record->getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from Mapper
 
@@ -464,7 +508,7 @@ abstract class ActiveRecord extends Record {
 				return $record->getMapper()->find(array($conditions), array(), 1)->first(); // self::findOne(array($conditions));
 			else
 				return $record->getMapper()->find(array($conditions)); // self::find(array($conditions));
-			
+
 		} else {
 			return $record->getMapper()->find($conditions, $order, $limit, $offset);
 		}
@@ -480,7 +524,7 @@ abstract class ActiveRecord extends Record {
 		return self::find($conditions, $order, 1)->first();
 	}
 
-	
+
 	/**
 	 * Active Record factory
 	 * @return ActiveRecord
