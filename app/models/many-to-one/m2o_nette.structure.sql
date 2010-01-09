@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS [Programmers] (
+	[id] INTEGER PRIMARY KEY UNIQUE,
+	[name] VARCHAR(64)
+);
+
+CREATE TABLE IF NOT EXISTS [Projects] (
+	[id] INTEGER PRIMARY KEY UNIQUE,
+	[name] VARCHAR(64)
+);
+
+CREATE TABLE IF NOT EXISTS [Tasks] (
+	[id] INTEGER PRIMARY KEY UNIQUE,
+	[name] VARCHAR(64),
+	[programmerId] INTEGER,
+	[projectId] INTEGER
+);

@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS [foods] (
+	[id] INTEGER PRIMARY KEY UNIQUE,
+	[name] VARCHAR(64)
+);
+
+CREATE TABLE IF NOT EXISTS [ingredients] (
+	[id] INTEGER PRIMARY KEY UNIQUE,
+	[name] VARCHAR(64)
+);
+
+CREATE TABLE IF NOT EXISTS [compositions] (
+	[id] INTEGER PRIMARY KEY UNIQUE,
+	[amount] VARCHAR(64),
+	[food_id] INTEGER,
+	[ingredient_id] INTEGER
+);
