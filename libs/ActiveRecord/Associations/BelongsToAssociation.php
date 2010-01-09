@@ -9,7 +9,7 @@
  */
 final class BelongsToAssociation extends Association {
 
-	/** @var DibiColumnInfo|array  referring attribute column info */
+	/** @var string|array  referring attribute name */
 	public $referringAttribute;
 
 	
@@ -18,11 +18,17 @@ final class BelongsToAssociation extends Association {
 	 *
 	 * @param string $local  local object name
 	 * @param string $referenced  referenced object name
-	 * @param string $by  name of attribute in local object referring to referenced object
+	 * @param string $referringAttribute  name of attribute in local object referring to referenced object
 	 */
 	public function __construct($local, $referenced, $referringAttribute = NULL) {
 		parent::__construct(self::BELONGS_TO, $local, $referenced);
-		$this->referringAttribute = $referringAttribute;
+
+		if ($referringAttribute === NULL) {
+			$referenced = new $this->referenced;
+			$this->referringAttribute = $referenced->foreignMask;
+		} else {
+			$this->referringAttribute = $referringAttribute;
+		}
 	}
 
 
@@ -32,12 +38,7 @@ final class BelongsToAssociation extends Association {
 	 * @return ActiveRecord|ActiveRecordCollection|NULL
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
-		if ($this->referringAttribute !== NULL) {
-			$key = $this->referringAttribute;
-		} else {
-			$referenced = new $this->referenced;
-			$key = $referenced->primaryName;
-		}
+		$key = $this->referringAttribute;
 		$class = $this->referenced;
 		return $class::find($record->$key);
 	}

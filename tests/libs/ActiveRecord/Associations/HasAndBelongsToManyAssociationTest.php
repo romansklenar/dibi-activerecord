@@ -77,7 +77,7 @@ class HasAndBelongsToManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals('foods_ingredients', $asc->getIntersectEntity('Ingredient', 'Food', Mapper::getConnection('#rails_style')->getDatabaseInfo()));
 	}
 
-	public function testFailsGetIntersectEntity() {
+	public function testGetIntersectEntityFails() {
 		Inflector::$railsStyle = FALSE;
 		$this->setExpectedException('InvalidStateException');
 		$asc = new HasAndBelongsToManyAssociation('Order', 'Product');
@@ -97,25 +97,6 @@ class HasAndBelongsToManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals('S18_1749', $ref->first()->productCode);
 		$this->assertEquals('S24_3969', $ref->last()->productCode);
 
-/*
-SELECT Products.*
-FROM Orders
-JOIN OrderDetails USING (orderNumber)
-JOIN Products USING (productCode)
-WHERE Orders.orderNumber = 10100
-
-
-SELECT Products.*
-FROM Orders, OrderDetails, Products
-WHERE Orders.orderNumber = 10100
-    AND Orders.orderNumber = OrderDetails.orderNumber
-    AND Products.productCode = OrderDetails.productCode
-
-
-SELECT * FROM Products
-WHERE productCode IN (SELECT productCode FROM OrderDetails WHERE orderNumber = 10100)
-
-*/
 		$product = Product::find('S10_1678');
 		$asc = new HasAndBelongsToManyAssociation('Product', 'Order', 'OrderDetails');
 		$asc = new HasAndBelongsToManyAssociation('Products', 'Orders', 'OrderDetails');
@@ -127,24 +108,42 @@ WHERE productCode IN (SELECT productCode FROM OrderDetails WHERE orderNumber = 1
 		$this->assertEquals('10107', $ref->first()->orderNumber);
 		$this->assertEquals('10417', $ref->last()->orderNumber);
 
-/*
-SELECT Orders.*
-FROM Products
-JOIN OrderDetails USING (productCode)
-JOIN Orders USING (orderNumber)
-WHERE Products.productCode = 'S10_1678'
 
 
-SELECT Orders.*
-FROM Orders, OrderDetails, Products
-WHERE Products.productCode = 'S10_1678'
-    AND Orders.orderNumber = OrderDetails.orderNumber
-    AND Products.productCode = OrderDetails.productCode
+		$post = Post::find(4);
+		$this->assertTrue($post->tags instanceof ActiveRecordCollection);
+		$this->assertEquals(2, count($post->tags));
+		$this->assertTrue(($tag = $post->tags->first()) instanceof Tag);
+		$this->assertEquals(1, $tag->id);
+		$this->assertTrue(($tag = $post->tags->last()) instanceof Tag);
+		$this->assertEquals(3, $tag->id);
+
+		$tag = Tag::find(1);
+		$this->assertTrue($tag->posts instanceof ActiveRecordCollection);
+		$this->assertEquals(5, count($tag->posts));
+		$this->assertTrue(($post = $tag->posts->first()) instanceof Post);
+		$this->assertEquals(1, $post->id);
+		$this->assertTrue(($post = $tag->posts->last()) instanceof Post);
+		$this->assertEquals(7, $post->id);
 
 
-SELECT * FROM Orders
-WHERE orderNumber IN (SELECT orderNumber FROM OrderDetails WHERE productCode = 'S10_1678')
 
-*/
+		Inflector::$railsStyle = TRUE;
+
+		$album = Album::find(3);
+		$this->assertTrue($album->songs instanceof ActiveRecordCollection);
+		$this->assertEquals(6, count($album->songs));
+		$this->assertTrue(($song = $album->songs->first()) instanceof Song);
+		$this->assertEquals(2, $song->id);
+		$this->assertTrue(($song = $album->songs->last()) instanceof Song);
+		$this->assertEquals(8, $song->id);
+
+		$song = Song::find(7);
+		$this->assertTrue($song->albums instanceof ActiveRecordCollection);
+		$this->assertEquals(3, count($song->albums));
+		$this->assertTrue(($album = $song->albums->first()) instanceof Album);
+		$this->assertEquals(1, $album->id);
+		$this->assertTrue(($album = $song->albums->last()) instanceof Album);
+		$this->assertEquals(3, $album->id);
 	}
 }
