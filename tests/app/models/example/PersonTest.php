@@ -5,7 +5,7 @@ require_once __DIR__ . '/BaseTestCase.php';
 /**
  * Test class for Person.
  */
-class PersonTest extends BaseTestCase {
+class PersonTest extends ExampleBaseTestCase {
 
 	/** @var Person */
 	public $record;
@@ -13,7 +13,7 @@ class PersonTest extends BaseTestCase {
 
 	public function setUp() {
 		parent::setUp();
-		$this->record = new Person();
+		$this->record = new Person;
 	}
 
 	public function testGetTableName() {

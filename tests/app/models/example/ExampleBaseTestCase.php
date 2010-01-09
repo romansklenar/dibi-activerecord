@@ -5,7 +5,7 @@ require_once 'PHPUnit/Framework.php';
 /**
  * Common test class for classes in example.
  */
-abstract class BaseTestCase extends PHPUnit_Framework_TestCase {
+abstract class ExampleBaseTestCase extends PHPUnit_Framework_TestCase {
 
 	/** @var array  database configuration settings */
 	protected $config = array(

@@ -5,7 +5,7 @@ require_once __DIR__ . '/BaseTestCase.php';
 /**
  * Test class for Firm.
  */
-class FirmTest extends BaseTestCase {
+class FirmTest extends ExampleBaseTestCase {
 
 	/** @var Firm */
 	public $record;
