@@ -63,7 +63,7 @@ class DataStorage extends Object implements ArrayAccess {
 	 * @return bool
 	 */
 	public function __isset($name) {
-		return array_key_exists($name, $this->original) || array_key_exists($name, $this->modified) ? TRUE : parent::__isset($name);
+		return array_key_exists($name, $this->original) ? TRUE : parent::__isset($name);
 	}
 
 
