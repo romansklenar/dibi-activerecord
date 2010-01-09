@@ -280,8 +280,9 @@ abstract class ActiveRecord extends Record {
 	 * Gets record's assotiations.
 	 * @return array
 	 */
-	protected function getAssotiations() {
-		return Association::getAssotiations($this->getReflection(), $this->getClass());
+	public function getAssotiations($type = NULL) {
+		$asc = Association::getAssotiations($this->getReflection(), $this->getClass());
+		return $type === NULL ? $asc : (isset($asc[$type]) ? $asc[$type] : array());
 	}
 
 
@@ -430,7 +431,7 @@ abstract class ActiveRecord extends Record {
 	public static function count($conditions = array(), $limit = NULL, $offset = NULL) {
 		$record = self::create();
 		
-		if (!is_array($conditions) && !is_string($conditions))
+		if (!is_array($conditions) && (is_numeric($conditions) || (is_string($conditions) && str_word_count($conditions) == 1)))
 			$conditions = array(Mapper::formatConditions($record->getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from Mapper
 
 		return $record->getMapper()->count($conditions, $limit, $offset);
@@ -455,12 +456,14 @@ abstract class ActiveRecord extends Record {
 	public static function find($conditions = array(), $order = array(), $limit = NULL, $offset = NULL) {
 		$record = self::create();
 
-		if (!is_array($conditions) && !is_string($conditions)) {
+		if (!is_array($conditions) && (is_numeric($conditions) || (is_string($conditions) && str_word_count($conditions) == 1))) {
 			$params = func_get_args();
 			$conditions = Mapper::formatConditions($record->getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from Mapper
-			return (count($params) == 1) ? 
-				self::findOne(array($conditions)) :
-				self::find(array($conditions));
+
+			if (count($params) == 1)
+				return $record->getMapper()->find(array($conditions), array(), 1)->first(); // self::findOne(array($conditions));
+			else
+				return $record->getMapper()->find(array($conditions)); // self::find(array($conditions));
 			
 		} else {
 			return $record->getMapper()->find($conditions, $order, $limit, $offset);
