@@ -15,14 +15,8 @@ class Mapper extends Object implements IMapper {
 
 	/** @var string */
 	private $collectionClass = 'ActiveRecordCollection';
-	
-	/** @var array of DibiConnection */
-	private static $connections = array();
 
-	const DEFAULT_CONNECTION = 'default';
-
-	/** @var array  record meta info */
-	//private $meta = array();
+	const DEFAULT_CONNECTION = '#AR';
 
 
 	/**
@@ -32,14 +26,6 @@ class Mapper extends Object implements IMapper {
 	public function __construct(ActiveRecord $record) {
 		$this->record = clone $record;
 	}
-/*
-	public function __construct($class, $table, $primary, $connection) {
-		$this->meta['class'] = $class;
-		$this->meta['table'] = $table;
-		$this->meta['primary'] = $primary;
-		$this->meta['connection'] = $table;
-	}
-*/
 
 
 
@@ -55,16 +41,6 @@ class Mapper extends Object implements IMapper {
 		return $this->record->getClass();
 	}
 
-/*
-	public function getTable() {
-		return $this->record->getTableName();
-	}
-
-
-	public function getPrimary() {
-		return $this->record->getPrimaryName();
-	}
-*/
 
 	/**
 	 * Gets record column types in array(column => type)
@@ -75,45 +51,54 @@ class Mapper extends Object implements IMapper {
 	}
 
 
-	
 	/**
-	 * Adds database connection.
-	 * @param  string $connection  connection object to be stored
-	 * @param  string $name        connection name
-	 * @return void
-	 */
-	public static function addConnection(DibiConnection $connection, $name = self::DEFAULT_CONNECTION) {
-		if (isset(self::$connections[$name]))
-			throw new InvalidArgumentException("Connection named '$name' already exists, please choose another name.");
-		
-		self::$connections[$name] = $connection;
-	}
-
-
-	/**
-	 * Gets database connection object.
-	 * @param  string $name  connection name
+	 * Creates a new DibiConnection object and connects it to specified database.
+	 * @param  array|string|ArrayObject $config  connection parameters
+	 * @param  string $name       connection name
 	 * @return DibiConnection
+	 * @throws DibiException
 	 */
-	public static function getConnection($name = self::DEFAULT_CONNECTION) {
-		if (!isset(self::$connections[$name]))
-			throw new InvalidArgumentException("Connection named '$name' does not exist.");
-
-		return self::$connections[$name];
+	public static function connect($config = array(), $name = self::DEFAULT_CONNECTION) {
+		return dibi::connect($config, $name);
 	}
 
 
+
 	/**
-	 * Disconnects and remove connection from mapper.
+	 * Disconnects from database (destroys DibiConnection object).
 	 * @param  string $name  connection name
 	 * @return void
 	 */
 	public static function disconnect($name = self::DEFAULT_CONNECTION) {
-		self::getConnection($name)->disconnect();
-		unset(self::$connections[$name]);
+		$connection = self::getConnection($name);
+		$connection->disconnect();
+		unset($connection);
 	}
 
-	
+
+
+	/**
+	 * Returns TRUE when connection was established.
+	 * @param  string $name  connection name
+	 * @return bool
+	 */
+	public static function isConnected($name = self::DEFAULT_CONNECTION) {
+		return self::getConnection($name)->isConnected();
+	}
+
+
+
+	/**
+	 * Retrieve active connection.
+	 * @param  string $name   connection registy name
+	 * @return DibiConnection
+	 * @throws DibiException
+	 */
+	public static function getConnection($name = self::DEFAULT_CONNECTION) {
+		return dibi::getConnection($name);
+	}
+
+
 
 	/********************* IMapper interface *********************/
 

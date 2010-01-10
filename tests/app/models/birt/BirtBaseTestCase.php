@@ -15,10 +15,9 @@ abstract class BirtBaseTestCase extends PHPUnit_Framework_TestCase {
 
 
 	public function setUp() {
-		$connection = new DibiConnection($this->config);
+		$connection = Mapper::connect($this->config);
 		$connection->loadFile(APP_DIR . '/models/birt.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/birt.data.sql');
-		Mapper::addConnection($connection);
 		RecordHelper::cleanCache();
 	}
 

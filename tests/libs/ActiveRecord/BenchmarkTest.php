@@ -16,10 +16,9 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 	public function testBenchmarkActiveRecord() {
 
 		Debug::$showLocation = FALSE;
-		$connection = new DibiConnection($this->config);
+		$connection = Mapper::connect($this->config);
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/consumers.data.sql');
-		Mapper::addConnection($connection);
 		RecordHelper::cleanCache();
 
 		// kalibrace
@@ -138,10 +137,9 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 	public function testGettingOneRecord() {
 
 		Debug::$showLocation = FALSE;
-		$connection = new DibiConnection($this->config);
+		$connection = Mapper::connect($this->config);
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/consumers.data.sql');
-		Mapper::addConnection($connection);
 		RecordHelper::cleanCache();
 
 		// kalibrace

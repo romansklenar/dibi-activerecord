@@ -54,13 +54,11 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testGetConnection() {
-		$connection = new DibiConnection($this->config);
+		$connection = Mapper::connect($this->config, 'connection #1');
 		$connection->loadFile(APP_DIR . '/models/birt.structure.sql');
-		Mapper::addConnection($connection, 'connection #1');
 
-		$connection = new DibiConnection($this->config);
+		$connection = Mapper::connect($this->config, 'connection #2');
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');
-		Mapper::addConnection($connection, 'connection #2');
 
 		$customer = MockCustomer::create();
 		$consumer = MockConsumer::create();

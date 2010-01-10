@@ -15,10 +15,9 @@ abstract class ExampleBaseTestCase extends PHPUnit_Framework_TestCase {
 
 
 	public function setUp() {
-		$connection = new DibiConnection($this->config);
+		$connection = Mapper::connect($this->config);
 		$connection->loadFile(APP_DIR . '/models/example/db.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/example/db.data.sql');
-		Mapper::addConnection($connection);
 
 		RecordHelper::cleanCache();
 	}
