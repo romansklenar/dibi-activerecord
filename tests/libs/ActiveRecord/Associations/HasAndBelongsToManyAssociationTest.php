@@ -45,43 +45,50 @@ class HasAndBelongsToManyAssociationTest extends ActiveRecordDatabaseTestCase {
 	public function testGetIntersectEntityByGivenManually() {
 		Inflector::$railsStyle = FALSE;
 		$asc = new HasAndBelongsToManyAssociation('Order', 'Product', 'OrderDetails');
-		$this->assertEquals('OrderDetails', $asc->getIntersectEntity('Order', 'Product', Mapper::getConnection()->getDatabaseInfo()));
+		$this->assertEquals('OrderDetails', $asc->getIntersectEntity(Mapper::getConnection()->getDatabaseInfo()));
 
 		$asc = new HasAndBelongsToManyAssociation('Product', 'Order', 'OrderDetails');
-		$this->assertEquals('OrderDetails', $asc->getIntersectEntity('Product', 'Order', Mapper::getConnection()->getDatabaseInfo()));
+		$this->assertEquals('OrderDetails', $asc->getIntersectEntity(Mapper::getConnection()->getDatabaseInfo()));
+
+		
+		$asc = new HasAndBelongsToManyAssociation('Posts', 'Tags', 'PostsTags');
+		$this->assertEquals('PostsTags', $asc->getIntersectEntity(Mapper::getConnection('#nette_style')->getDatabaseInfo()));
+
+		$asc = new HasAndBelongsToManyAssociation('Tag', 'Post', 'PostsTags');
+		$this->assertEquals('PostsTags', $asc->getIntersectEntity(Mapper::getConnection('#nette_style')->getDatabaseInfo()));
+
 
 		
 		Inflector::$railsStyle = TRUE;
-		$asc = new HasAndBelongsToManyAssociation('Food', 'Ingredient', 'food_ingredients');
-		$this->assertEquals('food_ingredients', $asc->getIntersectEntity('Food', 'Ingredient', Mapper::getConnection('#rails_style')->getDatabaseInfo()));
+		$asc = new HasAndBelongsToManyAssociation('Album', 'Song', 'albums_songs');
+		$this->assertEquals('albums_songs', $asc->getIntersectEntity(Mapper::getConnection('#rails_style')->getDatabaseInfo()));
 
-		$asc = new HasAndBelongsToManyAssociation('Ingredient', 'Food', 'food_ingredients');
-		$this->assertEquals('food_ingredients', $asc->getIntersectEntity('Ingredient', 'Food', Mapper::getConnection('#rails_style')->getDatabaseInfo()));
-
+		$asc = new HasAndBelongsToManyAssociation('Songs', 'Album', 'albums_songs');
+		$this->assertEquals('albums_songs', $asc->getIntersectEntity(Mapper::getConnection('#rails_style')->getDatabaseInfo()));
 	}
 
 	public function testGetIntersectEntityByAutodetect() {
 		Inflector::$railsStyle = FALSE;
-		$asc = new HasAndBelongsToManyAssociation('Programmer', 'Project');
-		$this->assertEquals('ProjectsProgrammers', $asc->getIntersectEntity('Programmer', 'Project', Mapper::getConnection('#nette_style')->getDatabaseInfo()));
+		$asc = new HasAndBelongsToManyAssociation('Posts', 'Tags');
+		$this->assertEquals('PostsTags', $asc->getIntersectEntity(Mapper::getConnection('#nette_style')->getDatabaseInfo()));
 
-		$asc = new HasAndBelongsToManyAssociation('Project', 'Programmer');
-		$this->assertEquals('ProjectsProgrammers', $asc->getIntersectEntity('Project', 'Programmer', Mapper::getConnection('#nette_style')->getDatabaseInfo()));
+		$asc = new HasAndBelongsToManyAssociation('Tag', 'Post');
+		$this->assertEquals('PostsTags', $asc->getIntersectEntity(Mapper::getConnection('#nette_style')->getDatabaseInfo()));
 
 
 		Inflector::$railsStyle = TRUE;
-		$asc = new HasAndBelongsToManyAssociation('Food', 'Ingredient');
-		$this->assertEquals('foods_ingredients', $asc->getIntersectEntity('Food', 'Ingredient', Mapper::getConnection('#rails_style')->getDatabaseInfo()));
+		$asc = new HasAndBelongsToManyAssociation('Album', 'Song');
+		$this->assertEquals('albums_songs', $asc->getIntersectEntity(Mapper::getConnection('#rails_style')->getDatabaseInfo()));
 
-		$asc = new HasAndBelongsToManyAssociation('Ingredient', 'Food');
-		$this->assertEquals('foods_ingredients', $asc->getIntersectEntity('Ingredient', 'Food', Mapper::getConnection('#rails_style')->getDatabaseInfo()));
+		$asc = new HasAndBelongsToManyAssociation('Songs', 'Album');
+		$this->assertEquals('albums_songs', $asc->getIntersectEntity(Mapper::getConnection('#rails_style')->getDatabaseInfo()));
 	}
 
 	public function testGetIntersectEntityFails() {
 		Inflector::$railsStyle = FALSE;
 		$this->setExpectedException('InvalidStateException');
 		$asc = new HasAndBelongsToManyAssociation('Order', 'Product');
-		$asc->getIntersectEntity('Order', 'Product', Mapper::getConnection()->getDatabaseInfo());
+		$asc->getIntersectEntity(Mapper::getConnection()->getDatabaseInfo());
 	}
 
 	public function testRetreiveReferenced() {

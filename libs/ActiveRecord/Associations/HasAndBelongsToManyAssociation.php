@@ -34,7 +34,7 @@ class HasAndBelongsToManyAssociation extends Association {
 	 */
 	public function retreiveReferenced(ActiveRecord $local) {
 		$referenced = new $this->referenced;
-		$entity = $this->getIntersectEntity($local->tableName, $referenced->tableName, $local->getConnection()->getDatabaseInfo());
+		$entity = $this->getIntersectEntity($local->getConnection()->getDatabaseInfo());
 		$sub = $local->getConnection()->dataSource($entity)->select($referenced->foreignMask)->where('%and', $local->foreignCondition);
 		$ds = $referenced->getDataSource()->where('%n IN (%sql)', $referenced->primaryName, (string) $sub);
 		return new ActiveRecordCollection($ds, $referenced->getMapper());
@@ -44,16 +44,14 @@ class HasAndBelongsToManyAssociation extends Association {
 	/**
 	 * Intersect entity name lazy getter.
 	 * 
-	 * @param string $local
-	 * @param string $referenced
 	 * @param DibiDatabaseInfo $database
 	 * @return string  intersect entity name
 	 */
-	public function getIntersectEntity($local, $referenced, DibiDatabaseInfo $database) {
+	public function getIntersectEntity(DibiDatabaseInfo $database) {
 		if ($this->intersectEntity == NULL) {
-			if ($database->hasTable($name = Inflector::intersectEntity($local, $referenced)))
+			if ($database->hasTable($name = Inflector::intersectEntity($this->local, $this->referenced)))
 				return $this->intersectEntity = $name;
-			else if ($database->hasTable($alternate = Inflector::intersectEntity($referenced, $local)))
+			else if ($database->hasTable($alternate = Inflector::intersectEntity($this->referenced, $this->local)))
 				return $this->intersectEntity = $alternate;
 			else
 				throw new InvalidStateException("Intersect entity '$name' or '$alternate' of many-to-many relation not found in a database $database->name");
