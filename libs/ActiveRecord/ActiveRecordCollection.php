@@ -13,8 +13,8 @@
  */
 class ActiveRecordCollection extends ArrayList {
 
-	/** @var Mapper */
-	private $mapper;
+	/** @var Record */
+	private $record;
 
 	/** @var DibiDataSource */
 	private $ds;
@@ -31,13 +31,13 @@ class ActiveRecordCollection extends ArrayList {
 
 	/**
 	 * @param DibiDataSource $ds
-	 * @param Mapper         $mapper
+	 * @param Record         $record
 	 */
-	public function __construct(DibiDataSource $ds, Mapper $mapper) {
+	public function __construct(DibiDataSource $ds, Record $record) {
 		$this->ds = $ds;
-		$this->mapper = $mapper;
+		$this->record = $record;
 
-		parent::__construct(NULL, $mapper->getRowClass());
+		parent::__construct(NULL, get_class($record));
 
 		if (self::$loadImmediately)
 			$this->load();
@@ -50,8 +50,8 @@ class ActiveRecordCollection extends ArrayList {
 	 */
 	public function load() {
 		$res = $this->ds->getResult();
-		$res->setRowClass($this->mapper->getRowClass()); // $this->getItemType()
-		$res->setTypes($this->mapper->getTypes()); // $res->detectTypes()
+		$res->setRowClass($this->getItemType());
+		$res->detectTypes();
 
 		$this->import($res->fetchAll());
 		//$this->loaded = TRUE;
@@ -100,10 +100,10 @@ class ActiveRecordCollection extends ArrayList {
 	 * @param  mixed      conditions
 	 * @return ActiveRecordCollection  provides a fluent interface
 	 */
-	public function filter($conditions) {
-		if (is_array($conditions))
-			foreach ($conditions as $condition)
-				$this->ds->where($condition);
+	public function filter($cond) {
+		if (is_array($cond))
+			foreach ($cond as $c)
+				$this->ds->where($c);
 		else
 			$this->ds->where(func_get_args());
 

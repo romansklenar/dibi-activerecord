@@ -193,11 +193,11 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	public function getPrimaryCondition() {
-		$condition = array();
+		$cond = array();
 		foreach	($this->getPrimaryInfo()->columns as $column)
-			$condition[$column->name . '%' . $column->type] = $this->originalValues[$column->name]; // $this->getStorage()->original[$column->name];
+			$cond[$column->name . '%' . $column->type] = $this->originalValues[$column->name]; // $this->getStorage()->original[$column->name];
 
-		return $condition;
+		return $cond;
 	}
 
 
@@ -210,9 +210,9 @@ abstract class ActiveRecord extends Record {
 			throw new InvalidStateException("You cannot use this format of conditions when table has primary key composed from more then one column.");
 
 		$column = $this->getPrimaryInfo()->columns[0];
-		$condition = array();
-		$condition[$this->getForeignMask() . '%' . $column->type] = $this->getPrimaryValue(); // $this->getStorage()->original[$column->name];
-		return $condition;
+		$cond = array();
+		$cond[$this->getForeignMask() . '%' . $column->type] = $this->getPrimaryValue(); // $this->getStorage()->original[$column->name];
+		return $cond;
 	}
 
 
@@ -488,22 +488,22 @@ abstract class ActiveRecord extends Record {
 
 	/**
 	 * Counter.
-	 * @param array $conditions
+	 * @param array $cond
 	 * @return int
 	 */
-	public static function count($conditions = array(), $limit = NULL, $offset = NULL) {
+	public static function count($cond = array(), $limit = NULL, $offset = NULL) {
 		$record = self::create();
 
-		if (!is_array($conditions) && (is_numeric($conditions) || (is_string($conditions) && str_word_count($conditions) == 1)))
-			$conditions = array(RecordHelper::formatConditions($record->getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from Mapper
+		if (!is_array($cond) && (is_numeric($cond) || (is_string($cond) && str_word_count($cond) == 1)))
+			$cond = array(RecordHelper::formatConditions($record->getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from Mapper
 
-		return $record->getMapper()->count($conditions, $limit, $offset);
+		return $record->getMapper()->count($cond, $limit, $offset);
 	}
 
 
 	/**
 	 * Django-like alias to find().
-	 * @param array $conditions
+	 * @param array $cond
 	 * @return ActiveRecordCollection
 	 */
 	public static function objects() {
@@ -513,34 +513,34 @@ abstract class ActiveRecord extends Record {
 
 	/**
 	 * Finder.
-	 * @param array $conditions
+	 * @param array $cond
 	 * @return ActiveRecordCollection|NULL
 	 */
-	public static function findAll($conditions = array(), $order = array(), $limit = NULL, $offset = NULL) {
+	public static function findAll($cond = array(), $order = array(), $limit = NULL, $offset = NULL) {
 		$record = self::create();
-		return $record->getMapper()->find($conditions, $order, $limit, $offset);
+		return $record->getMapper()->find($cond, $order, $limit, $offset);
 	}
 
 
 	/**
 	 * Finder.
-	 * @param array $conditions
+	 * @param array $cond
 	 * @return ActiveRecord|ActiveRecordCollection
 	 */
-	public static function find($conditions = array(), $order = array()) {
+	public static function find($cond = array(), $order = array()) {
 		$record = self::create();
 
-		if (!is_array($conditions) && (is_numeric($conditions) || (is_string($conditions) && str_word_count($conditions) == 1))) {
+		if (!is_array($cond) && (is_numeric($cond) || (is_string($cond) && str_word_count($cond) == 1))) {
 			$params = func_get_args();
-			$conditions = RecordHelper::formatConditions($record->getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from Mapper
+			$cond = RecordHelper::formatConditions($record->getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from Mapper
 
 			if (count($params) == 1)
-				return $record->getMapper()->find(array($conditions), array(), 1)->first();
+				return $record->getMapper()->find(array($cond), array(), 1)->first();
 			else
-				return $record->getMapper()->find(array($conditions));
+				return $record->getMapper()->find(array($cond));
 
 		} else {
-			return $record->getMapper()->find($conditions, $order, 1)->first();
+			return $record->getMapper()->find($cond, $order, 1)->first();
 		}
 	}
 

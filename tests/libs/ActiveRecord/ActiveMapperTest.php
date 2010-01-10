@@ -4,14 +4,11 @@ require_once __DIR__ . '/ActiveRecordDatabaseTestCase.php';
 
 
 /**
- * Test class for Mapper.
+ * Test class for ActiveMapper.
  */
-class MapperTest extends ActiveRecordDatabaseTestCase {
+class ActiveMapperTest extends ActiveRecordDatabaseTestCase {
 
-	/** @var Mapper */
-	protected $object;
-
-	public function testAddConnection() {
+	public function testConnect() {
 		$this->markTestSkipped();
 	}
 
@@ -19,141 +16,98 @@ class MapperTest extends ActiveRecordDatabaseTestCase {
 		$this->markTestSkipped();
 	}
 
+	public function testIsConnected() {
+		$this->markTestSkipped();
+	}
+
 	public function testDisconnect() {
 		$this->markTestSkipped();
 	}
 
-	public function testFind() {
-		$mapper = new Mapper(new Office);
 
-		$offices = $mapper->find();
-		$this->assertType('object', $offices);
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
 
-		$office = $mapper->find(1);
-		$this->assertType('object', $office);
-		$this->assertTrue($office instanceof Office);
+	/********************* IMapper interface test *********************/
 
-		$offices = $mapper->find(3,4,5);
-		$this->assertType('object', $offices);
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertEquals(3, count($offices));
-		$this->assertTrue($offices->first() instanceof Office);
 
-		$offices = $mapper->find(1,2,3,4,5);
-		$this->assertType('object', $offices);
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertEquals(5, count($offices));
-		$this->assertTrue($offices->first() instanceof Office);
-		
-		$offices = $mapper->find('[position] < 6', '[position] DESC');
-		$this->assertType('object', $offices);
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertEquals(5, count($offices));
-		$this->assertTrue($offices->first() instanceof Office);
-		$this->assertEquals(5, $offices->first()->officeCode);
-
-		$offices = $mapper->find('[position] > 2 AND [position] < 6', '[position] DESC, [officeCode] ASC');
-		$this->assertType('object', $offices);
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertEquals(3, count($offices));
-		$this->assertTrue($offices->first() instanceof Office);
-		$this->assertEquals(5, $offices->first()->officeCode);
-
-		$offices = $mapper->find(
-			array('[position] > 2', '[position] < 6'),
-			array('position' => 'DESC', 'officeCode' => 'ASC')
-		);
-		$this->assertType('object', $offices);
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertEquals(3, count($offices));
-		$this->assertTrue($offices->first() instanceof Office);
-		$this->assertEquals(5, $offices->first()->officeCode);
-
-		$offices = $mapper->find(
-			array(
-				array('%n > %i', 'position', 2),
-				array('%n < %i', 'position', 6),
-			),
-			array(
-				'position' => 'DESC',
-				'officeCode' => 'ASC',
-			)
-		);
-		$this->assertType('object', $offices);
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertEquals(3, count($offices));
-		$this->assertTrue($offices->first() instanceof Office);
-		$this->assertEquals(5, $offices->first()->officeCode);
-
-		$offices = $mapper->find('[officeCode] < 6', '[officeCode] DESC', 2);
-		$this->assertType('object', $offices);
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertEquals(2, count($offices));
-		$this->assertTrue($offices->first() instanceof Office);
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(4, $offices->last()->officeCode);
-
-		$offices = $mapper->find('[officeCode] < 6', '[officeCode] DESC', 2, 2);
-		$this->assertType('object', $offices);
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertEquals(2, count($offices));
-		$this->assertTrue($offices->first() instanceof Office);
-		$this->assertEquals(3, $offices->first()->officeCode);
-		$this->assertEquals(2, $offices->last()->officeCode);
+	public function testFindFailsInvalidType() {
+		$this->setExpectedException('InvalidArgumentException');
+		ActiveMapper::find('NonExistingClass');
 	}
 
-	public function testCount() {
-		$mapper = new Mapper(new Office);
+	public function testFind() {
+		ActiveRecordCollection::$loadImmediately = TRUE;
+		
+		$offices = ActiveMapper::find('Office');
+		$this->assertTrue($offices instanceof ActiveRecordCollection);
+		$this->assertContains('SELECT * FROM [Offices]', strip(dibi::$sql));
+		$this->assertEquals(8, $offices->count());
 
-		$this->assertEquals(8, $mapper->count());
-		$this->assertEquals(1, $mapper->count(1));
-		//$this->assertEquals(5, $mapper->count(1,2,3,4,5)); // is it needed?
-		$this->assertEquals(5, $mapper->count('[position] < 6'));
-		$this->assertEquals(3, $mapper->count('[position] > 2 AND [position] < 6'));
-		$this->assertEquals(3, $mapper->count(array('[position] > 2', '[position] < 6')));
-		$this->assertEquals(2, $mapper->count('[officeCode] < 6', 2));
-		$this->assertEquals(2, $mapper->count('[officeCode] < 6', 2, 2));
-		$this->assertEquals(3, $mapper->count(
-			array(
-				array('%n > %i', 'position', 2),
-				array('%n < %i', 'position', 6),
-			)
-		));
+		$offices = ActiveMapper::find(new Office);
+		$this->assertTrue($offices instanceof ActiveRecordCollection);
+		$this->assertContains('SELECT * FROM [Offices]', strip(dibi::$sql));
+		$this->assertEquals(8, $offices->count());
+
+		$offices = ActiveMapper::find('Office', array('where' => '[officeCode] > 4'));
+		$this->assertTrue($offices instanceof ActiveRecordCollection);
+		$this->assertContains('WHERE ([officeCode] > 4)', strip(dibi::$sql));
+
+		$offices = ActiveMapper::find('Office', array('where' => array(array('%n > %i', 'officeCode', 4))));
+		$this->assertTrue($offices instanceof ActiveRecordCollection);
+		$this->assertContains('WHERE', strip(dibi::$sql));
+		$this->assertContains('[officeCode] > 4', strip(dibi::$sql));
+
+		$offices = ActiveMapper::find('Office', array('where' => array("[addressLine1] = '25 Old Broad Street'", "[city] = 'London'")));
+		$this->assertTrue($offices instanceof ActiveRecordCollection);
+		$this->assertContains("WHERE (([addressLine1] = '25 Old Broad Street') AND ([city] = 'London'))", strip(dibi::$sql));
+
+		# not implemented: feature of DibiFluent
+		$offices = ActiveMapper::find('Office', array('where' => array('addressLine1' => '25 Old Broad Street', 'city' => 'London')));
+		$this->assertTrue($offices instanceof ActiveRecordCollection);
+		$this->assertContains("WHERE ([addressLine1] = '25 Old Broad Street' AND [city] = 'London')", strip(dibi::$sql));
+
+		$offices = ActiveMapper::find('Office', array('order' => 'city ASC'));
+		$this->assertTrue($offices instanceof ActiveRecordCollection);
+		$this->assertContains('ORDER BY [city] ASC', strip(dibi::$sql));
+
+		$offices = ActiveMapper::find('Office', array('order' => 'city ASC, country DESC'));
+		$this->assertTrue($offices instanceof ActiveRecordCollection);
+		$this->assertContains('ORDER BY [city] ASC, [country] DESC', strip(dibi::$sql));
+
+		$offices = ActiveMapper::find('Office', array('order' => array('city' => dibi::ASC, 'country' => dibi::DESC)));
+		$this->assertTrue($offices instanceof ActiveRecordCollection);
+		$this->assertContains('ORDER BY [city] ASC, [country] DESC', strip(dibi::$sql));
+
+		$offices = ActiveMapper::find('Office', array('limit' => 3));
+		$this->assertTrue($offices instanceof ActiveRecordCollection);
+		$this->assertContains('LIMIT 3', strip(dibi::$sql));
+		$this->assertEquals(3, $offices->count());
+
+		$offices = ActiveMapper::find('Office', array('limit' => 3, 'offset' => 4));
+		$this->assertTrue($offices instanceof ActiveRecordCollection);
+		$this->assertContains('LIMIT 3 OFFSET 4', strip(dibi::$sql));
+		$this->assertEquals(3, $offices->count());
+	}
+
+	public function testSave() {
+		$this->markTestSkipped();
 	}
 
 	public function testUpdate() {
-		$mapper = new Mapper(new Office);
+		ActiveRecordCollection::$loadImmediately = TRUE;
 
-		$office = $mapper->find(8);
+		$office = ActiveMapper::find('Office', array('where' => '[officeCode] = 8'), 'first');
+		$this->assertTrue($office instanceof Office);
 		$office->officeCode = 555;
-		$mapper->update($office);
+		ActiveMapper::update($office);
 		$this->assertEquals("UPDATE [Offices] SET [officeCode]='555' WHERE ([officeCode] = '8')", strip(dibi::$sql));
-		$this->assertEquals(1, $mapper->count(555));
 
-		$office = new Office(array(
-			'officeCode' => 8,
-			'city' => 'Ostrava',
-			'phone' => '+420 595 846 854',
-			'addressLine1' => 'Ostravska 69',
-			'country' => 'NA',
-			'state' => 'Czech Republic',
-			'postalCode' => '708 00',
-			'territory' => 'NA',
-		), Office::STATE_EXISTING);
-
-		$office->officeCode = 555;
-		$mapper->update($office);
-		$this->assertEquals("UPDATE [Offices] SET [officeCode]='555' WHERE ([officeCode] = '8')", strip(dibi::$sql));
-		$this->assertEquals(1, $mapper->count(555));
-
-		$this->setExpectedException('InvalidStateException');
+		$this->setExpectedException('LogicException');
 		$office = new Office;
-		$mapper->update($office); // throw InvalidStateException when updating non existing record?
+		ActiveMapper::update($office);
 	}
 
 	public function testInsert() {
-		$mapper = new Mapper(new Office);
+		ActiveRecordCollection::$loadImmediately = TRUE;
 		
 		$office = new Office(array(
 			'officeCode' => 9,
@@ -165,34 +119,18 @@ class MapperTest extends ActiveRecordDatabaseTestCase {
 			'postalCode' => '708 00',
 			'territory' => 'NA',
 		));
-
-		$mapper->insert($office);
+		ActiveMapper::insert($office);
 		$this->assertEquals("INSERT INTO [Offices] ([officeCode], [city], [phone], [addressLine1], [addressLine2], [state], [country], [postalCode], [territory], [position]) VALUES ('9', 'Ostrava', '+420 595 846 854', 'Ostravska 69', NULL, 'Czech Republic', 'NA', '708 00', 'NA', 0)", strip(dibi::$sql));
-		$this->assertEquals(1, $mapper->count(9));
 
-		$office = new Office(array(
-			'officeCode' => 10,
-			'city' => 'Ostrava',
-			'phone' => '+420 595 846 854',
-			'addressLine1' => 'Ostravska 69',
-			'country' => 'NA',
-			'state' => 'Czech Republic',
-			'postalCode' => '708 00',
-			'territory' => 'NA',
-		));
 
-		$mapper->insert($office);
-		$this->assertEquals("INSERT INTO [Offices] ([officeCode], [city], [phone], [addressLine1], [addressLine2], [state], [country], [postalCode], [territory], [position]) VALUES ('10', 'Ostrava', '+420 595 846 854', 'Ostravska 69', NULL, 'Czech Republic', 'NA', '708 00', 'NA', 0)", strip(dibi::$sql));
-		$this->assertEquals(1, $mapper->count(10));
-
-		$this->setExpectedException('InvalidStateException');
-		$office = $mapper->find(8);
-		$mapper->insert($office); // throw InvalidStateException when inserting existing record?
+		$this->setExpectedException('LogicException');
+		$office = ActiveMapper::find('Office', array('where' => '[officeCode] = 8'), 'first');
+		ActiveMapper::insert($office);
 	}
 
 	public function testInsertAutoincrement() {
-		$mapper = new Mapper(new Employee);
-
+		ActiveRecordCollection::$loadImmediately = TRUE;
+		
 		$employee = new Employee(array(
 			'lastName' => 'Murphy',
 			'firstName' => 'Diane',
@@ -203,45 +141,90 @@ class MapperTest extends ActiveRecordDatabaseTestCase {
 			'jobTitle' => 'President'
 		));
 
-		$last = $mapper->insert($employee);
-		$this->assertEquals("INSERT INTO [Employees] ([lastName], [firstName], [extension], [email], [officeCode], [reportsTo], [jobTitle]) VALUES ('Murphy', 'Diane', 'x5800', 'dmurphy@classicmodelcars.com', '8', NULL, 'President')", strip(dibi::$sql));
-		$this->assertEquals(1, $mapper->count($last));
+		$inserted = ActiveMapper::insert($employee);
+		$this->assertEquals($inserted, 1703);
+		$this->assertContains('INSERT INTO [Employees]', strip(dibi::$sql));
+		$this->assertNotContains('employeeNumber', strip(dibi::$sql));
+	}
+
+	public function testInsertComposedPrimaryKey() {
+		$payment = new Payment(array(
+			'customerNumber' => 103,
+			'checkNumber' => 'HF336336',
+			'paymentDate' => new DateTime('2010-01-01 12:00:00'),
+			'amount' => 15.5,
+		), ActiveRecord::STATE_NEW);
+
+		$inserted = ActiveMapper::insert($payment);
+		$this->assertTrue((bool) $inserted);
+		$this->assertEquals("INSERT INTO [Payments] ([customerNumber], [checkNumber], [paymentDate], [amount]) VALUES (103, 'HF336336', '2010-01-01 12:00:00', 15.5)", strip(dibi::$sql));
 	}
 
 	public function testDelete() {
-		$mapper = new Mapper(new Office);
-		$office = $mapper->find(8);
-		$deleted = $mapper->delete($office);
-
+		$author = ActiveMapper::find('Author', array('where' => '[id] = 1'), 'first');
+		$deleted = ActiveMapper::delete($author);
 		$this->assertEquals(1, $deleted);
-		$this->assertEquals("DELETE FROM [Offices] WHERE ([officeCode] = '8')", strip(dibi::$sql));
-		$this->assertEquals(0, $mapper->count(8));
+		$this->assertEquals("DELETE FROM [Authors] WHERE ([id] = 1)", strip(dibi::$sql));
+	}
+
+	public function testDeleteComposedPrimaryKey() {
+		$payment = ActiveMapper::find('Payment', array('where' => array("[customerNumber] = 103", "[checkNumber] = 'HQ336336'")), 'first');
+		$deleted = ActiveMapper::delete($payment);
+		$this->assertEquals(1, $deleted);
+		$this->assertEquals("DELETE FROM [Payments] WHERE ([customerNumber] = 103) AND ([checkNumber] = 'HQ336336')", strip(dibi::$sql));
 	}
 
 
-	public function testMagicFind() {
-		$mapper = new Mapper(new Office);
-		
-		$offices = $mapper->findByCity('San Francisco');
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertEquals(1, count($offices));
-		$this->assertEquals(1, $offices[0]->officeCode);
 
-		$office = $mapper->findOneByCity('San Francisco');
-		$this->assertTrue($office instanceof Office);
-		$this->assertEquals(1, $office->officeCode);
+	/********************* testování práce s časem / TODO: přesunout do testu k ActiveRecordu až bude mít refactorované findery *********************/
 
-		$offices = $mapper->findByStateAndCountry('CA', 'USA');
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertEquals(1, count($offices));
-		$this->assertEquals(1, $offices[0]->officeCode);
 
-		$office = $mapper->findOneByStateAndCountry('CA', 'USA');
-		$this->assertTrue($office instanceof Office);
-		$this->assertEquals(1, $office->officeCode);
 
-		$this->setExpectedException('InvalidArgumentException');
-		$mapper->findOneByStateAndCountry('CA');
+	public function _testGetDibiDateAttribute() {
+		$row = self::createResource()->fetch();
+		$this->assertEquals('2004-10-19 00:00:00', $row['paymentDate']);
+
+		$res = self::createResource();
+		$res->detectTypes();
+		$row = $res->fetch();
+		$this->assertEquals('2004-10-19 00:00:00', $row['paymentDate']);
+
+		$res = self::createResource();
+		$res->setType('paymentDate', dibi::DATETIME);
+		$row = $res->fetch();
+		$this->assertEquals('2004-10-19 00:00:00', $row['paymentDate']);
+
+		$res = self::createResource();
+		$res->setType('paymentDate', dibi::TIME);
+		$row = $res->fetch();
+		$this->assertEquals('2004-10-19 00:00:00', $row['paymentDate']);
+
+		$res = self::createResource();
+		$res->setType('paymentDate', dibi::DATE);
+		$row = self::createResource()->fetch();
+		$this->assertEquals('2004-10-19', $row['paymentDate']);
+
+	}
+
+	public function _testGetActiveRecordDateAttribute() {
+		$payment = ActiveMapper::find('Payment', array('where' => array("[customerNumber] = 103", "[checkNumber] = 'HQ336336'")), 'first');
+		$this->assertEquals('2004-10-19 00:00:00', $payment['paymentDate']->format('Y-m-d H:i:s'));
+		ActiveMapper::getConnection()->delete('Payments');
+
+		$payment = new Payment(array(
+			'customerNumber' => 103,
+			'checkNumber' => 'HF336336',
+			'paymentDate' => new DateTime('2010-01-01 12:00:00'),
+			'amount' => 15.5,
+		), ActiveRecord::STATE_NEW);
+
+		$inserted = ActiveMapper::insert($payment);
+		$payment = ActiveMapper::find('Payment', array('where' => array("[customerNumber] = 103", "[checkNumber] = 'HF336336'")), 'first');
+		$this->assertEquals('2010-01-01 12:00:00', $payment->paymentDate->format('Y-m-d H:i:s'));
+	}
+
+	private static function createResource() {
+		return ActiveMapper::getConnection()->query('SELECT * FROM Payments WHERE %and', array("[customerNumber] = 103", "[checkNumber] = 'HQ336336'"));
 	}
 
 }
