@@ -704,6 +704,12 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertFalse($authors[1]->isRecordNew());
 		$this->assertTrue($authors[1]->isRecordExisting());
 
+		$products = Product::find('S10_1678', 'S24_2000');
+		$this->assertTrue($products instanceof ActiveRecordCollection);
+		$this->assertEquals(2, count($products));
+		$this->assertEquals('S10_1678', $products->first()->productCode);
+		$this->assertEquals('S24_2000', $products->last()->productCode);
+
 		$author = Author::findAll(array('[id] = 3'))->first();
 		$this->assertTrue($author instanceof Author);
 		$this->assertFalse($author->isRecordNew());
@@ -732,7 +738,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertGreaterThanOrEqual($authors[0]->credit, $authors[1]->credit);
 	}
 
-	public function testStaticFindOne() {
+	public function testStaticFind() {
 		if (!TestHelper::isPhpVersion('5.3'))
 			$this->markTestSkipped("Test is only for PHP 5.3.*");
 
