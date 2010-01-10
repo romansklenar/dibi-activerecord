@@ -55,7 +55,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 	public function testGetConnection() {
 		$connection = Mapper::connect($this->config, 'connection #1');
-		$connection->loadFile(APP_DIR . '/models/birt.structure.sql');
+		$connection->loadFile(APP_DIR . '/models/birt/birt.structure.sql');
 
 		$connection = Mapper::connect($this->config, 'connection #2');
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');

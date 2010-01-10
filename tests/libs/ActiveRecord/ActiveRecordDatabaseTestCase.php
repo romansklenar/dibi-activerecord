@@ -16,8 +16,8 @@ abstract class ActiveRecordDatabaseTestCase extends PHPUnit_Framework_TestCase {
 
 	public function setUp() {
 		$connection = Mapper::connect($this->config);
-		$connection->loadFile(APP_DIR . '/models/birt.structure.sql');
-		$connection->loadFile(APP_DIR . '/models/birt.data.sql');
+		$connection->loadFile(APP_DIR . '/models/birt/birt.structure.sql');
+		$connection->loadFile(APP_DIR . '/models/birt/birt.data.sql');
 
 		$connection = Mapper::connect($this->config, '#authors');
 		$connection->loadFile(APP_DIR . '/models/authors.structure.sql');
