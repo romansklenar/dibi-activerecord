@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/BaseTestCase.php';
+require_once __DIR__ . '/ExampleBaseTestCase.php';
 
 /**
  * Test class for Client.
