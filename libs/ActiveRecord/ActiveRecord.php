@@ -150,7 +150,7 @@ abstract class ActiveRecord extends Record {
 
 	protected function detectPrimaryName() {
 		$primary = array();
-		$pk = Mapper::getPrimaryInfo($this->getTableName(), $this->getConnectionName()); // intentionally from Mapper
+		$pk = RecordHelper::getPrimaryInfo($this->getTableName(), $this->getConnectionName()); // intentionally from Mapper
 
 		if (!$pk instanceof DibiIndexInfo)
 			throw new InvalidStateException("Table '$this->tableName' has not defined primay key index" .
@@ -255,7 +255,7 @@ abstract class ActiveRecord extends Record {
 	 * @retrun array
 	 */
 	protected function getDefaultValues() {
-		return Mapper::getColumnDefaults($this->getTableName(), $this->getConnectionName());
+		return RecordHelper::getColumnDefaults($this);
 	}
 
 
@@ -264,7 +264,7 @@ abstract class ActiveRecord extends Record {
 	 * @retrun array
 	 */
 	public function getColumnNames() {
-		return Mapper::getColumnNames($this->getTableName(), $this->getConnectionName());
+		return RecordHelper::getColumnNames($this);
 	}
 
 
@@ -273,7 +273,7 @@ abstract class ActiveRecord extends Record {
 	 * @return DibiTableInfo
 	 */
 	public function getTableInfo() {
-		return Mapper::getTableInfo($this->getTableName(), $this->getConnectionName());
+		return RecordHelper::getTableInfo($this);
 	}
 
 
@@ -301,9 +301,9 @@ abstract class ActiveRecord extends Record {
 		}
 
 		// detect
-		$primary = Mapper::getPrimaryInfo($this->getTableName(), $this->getConnectionName());
+		$primary = RecordHelper::getPrimaryInfo($this);
 
-		if ($primary instanceof  DibiIndexInfo)
+		if ($primary instanceof DibiIndexInfo)
 			return $primary;
 		else
 			throw new InvalidStateException("Table '$this->tableName' has not defined primay key index" .
@@ -316,7 +316,7 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	public function getTypes() {
-		return Mapper::getColumnTypes($this->getTableName(), $this->getConnectionName());
+		return RecordHelper::getColumnTypes($this);
 	}
 
 
@@ -325,7 +325,7 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	public function getAssotiations($type = NULL) {
-		$asc = Association::getAssotiations($this->getReflection(), $this->getClass());
+		$asc = RecordHelper::getAssotiations($this);
 		return $type === NULL ? $asc : (isset($asc[$type]) ? $asc[$type] : array());
 	}
 
@@ -495,7 +495,7 @@ abstract class ActiveRecord extends Record {
 		$record = self::create();
 
 		if (!is_array($conditions) && (is_numeric($conditions) || (is_string($conditions) && str_word_count($conditions) == 1)))
-			$conditions = array(Mapper::formatConditions($record->getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from Mapper
+			$conditions = array(RecordHelper::formatConditions($record->getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from Mapper
 
 		return $record->getMapper()->count($conditions, $limit, $offset);
 	}
@@ -521,7 +521,7 @@ abstract class ActiveRecord extends Record {
 
 		if (!is_array($conditions) && (is_numeric($conditions) || (is_string($conditions) && str_word_count($conditions) == 1))) {
 			$params = func_get_args();
-			$conditions = Mapper::formatConditions($record->getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from Mapper
+			$conditions = RecordHelper::formatConditions($record->getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from Mapper
 
 			if (count($params) == 1)
 				return $record->getMapper()->find(array($conditions), array(), 1)->first(); // self::findOne(array($conditions));

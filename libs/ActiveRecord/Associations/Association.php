@@ -19,7 +19,7 @@ abstract class Association extends Object {
 	public $type;
 
 	/** @var array */
-	static protected $types = array(self::BELONGS_TO, self::HAS_ONE, self::HAS_MANY, self::HAS_AND_BELONGS_TO_MANY);
+	static public $types = array(self::BELONGS_TO, self::HAS_ONE, self::HAS_MANY, self::HAS_AND_BELONGS_TO_MANY);
 
 	/** @var string */
 	public $local;
@@ -52,48 +52,6 @@ abstract class Association extends Object {
 
 		$this->local = $local;
 		$this->referenced = $referenced;
-	}
-
-
-	/**
-	 * Gets class assotiations.
-	 * @param  ClassReflection $r
-	 * @return array of Association
-	 */
-	public static function getAssotiations(ClassReflection $r) {
-		$class = $r->getName();
-		$cache = CacheHelper::getCache();
-		$key = $class . '.assotiations';
-
-		if (isset($cache[$key]))
-			return $cache[$key];
-
-		$associations = array();
-		$arr = $r->getAnnotations();
-
-		foreach ($arr as $type => $annotations)
-			if (in_array($type, self::$types))
-				foreach ($annotations as $annotation)
-					foreach ($annotation->getValues() as $attribute => $referenced) {
-						switch ($type) {
-							case Association::BELONGS_TO:
-								$asc = new BelongsToAssociation($class, $referenced, is_numeric($attribute) ? NULL : $attribute); break;
-							case Association::HAS_ONE:
-								$asc = new HasOneAssociation($class, $referenced); break;
-							case Association::HAS_MANY:
-								$asc = new HasManyAssociation($class, $referenced, is_numeric($attribute) ? NULL : $attribute); break;
-							case Association::HAS_AND_BELONGS_TO_MANY:
-								$asc = new HasAndBelongsToManyAssociation($class, $referenced, is_numeric($attribute) ? NULL : $attribute); break;
-						}
-						$associations[$type][] = $asc;
-					}
-
-		$cache->save($key, $associations, array(
-			'files' => array($r->getFileName())
-			// TODO: vsechny soubory predku
-		));
-
-		return $associations;
 	}
 
 

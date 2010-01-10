@@ -23,59 +23,6 @@ class MapperTest extends ActiveRecordDatabaseTestCase {
 		$this->markTestSkipped();
 	}
 
-	public function testGetTableInfo() {
-		$r = Mapper::getTableInfo('Offices');
-		$this->assertType('object', $r);
-		$this->assertTrue($r instanceof DibiTableInfo);
-	}
-
-	public function getPrimaryInfo() {
-		$primary = Mapper::getPrimaryInfo('Offices');
-		$this->assertType('object', $primary);
-		$this->assertTrue($primary instanceof DibiIndexInfo);
-	}
-
-	public function testGetColumnNames() {
-		$cmp = array('productLine', 'textDescription', 'htmlDescription', 'image');
-
-		$cols = Mapper::getColumnNames('ProductLines');
-		$this->assertType('array', $cols);
-		$this->assertEquals($cmp, $cols);
-	}
-
-	public function testGetColumnDefaults() {
-		$cmp = array(
-			'officeCode' => NULL,
-			'city' => NULL,
-			'phone' => NULL,
-			'addressLine1' => NULL,
-			'addressLine2' => NULL,
-			'state' => NULL,
-			'country' => NULL,
-			'postalCode' => NULL,
-			'territory' => NULL,
-			'position' => 0,
-		);
-
-		$defaults = Mapper::getColumnDefaults('Offices');
-		$this->assertType('array', $defaults);
-		//$this->assertEquals($cmp, $defaults);
-		$this->assertEquals($cmp['position'], (int) $defaults['position']);
-	}
-
-	public function testGetColumnTypes() {
-		$cmp = array(
-			'customerNumber' => dibi::INTEGER,
-			'checkNumber' => dibi::TEXT,
-			'paymentDate' => dibi::DATETIME,
-			'amount' => dibi::FLOAT,
-		);
-
-		$types = Mapper::getColumnTypes('Payments');
-		$this->assertType('array', $types);
-		$this->assertEquals($cmp, $types);
-	}
-
 	public function testFind() {
 		$mapper = new Mapper(new Office);
 

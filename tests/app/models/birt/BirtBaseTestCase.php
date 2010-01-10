@@ -19,11 +19,11 @@ abstract class BirtBaseTestCase extends PHPUnit_Framework_TestCase {
 		$connection->loadFile(APP_DIR . '/models/birt.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/birt.data.sql');
 		Mapper::addConnection($connection);
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 	}
 
 	public function tearDown() {
 		Mapper::disconnect();
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 	}
 }

@@ -43,7 +43,7 @@ abstract class ActiveRecordDatabaseTestCase extends PHPUnit_Framework_TestCase {
 		$connection->loadFile(APP_DIR . '/models/many-to-many/m2m_rails.data.sql');
 		Mapper::addConnection($connection, '#rails_style');
 
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 		Inflector::$railsStyle = FALSE;
 	}
 
@@ -52,7 +52,7 @@ abstract class ActiveRecordDatabaseTestCase extends PHPUnit_Framework_TestCase {
 		Mapper::disconnect('#authors');
 		Mapper::disconnect('#nette_style');
 		Mapper::disconnect('#rails_style');
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 	}
 
 }

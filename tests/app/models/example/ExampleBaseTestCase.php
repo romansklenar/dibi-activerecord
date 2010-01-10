@@ -20,11 +20,11 @@ abstract class ExampleBaseTestCase extends PHPUnit_Framework_TestCase {
 		$connection->loadFile(APP_DIR . '/models/example/db.data.sql');
 		Mapper::addConnection($connection);
 
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 	}
 
 	public function tearDown() {
 		Mapper::disconnect();
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 	}
 }

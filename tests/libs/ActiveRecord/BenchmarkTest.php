@@ -20,7 +20,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/consumers.data.sql');
 		Mapper::addConnection($connection);
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 
 		// kalibrace
 		ini_set('memory_limit', '10M'); // memory_get_peak_usage() ~ 8.5M
@@ -77,7 +77,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 
 		// clean up
 		Mapper::disconnect();
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 	}
 
 	public function testBenchmarkDibi() {
@@ -142,7 +142,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/consumers.data.sql');
 		Mapper::addConnection($connection);
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 
 		// kalibrace
 		dump('--- ActiveRecord: getting one record ---');
@@ -186,7 +186,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 
 		// clean up
 		Mapper::disconnect();
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 	}
 
 	public function testGettingOneRow() {
