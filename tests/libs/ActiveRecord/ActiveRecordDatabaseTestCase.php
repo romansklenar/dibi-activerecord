@@ -41,6 +41,7 @@ abstract class ActiveRecordDatabaseTestCase extends PHPUnit_Framework_TestCase {
 
 		RecordHelper::cleanCache();
 		Inflector::$railsStyle = FALSE;
+		ActiveRecordCollection::$loadImmediately = FALSE;
 	}
 
 	public function tearDown() {

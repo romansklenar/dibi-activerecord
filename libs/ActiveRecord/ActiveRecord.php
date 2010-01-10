@@ -507,16 +507,27 @@ abstract class ActiveRecord extends Record {
 	 * @return ActiveRecordCollection
 	 */
 	public static function objects() {
-		return self::find();
+		return self::findAll();
 	}
 
 
 	/**
 	 * Finder.
 	 * @param array $conditions
-	 * @return ActiveRecordCollection|ActiveRecord
+	 * @return ActiveRecordCollection|NULL
 	 */
-	public static function find($conditions = array(), $order = array(), $limit = NULL, $offset = NULL) {
+	public static function findAll($conditions = array(), $order = array(), $limit = NULL, $offset = NULL) {
+		$record = self::create();
+		return $record->getMapper()->find($conditions, $order, $limit, $offset);
+	}
+
+
+	/**
+	 * Finder.
+	 * @param array $conditions
+	 * @return ActiveRecord|ActiveRecordCollection
+	 */
+	public static function find($conditions = array(), $order = array()) {
 		$record = self::create();
 
 		if (!is_array($conditions) && (is_numeric($conditions) || (is_string($conditions) && str_word_count($conditions) == 1))) {
@@ -524,29 +535,19 @@ abstract class ActiveRecord extends Record {
 			$conditions = RecordHelper::formatConditions($record->getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from Mapper
 
 			if (count($params) == 1)
-				return $record->getMapper()->find(array($conditions), array(), 1)->first(); // self::findOne(array($conditions));
+				return $record->getMapper()->find(array($conditions), array(), 1)->first();
 			else
-				return $record->getMapper()->find(array($conditions)); // self::find(array($conditions));
+				return $record->getMapper()->find(array($conditions));
 
 		} else {
-			return $record->getMapper()->find($conditions, $order, $limit, $offset);
+			return $record->getMapper()->find($conditions, $order, 1)->first();
 		}
 	}
 
 
 	/**
-	 * Finder.
-	 * @param array $conditions
-	 * @return ActiveRecord
-	 */
-	public static function findOne($conditions = array(), $order = array()) {
-		return self::find($conditions, $order, 1)->first();
-	}
-
-
-	/**
 	 * Magic find.
-	 * - $rec = Page::findOneByUrl('about-us');
+	 * - $rec = Page::findAllByUrl('about-us');
 	 * - $col = Page::findByCategoryIdAndVisibility(5, TRUE);
 	 * - $col = User::findByNameAndLogin('John', 'john007');
 	 * - $col = Product::findByCategory(3);
@@ -560,8 +561,8 @@ abstract class ActiveRecord extends Record {
 			$method = 'find';
 			$name = substr($name, 6);
 
-		} elseif (strncmp($name, 'findOneBy', 9) === 0) { // single record
-			$method = 'findOne';
+		} elseif (strncmp($name, 'findAllBy', 9) === 0) { // single record
+			$method = 'findAll';
 			$name = substr($name, 9);
 
 		} else {
@@ -578,7 +579,7 @@ abstract class ActiveRecord extends Record {
 		$cond = array_combine($parts, $args);
 		$mapper = self::create()->getMapper();
 
-		return $method == 'findOne' ? $mapper->find($cond, array(), 1)->first() : $mapper->find($cond);
+		return $method == 'find' ? $mapper->find($cond, array(), 1)->first() : $mapper->find($cond);
 	}
 
 

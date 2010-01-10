@@ -680,27 +680,44 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$author = Author::create("*** not compatible ***");
 	}
 
-	public function testStaticFind() {
+	public function testStaticFindAll() {
 		if (!TestHelper::isPhpVersion('5.3'))
 			$this->markTestSkipped("Test is only for PHP 5.3.*");
 
-		$authors = Author::find();
+		$authors = Author::find(1,2);
 		$this->assertTrue($authors instanceof ActiveRecordCollection);
-		$this->assertEquals(3, count($authors));
+		$this->assertEquals(2, count($authors));
+		$this->assertEquals(1, $authors[0]->id);
+		$this->assertFalse($authors[0]->isRecordNew());
+		$this->assertTrue($authors[0]->isRecordExisting());
+		$this->assertEquals(2, $authors[1]->id);
+		$this->assertFalse($authors[1]->isRecordNew());
+		$this->assertTrue($authors[1]->isRecordExisting());
 
-		$author = $authors->first();
-		$this->assertTrue($author instanceof Author);
-		$this->assertFalse($author->isRecordNew());
-		$this->assertTrue($author->isRecordExisting());
-		$this->assertEquals(1, $author->id);
+		$authors = Author::find('1','2');
+		$this->assertTrue($authors instanceof ActiveRecordCollection);
+		$this->assertEquals(2, count($authors));
+		$this->assertEquals(1, $authors[0]->id);
+		$this->assertFalse($authors[0]->isRecordNew());
+		$this->assertTrue($authors[0]->isRecordExisting());
+		$this->assertEquals(2, $authors[1]->id);
+		$this->assertFalse($authors[1]->isRecordNew());
+		$this->assertTrue($authors[1]->isRecordExisting());
 
-		$author = $authors->last();
+		$author = Author::findAll(array('[id] = 3'))->first();
 		$this->assertTrue($author instanceof Author);
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());
 		$this->assertEquals(3, $author->id);
 
-		$authors = Author::find(
+		// alternative way of previous command
+		$author = Author::find(3);
+		$this->assertTrue($author instanceof Author);
+		$this->assertFalse($author->isRecordNew());
+		$this->assertTrue($author->isRecordExisting());
+		$this->assertEquals(3, $author->id);
+
+		$authors = Author::findAll(
 			array(
 				array('%n >= %i', 'credit', 100),
 				array('%n <= %i', 'credit', 300),
@@ -713,52 +730,46 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals(2, count($authors));
 		$this->assertTrue($authors[0]->credit <= $authors[1]->credit);
 		$this->assertGreaterThanOrEqual($authors[0]->credit, $authors[1]->credit);
-
-		$authors = Author::find(1,2);
-		$this->assertTrue($authors instanceof ActiveRecordCollection);
-		$this->assertEquals(2, count($authors));
-		$this->assertEquals(1, $authors[0]->id);
-		$this->assertFalse($authors[0]->isRecordNew());
-		$this->assertTrue($authors[0]->isRecordExisting());
-		$this->assertEquals(2, $authors[1]->id);
-		$this->assertFalse($authors[1]->isRecordNew());
-		$this->assertTrue($authors[1]->isRecordExisting());
-
-		$author = Author::find(array('[id] = 3'))->first();
-		$this->assertTrue($author instanceof Author);
-		$this->assertFalse($author->isRecordNew());
-		$this->assertTrue($author->isRecordExisting());
-		$this->assertEquals(3, $author->id);
-
-		// alternative way of previous command
-		$author = Author::find(3);
-		$this->assertTrue($author instanceof Author);
-		$this->assertFalse($author->isRecordNew());
-		$this->assertTrue($author->isRecordExisting());
-		$this->assertEquals(3, $author->id);
 	}
 
 	public function testStaticFindOne() {
 		if (!TestHelper::isPhpVersion('5.3'))
 			$this->markTestSkipped("Test is only for PHP 5.3.*");
 
-		$author = Author::findOne();
+		$author = Author::find();
 		$this->assertTrue($author instanceof Author);
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());
 		$this->assertEquals(1, $author->id);
 
-		$author = Author::findOne(array('[id] = 3'));
+		$author = Author::find(1);
+		$this->assertTrue($author instanceof Author);
+		$this->assertFalse($author->isRecordNew());
+		$this->assertTrue($author->isRecordExisting());
+		$this->assertEquals(1, $author->id);
+
+		$author = Author::find(array('[id] = 3'));
 		$this->assertTrue($author instanceof Author);
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());
 		$this->assertEquals(3, $author->id);
 
-		$author = Author::findOne(array("[firstname] = 'John'"));
+		$author = Author::find(array("[firstname] = 'John'"));
 		$this->assertTrue($author instanceof Author);
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());
 		$this->assertEquals(1, $author->id);
+
+		$author = Author::find(
+			array(
+				array('%n >= %i', 'credit', 100),
+				array('%n <= %i', 'credit', 300),
+			),
+			array(
+				'credit' => 'ASC'
+			)
+		);
+		$this->assertTrue($author->credit >= 100 && $author->credit <= 300);
 	}
 
 	public function testStaticCount() {
@@ -805,7 +816,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$author->save();
 
 		$this->assertEquals(1, Author::count(array('[id] = 55')));
-		$tmp = Author::find(array('[id] = 55'))->first();
+		$tmp = Author::findAll(array('[id] = 55'))->first();
 		$this->assertTrue($tmp instanceof Author);
 	}
 
@@ -886,39 +897,39 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		if (!TestHelper::isPhpVersion('5.3'))
 			$this->markTestSkipped("Test is only for PHP 5.3.*");
 
-		$author = Author::findOneByLogin('john007');
+		$author = Author::findByLogin('john007');
 		$this->assertTrue($author instanceof Author);
 		$this->assertEquals('john007', $author->login);
 
-		$authors = Author::findByFirstname('John');
+		$authors = Author::findAllByFirstname('John');
 		$this->assertTrue($authors instanceof ActiveRecordCollection);
 		$this->assertEquals(1, count($authors));
 		$this->assertTrue($authors->first() instanceof Author);
 		$this->assertEquals('John', $author->firstname);
 
-		$author = Author::findOneByFirstname('John');
+		$author = Author::findByFirstname('John');
 		$this->assertTrue($author instanceof Author);
 		$this->assertEquals('John', $author->firstname);
 
-		$authors = Author::findByLastname('Doe');
+		$authors = Author::findAllByLastname('Doe');
 		$this->assertTrue($authors instanceof ActiveRecordCollection);
 		$this->assertEquals(3, count($authors));
 		$this->assertTrue($authors->first() instanceof Author);
 
-		$authors = Author::findByFirstnameAndLastname('John', 'Doe');
+		$authors = Author::findAllByFirstnameAndLastname('John', 'Doe');
 		$this->assertTrue($authors instanceof ActiveRecordCollection);
 		$this->assertEquals(1, count($authors));
 		$this->assertTrue($authors->first() instanceof Author);
 		$this->assertEquals('John', $author->firstname);
 		$this->assertEquals('Doe', $author->lastname);
 
-		$author = Author::findOneByFirstnameAndLastname('John', 'Doe');
+		$author = Author::findByFirstnameAndLastname('John', 'Doe');
 		$this->assertTrue($author instanceof Author);
 		$this->assertEquals('John', $author->firstname);
 		$this->assertEquals('Doe', $author->lastname);
 
 		$this->setExpectedException('InvalidArgumentException');
-		Author::findOneByFirstnameAndLastname('John');
+		Author::findByFirstnameAndLastname('John');
 	}
 
 }

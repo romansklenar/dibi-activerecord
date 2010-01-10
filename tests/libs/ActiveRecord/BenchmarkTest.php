@@ -145,7 +145,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 		// kalibrace
 		dump('--- ActiveRecord: getting one record ---');
 		Consumer::find(1);
-		Consumer::findOne();
+		Consumer::findAll()->first();
 		Consumer::objects()->first();
 		Consumer::objects()->applyLimit(1)->first();
 		
@@ -160,7 +160,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 
 		timer('1.2');
 		memory('1.2');
-		$consumer = Consumer::findOne();
+		$consumer = Consumer::findAll()->first();
 		$m = memory('1.2');
 		$t = timer('1.2');
 		dump(self::formatMemory($m));

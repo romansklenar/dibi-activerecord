@@ -137,7 +137,8 @@ class Mapper extends Object implements IMapper {
 		}
 
 		$class = $this->collectionClass;
-		return new $class($ds, $this);
+		$collection = new $class($ds, $this);
+		return $collection->count() > 0 ? $collection : NULL;
 	}
 
 

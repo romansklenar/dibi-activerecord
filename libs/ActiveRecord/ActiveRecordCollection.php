@@ -4,7 +4,7 @@
 /**
  * The ActiveRecordCollection class represents a list of records identified by a query.
  * An ActiveRecordCollection should act like an array in every way, except that it will attempt to defer loading until the records are needed.
- * An ActiveRecordCollection is typically returned by the ActiveRecord::find() or objects() methods.
+ * An ActiveRecordCollection is typically returned by the ActiveRecord::findAll() or objects() methods.
  *
  * @author     Roman Sklenář
  * @copyright  Copyright (c) 2009 Roman Sklenář (http://romansklenar.cz)
