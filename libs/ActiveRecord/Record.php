@@ -275,7 +275,15 @@ class Record extends FreezableObject implements ArrayAccess {
 			case dibi::FLOAT: $value = (float) $value; break;
 			case dibi::DATE:
 			case dibi::TIME:
-			case dibi::DATETIME: $value = ($value instanceof DateTime) ? $value : new DateTime($value); break;
+			case dibi::DATETIME:
+				if ($value instanceof DateTime)
+					return $value;
+				else if ((int) $value === 0) // '', NULL, FALSE, '0000-00-00', ...
+					return NULL;
+				else
+					$value = new DateTime(is_numeric($value) ? date('Y-m-d H:i:s', $value) : $value);
+				break;
+
 			case dibi::BINARY:
 			default: break;
 		}
