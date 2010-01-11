@@ -45,50 +45,50 @@ class HasAndBelongsToManyAssociationTest extends ActiveRecordDatabaseTestCase {
 	public function testGetIntersectEntityByGivenManually() {
 		Inflector::$railsStyle = FALSE;
 		$asc = new HasAndBelongsToManyAssociation('Order', 'Product', 'OrderDetails');
-		$this->assertEquals('OrderDetails', $asc->getIntersectEntity(Mapper::getConnection()->getDatabaseInfo()));
+		$this->assertEquals('OrderDetails', $asc->getIntersectEntity(ActiveMapper::getConnection()->getDatabaseInfo()));
 
 		$asc = new HasAndBelongsToManyAssociation('Product', 'Order', 'OrderDetails');
-		$this->assertEquals('OrderDetails', $asc->getIntersectEntity(Mapper::getConnection()->getDatabaseInfo()));
+		$this->assertEquals('OrderDetails', $asc->getIntersectEntity(ActiveMapper::getConnection()->getDatabaseInfo()));
 
 		
 		$asc = new HasAndBelongsToManyAssociation('Posts', 'Tags', 'PostsTags');
-		$this->assertEquals('PostsTags', $asc->getIntersectEntity(Mapper::getConnection('#nette_style')->getDatabaseInfo()));
+		$this->assertEquals('PostsTags', $asc->getIntersectEntity(ActiveMapper::getConnection('#nette_style')->getDatabaseInfo()));
 
 		$asc = new HasAndBelongsToManyAssociation('Tag', 'Post', 'PostsTags');
-		$this->assertEquals('PostsTags', $asc->getIntersectEntity(Mapper::getConnection('#nette_style')->getDatabaseInfo()));
+		$this->assertEquals('PostsTags', $asc->getIntersectEntity(ActiveMapper::getConnection('#nette_style')->getDatabaseInfo()));
 
 
 		
 		Inflector::$railsStyle = TRUE;
 		$asc = new HasAndBelongsToManyAssociation('Album', 'Song', 'albums_songs');
-		$this->assertEquals('albums_songs', $asc->getIntersectEntity(Mapper::getConnection('#rails_style')->getDatabaseInfo()));
+		$this->assertEquals('albums_songs', $asc->getIntersectEntity(ActiveMapper::getConnection('#rails_style')->getDatabaseInfo()));
 
 		$asc = new HasAndBelongsToManyAssociation('Songs', 'Album', 'albums_songs');
-		$this->assertEquals('albums_songs', $asc->getIntersectEntity(Mapper::getConnection('#rails_style')->getDatabaseInfo()));
+		$this->assertEquals('albums_songs', $asc->getIntersectEntity(ActiveMapper::getConnection('#rails_style')->getDatabaseInfo()));
 	}
 
 	public function testGetIntersectEntityByAutodetect() {
 		Inflector::$railsStyle = FALSE;
 		$asc = new HasAndBelongsToManyAssociation('Posts', 'Tags');
-		$this->assertEquals('PostsTags', $asc->getIntersectEntity(Mapper::getConnection('#nette_style')->getDatabaseInfo()));
+		$this->assertEquals('PostsTags', $asc->getIntersectEntity(ActiveMapper::getConnection('#nette_style')->getDatabaseInfo()));
 
 		$asc = new HasAndBelongsToManyAssociation('Tag', 'Post');
-		$this->assertEquals('PostsTags', $asc->getIntersectEntity(Mapper::getConnection('#nette_style')->getDatabaseInfo()));
+		$this->assertEquals('PostsTags', $asc->getIntersectEntity(ActiveMapper::getConnection('#nette_style')->getDatabaseInfo()));
 
 
 		Inflector::$railsStyle = TRUE;
 		$asc = new HasAndBelongsToManyAssociation('Album', 'Song');
-		$this->assertEquals('albums_songs', $asc->getIntersectEntity(Mapper::getConnection('#rails_style')->getDatabaseInfo()));
+		$this->assertEquals('albums_songs', $asc->getIntersectEntity(ActiveMapper::getConnection('#rails_style')->getDatabaseInfo()));
 
 		$asc = new HasAndBelongsToManyAssociation('Songs', 'Album');
-		$this->assertEquals('albums_songs', $asc->getIntersectEntity(Mapper::getConnection('#rails_style')->getDatabaseInfo()));
+		$this->assertEquals('albums_songs', $asc->getIntersectEntity(ActiveMapper::getConnection('#rails_style')->getDatabaseInfo()));
 	}
 
 	public function testGetIntersectEntityFails() {
 		Inflector::$railsStyle = FALSE;
 		$this->setExpectedException('InvalidStateException');
 		$asc = new HasAndBelongsToManyAssociation('Order', 'Product');
-		$asc->getIntersectEntity(Mapper::getConnection()->getDatabaseInfo());
+		$asc->getIntersectEntity(ActiveMapper::getConnection()->getDatabaseInfo());
 	}
 
 	public function testRetreiveReferenced() {

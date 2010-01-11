@@ -63,7 +63,7 @@ class ActiveMapperTest extends ActiveRecordDatabaseTestCase {
 		# not implemented: feature of DibiFluent
 		$offices = ActiveMapper::find('Office', array('where' => array('addressLine1' => '25 Old Broad Street', 'city' => 'London')));
 		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertContains("WHERE ([addressLine1] = '25 Old Broad Street' AND [city] = 'London')", strip(dibi::$sql));
+		$this->assertContains("WHERE (([addressLine1] = '25 Old Broad Street') AND ([city] = 'London'))", strip(dibi::$sql));
 
 		$offices = ActiveMapper::find('Office', array('order' => 'city ASC'));
 		$this->assertTrue($offices instanceof ActiveRecordCollection);

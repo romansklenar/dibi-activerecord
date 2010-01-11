@@ -21,16 +21,16 @@ abstract class ActiveRecord extends Record {
 	protected static $foreingMask; # i.e. '%table%Id', '%table%_id', '%table%_%primary%', '%primary%'
 
 	/** @var string  used connection name */
-	protected static $connection = Mapper::DEFAULT_CONNECTION;
+	protected static $connection = ActiveMapper::DEFAULT_CONNECTION;
 
 	/** @var array  detected primary key name and table name cache */
-	private static $cache = array();
+	private static $register = array();
 
 	/** @var Events */
 	protected static $events;
 
-	/** @var IMapper */
-	protected static $mapper;
+	/** @var string  used mapper class */
+	protected static $mapper = 'ActiveMapper';
 
 	/** @var IValidator */
 	protected static $validator;
@@ -42,9 +42,6 @@ abstract class ActiveRecord extends Record {
 	 * @param int $state  does data physically exists in database?
 	 */
 	public function __construct($input = array(), $state = NULL) {
-		if ($this->getMapper() === NULL)
-			$this->setMapper(new Mapper($this)); //new Mapper($this->getClass(), $this->getTableName(), $this->getPrimaryName(), $this->getConnectionName());
-
 		if ($state === NULL)
 			$state = $this->detectState((array) $input);
 
@@ -100,9 +97,9 @@ abstract class ActiveRecord extends Record {
 			return static::$table;
 
 		} else {
-			if (!isset(self::$cache[$this->class]['table']))
-				self::$cache[$this->class]['table'] = Inflector::tableize($this->class);
-			return self::$cache[$this->class]['table'];
+			if (!isset(self::$register[$this->class]['table']))
+				self::$register[$this->class]['table'] = Inflector::tableize($this->class);
+			return self::$register[$this->class]['table'];
 		}
 	}
 
@@ -120,9 +117,9 @@ abstract class ActiveRecord extends Record {
 			);
 
 		} else {
-			if (!isset(self::$cache[$this->class]['foreign']))
-				self::$cache[$this->class]['foreign'] = Inflector::foreignKey($this->class);
-			return self::$cache[$this->class]['foreign'];
+			if (!isset(self::$register[$this->class]['foreign']))
+				self::$register[$this->class]['foreign'] = Inflector::foreignKey($this->class);
+			return self::$register[$this->class]['foreign'];
 		}
 	}
 
@@ -136,21 +133,21 @@ abstract class ActiveRecord extends Record {
 			return static::$primary;
 
 		} else {
-			if (!isset(self::$cache[$this->class]['primary'])) {
+			if (!isset(self::$register[$this->class]['primary'])) {
 				$primary = array();
 				$info = $this->getPrimaryInfo();
 				foreach ($info->getColumns() as $column)
 					$primary[] = $column->getName();
 
-				self::$cache[$this->class]['primary'] = count($primary) == 1 ? $primary[0] : $primary;
+				self::$register[$this->class]['primary'] = count($primary) == 1 ? $primary[0] : $primary;
 			}
-			return self::$cache[$this->class]['primary'];
+			return self::$register[$this->class]['primary'];
 		}
 	}
 
 	protected function detectPrimaryName() {
 		$primary = array();
-		$pk = RecordHelper::getPrimaryInfo($this->getTableName(), $this->getConnectionName()); // intentionally from Mapper
+		$pk = RecordHelper::getPrimaryInfo($this->getTableName(), $this->getConnectionName()); // intentionally from helper
 
 		if (!$pk instanceof DibiIndexInfo)
 			throw new InvalidStateException("Table '$this->tableName' has not defined primay key index" .
@@ -335,39 +332,16 @@ abstract class ActiveRecord extends Record {
 	 * @return DibiConnection
 	 */
 	public function getConnection() {
-		return Mapper::getConnection($this->getConnectionName());
+		return ActiveMapper::getConnection($this->getConnectionName());
 	}
 
 
 	/**
-	 * Gets record's mapper.
-	 * @return Mapper
+	 * Gets associated mapper class name.
+	 * @return string
 	 */
-	public function getMapper() {
-		return isset(self::$cache[$this->class]['mapper']) ? self::$cache[$this->class]['mapper'] : NULL;
-	}
-
-
-	/**
-	 * Gets record's mapper.
-	 * @param Mapper $mapper
-	 */
-	protected function setMapper(Mapper $mapper) {
-		self::$cache[$this->class]['mapper'] = $mapper;
-	}
-
-
-	/**
-	 * Gets record's events.
-	 * @return Events
-	 */
-	protected function getEvents() {
-		throw new NotImplementedException;
-
-		if (static::$events === NULL)
-			static::$events = new Events;
-
-		return static::$events;
+	protected static function mapper() {
+		return static::$mapper;
 	}
 
 
@@ -455,7 +429,8 @@ abstract class ActiveRecord extends Record {
 	 * @return ActiveRecord
 	 */
 	public function save() {
-		$this->getMapper()->save($this);
+		$mapper = self::mapper();
+		$mapper::save($this);
 		parent::save();
 		return $this;
 	}
@@ -466,7 +441,8 @@ abstract class ActiveRecord extends Record {
 	 * @return bool  true if Record was destroyed
 	 */
 	public function destroy() {
-		$deleted = (bool) $this->getMapper()->delete($this);
+		$mapper = self::mapper();
+		$deleted = (bool) $mapper::delete($this);
 		parent::destroy();
 		return $deleted;
 	}
@@ -487,23 +463,7 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Counter.
-	 * @param array $cond
-	 * @return int
-	 */
-	public static function count($cond = array(), $limit = NULL, $offset = NULL) {
-		$record = self::create();
-
-		if (!is_array($cond) && (is_numeric($cond) || (is_string($cond) && str_word_count($cond) == 1)))
-			$cond = array(RecordHelper::formatConditions($record->getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from Mapper
-
-		return $record->getMapper()->count($cond, $limit, $offset);
-	}
-
-
-	/**
 	 * Django-like alias to find().
-	 * @param array $cond
 	 * @return ActiveRecordCollection
 	 */
 	public static function objects() {
@@ -512,41 +472,65 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Finder.
-	 * @param array $cond
-	 * @return ActiveRecordCollection|NULL
+	 * Counter.
+	 * @param array $where
+	 * @param array $limit
+	 * @param array $offset
+	 * @return int
 	 */
-	public static function findAll($cond = array(), $order = array(), $limit = NULL, $offset = NULL) {
-		$record = self::create();
-		return $record->getMapper()->find($cond, $order, $limit, $offset);
+	public static function count($where = array(), $limit = NULL, $offset = NULL) {
+		if (!is_array($where) && (is_numeric($where) || (is_string($where) && str_word_count($where) == 1)))
+			$where = array(RecordHelper::formatConditions(self::create()->getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from helper
+
+		$class  = get_called_class();
+		$mapper = self::mapper();
+		return $mapper::find($class, array('where' => $where, 'limit' => $limit, 'limit' => $offset), 'all')->count();
 	}
 
 
 	/**
 	 * Finder.
-	 * @param array $cond
-	 * @return ActiveRecord|ActiveRecordCollection
+	 * @param array $where
+	 * @param array $order
+	 * @param array $limit
+	 * @param array $offset
+	 * @return ActiveRecordCollection|NULL
 	 */
-	public static function find($cond = array(), $order = array()) {
-		$record = self::create();
+	public static function findAll($where = array(), $order = array(), $limit = NULL, $offset = NULL) {
+		$class  = get_called_class();
+		$mapper = self::mapper();
+		return $mapper::find($class, array('where' => $where, 'order' => $order, 'limit' => $limit, 'limit' => $offset), 'all');
+	}
 
-		if (!is_array($cond) && (is_numeric($cond) || (is_string($cond) && str_word_count($cond) == 1))) {
+
+	/**
+	 * Static finder.
+	 * @param array $where
+	 * @param array $order
+	 * @return ActiveRecord|ActiveRecordCollection|NULL
+	 */
+	public static function find($where = array(), $order = array()) {
+		$class  = get_called_class();
+		$mapper = self::mapper();
+
+		if (!is_array($where) && (is_numeric($where) || (is_string($where) && str_word_count($where) == 1))) {
 			$params = func_get_args();
-			$cond = RecordHelper::formatConditions($record->getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from Mapper
+			$where = RecordHelper::formatConditions(self::create()->getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from helper
 
-			if (count($params) == 1)
-				return $record->getMapper()->find(array($cond), array(), 1)->first();
-			else
-				return $record->getMapper()->find(array($cond));
+			if (count($params) == 1) {
+				Debug::dump($where);
+				return $mapper::find($class, array('where' => array($where)), 'first');
+			} else
+				return $mapper::find($class, array('where' => array($where)), 'all');
 
 		} else {
-			return $record->getMapper()->find($cond, $order, 1)->first();
+			return $mapper::find($class, array('where' => $where, 'order' => $order), 'first');
 		}
 	}
 
 
 	/**
-	 * Magic find.
+	 * Static Magic find.
 	 * - $rec = Page::findAllByUrl('about-us');
 	 * - $col = Page::findByCategoryIdAndVisibility(5, TRUE);
 	 * - $col = User::findByNameAndLogin('John', 'john007');
@@ -557,11 +541,11 @@ abstract class ActiveRecord extends Record {
 	 * @return ActiveRecordCollection|ActiveRecord|NULL
 	 */
 	public static function __callStatic($name, $args) {
-		if (strncmp($name, 'findBy', 6) === 0) { // record collection
+		if (strncmp($name, 'findBy', 6) === 0) { // single record
 			$method = 'find';
 			$name = substr($name, 6);
 
-		} elseif (strncmp($name, 'findAllBy', 9) === 0) { // single record
+		} elseif (strncmp($name, 'findAllBy', 9) === 0) { // record collection
 			$method = 'findAll';
 			$name = substr($name, 9);
 
@@ -576,10 +560,48 @@ abstract class ActiveRecord extends Record {
 			throw new InvalidArgumentException("Magic find expects " . count($parts) . " parameters, but " . count($args) . " was given.");
 		}
 
-		$cond = array_combine($parts, $args);
-		$mapper = self::create()->getMapper();
+		$options = array('where' => array_combine($parts, $args));
+		$class  = get_called_class();
+		$mapper = self::mapper();
+		return $mapper::find($class, $options, $method == 'find' ? 'first' : 'all');
+	}
 
-		return $method == 'find' ? $mapper->find($cond, array(), 1)->first() : $mapper->find($cond);
+
+
+	/**
+	 * Magic find.
+	 * - $rec = $page->findAllByUrl('about-us');
+	 * - $col = $page->findByCategoryIdAndVisibility(5, TRUE);
+	 * - $col = $page->findByNameAndLogin('John', 'john007');
+	 * - $col = $product->findByCategory(3);
+	 *
+	 * @param string $name
+	 * @param array  $args
+	 * @return ActiveRecordCollection|ActiveRecord|NULL
+	 */
+	public function __call($name, $args) {
+		if (strncmp($name, 'findBy', 6) === 0) { // single row
+			$method = 'find';
+			$name = substr($name, 6);
+
+		} elseif (strncmp($name, 'findAllBy', 9) === 0) { // row collection
+			$method = 'findAll';
+			$name = substr($name, 9);
+
+		} else {
+			return parent::__call($name, $args);
+		}
+
+		// ProductIdAndTitle -> array('productId', 'title')
+		$parts = array_map('lcfirst', explode('And', $name));
+
+		if (count($parts) !== count($args))
+			throw new InvalidArgumentException("Magic find expects " . count($parts) . " parameters, but " . count($args) . " was given.");
+
+		$options = array('where' => array_combine($parts, $args));
+		$class  = get_called_class();
+		$mapper = self::mapper();
+		return $mapper::find($class, $options, $method == 'find' ? 'first' : 'all');
 	}
 
 
@@ -714,5 +736,52 @@ abstract class ActiveRecord extends Record {
 	 */
 	public function __unset($name) {
 		throw new NotSupportedException("Cannot unset the property $this->class::\$$name.");
+	}
+
+
+
+
+
+	/**
+	 * Converts value to date-time format.
+	 * @param  string key
+	 * @param  string format (TRUE means DateTime object)
+	 * @return mixed
+	 */
+	public function asDate($key, $format = NULL) {
+		$time = $this[$key];
+		if ((int) $time === 0) { // '', NULL, FALSE, '0000-00-00', ...
+			return NULL;
+
+		} elseif ($format === NULL) { // return timestamp (default)
+			return is_numeric($time) ? (int) $time : strtotime($time);
+
+		} elseif ($format === TRUE) { // return DateTime object
+			return new DateTime(is_numeric($time) ? date('Y-m-d H:i:s', $time) : $time);
+
+		} elseif (is_numeric($time)) { // single timestamp
+			return date($format, $time);
+
+		} else {
+			$time = new DateTime($time);
+			return $time->format($format);
+		}
+	}
+
+
+
+	/**
+	 * Converts value to boolean.
+	 * @param  string key
+	 * @return mixed
+	 */
+	public function asBool($key) {
+		$value = $this[$key];
+		if ($value === NULL || $value === FALSE) {
+			return $value;
+
+		} else {
+			return ((bool) $value) && $value !== 'f' && $value !== 'F';
+		}
 	}
 }

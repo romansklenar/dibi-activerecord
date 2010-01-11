@@ -108,6 +108,17 @@ class RecordHelper {
 
 
 	/**
+	 * Is record's primary key AI?
+	 * @param Record $record
+	 * @return bool
+	 */
+	public function isPrimaryAutoIncrement(Record $record) {
+		$columns = self::getPrimaryInfo($record)->getColumns();
+		return count($columns) == 1 && $columns[0]->isAutoIncrement();
+	}
+
+
+	/**
 	 * Gets record's table column names.
 	 * @param Record $record
 	 * @return array

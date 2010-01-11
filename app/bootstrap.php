@@ -37,7 +37,7 @@ if (!is_writable(Environment::getVariable('logDir'))) {
 }
 
 
-$connection = Mapper::connect(array(
+$connection = ActiveMapper::connect(array(
 	'driver' => 'sqlite3',
 	'database' => ':memory:',
 ));
@@ -48,4 +48,4 @@ Debug::dump($connection->fetchAll('SELECT * FROM [People] WHERE [companyId] = 1'
 Debug::dump(Person::objects()->filter('[companyId] = 1')->toArray());
 Debug::dump(strip(dibi::$sql));
 
-Mapper::disconnect();
+ActiveMapper::disconnect();

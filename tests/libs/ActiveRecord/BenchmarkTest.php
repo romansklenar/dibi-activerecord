@@ -16,7 +16,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 	public function testBenchmarkActiveRecord() {
 
 		Debug::$showLocation = FALSE;
-		$connection = Mapper::connect($this->config);
+		$connection = ActiveMapper::connect($this->config);
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/consumers.data.sql');
 		RecordHelper::cleanCache();
@@ -75,7 +75,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 		dump(self::formatTime($t));
 
 		// clean up
-		Mapper::disconnect();
+		ActiveMapper::disconnect();
 		RecordHelper::cleanCache();
 	}
 
@@ -137,7 +137,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 	public function testGettingOneRecord() {
 
 		Debug::$showLocation = FALSE;
-		$connection = Mapper::connect($this->config);
+		$connection = ActiveMapper::connect($this->config);
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/consumers.data.sql');
 		RecordHelper::cleanCache();
@@ -183,7 +183,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 		dump(self::formatTime($t));
 
 		// clean up
-		Mapper::disconnect();
+		ActiveMapper::disconnect();
 		RecordHelper::cleanCache();
 	}
 

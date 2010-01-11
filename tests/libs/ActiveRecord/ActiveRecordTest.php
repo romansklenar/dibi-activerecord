@@ -14,50 +14,11 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		'lastname' => 'Doe',
 	);
 
-
-	public function testGetMapper() {
-		$order = new Order;
-		$product = new Product;
-		$office = new Office;
-		$mock = new MockOffice;
-		$customer = new Customer;
-		$employee = new Employee;
-		$payment = new Payment;
-		$author = new Author;
-
-		$this->assertTrue($order->mapper instanceof IMapper);
-		$this->assertTrue($product->mapper instanceof IMapper);
-		$this->assertTrue($office->mapper instanceof IMapper);
-		$this->assertTrue($mock->mapper instanceof IMapper);
-		$this->assertTrue($customer->mapper instanceof IMapper);
-		$this->assertTrue($employee->mapper instanceof IMapper);
-		$this->assertTrue($payment->mapper instanceof IMapper);
-		$this->assertTrue($author->mapper instanceof IMapper);
-
-		$this->assertTrue($order->mapper instanceof Mapper);
-		$this->assertTrue($product->mapper instanceof Mapper);
-		$this->assertTrue($office->mapper instanceof Mapper);
-		$this->assertTrue($mock->mapper instanceof Mapper);
-		$this->assertTrue($customer->mapper instanceof Mapper);
-		$this->assertTrue($employee->mapper instanceof Mapper);
-		$this->assertTrue($payment->mapper instanceof Mapper);
-		$this->assertTrue($author->mapper instanceof Mapper);
-
-		$this->assertEquals('Order', $order->getMapper()->getRowClass());
-		$this->assertEquals('Product', $product->getMapper()->getRowClass());
-		$this->assertEquals('Office', $office->getMapper()->getRowClass());
-		$this->assertEquals('MockOffice', $mock->getMapper()->getRowClass());
-		$this->assertEquals('Customer', $customer->getMapper()->getRowClass());
-		$this->assertEquals('Employee', $employee->getMapper()->getRowClass());
-		$this->assertEquals('Payment', $payment->getMapper()->getRowClass());
-		$this->assertEquals('Author', $author->getMapper()->getRowClass());
-	}
-
 	public function testGetConnection() {
-		$connection = Mapper::connect($this->config, 'connection #1');
+		$connection = ActiveMapper::connect($this->config, 'connection #1');
 		$connection->loadFile(APP_DIR . '/models/birt/birt.structure.sql');
 
-		$connection = Mapper::connect($this->config, 'connection #2');
+		$connection = ActiveMapper::connect($this->config, 'connection #2');
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');
 
 		$customer = MockCustomer::create();
@@ -91,8 +52,8 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals($tables, $payment->getConnection()->getDatabaseInfo()->getTableNames());
 		$this->assertEquals(array('Authors'), $author->getConnection()->getDatabaseInfo()->getTableNames());
 
-		Mapper::disconnect('connection #1');
-		Mapper::disconnect('connection #2');
+		ActiveMapper::disconnect('connection #1');
+		ActiveMapper::disconnect('connection #2');
 	}
 
 	public function testGetTableName() {
@@ -548,33 +509,6 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		// TODO: ostatni varianty
 	}
 
-	public function testMapperCount() {
-		$order = new Order;
-		$product = new Product;
-		$office = new Office;
-		$mock = new MockOffice;
-		$customer = new Customer;
-		$employee = new Employee;
-		$payment = new Payment;
-		$author = new Author;
-
-		$this->assertEquals(326, $order->mapper->count());
-		$this->assertEquals(110, $product->mapper->count());
-		$this->assertEquals(8, $office->mapper->count());
-		$this->assertEquals(8, $mock->mapper->count());
-		$this->assertEquals(122, $customer->mapper->count());
-		$this->assertEquals(23, $employee->mapper->count());
-		$this->assertEquals(273, $payment->mapper->count());
-		$this->assertEquals(3, $author->mapper->count());
-
-		$this->assertEquals(1, $office->mapper->count(1));
-		$this->assertEquals(1, $mock->mapper->count(1));
-		$this->assertEquals(1, $author->mapper->count(1));
-
-		$this->markTestIncomplete();
-		// TODO: ostatni varianty
-	}
-
 	public function testStaticObjectsCount() {
 		if (!TestHelper::isPhpVersion('5.3'))
 			$this->markTestSkipped("Test is only for PHP 5.3.*");
@@ -710,7 +644,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals('S10_1678', $products->first()->productCode);
 		$this->assertEquals('S24_2000', $products->last()->productCode);
 
-		$author = Author::findAll(array('[id] = 3'))->first();
+		$author = Author::find(array('[id] = 3'));
 		$this->assertTrue($author instanceof Author);
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());

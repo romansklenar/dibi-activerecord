@@ -9,8 +9,6 @@
  * @example    http://wiki.github.com/romansklenar/dibi-activerecord
  */
 final class ActiveMapper extends Mapper {
-	
-	const DEFAULT_CONNECTION = '#AR';
 
 	/** @var string */
 	static $collectionClass = 'ActiveRecordCollection';
@@ -90,12 +88,12 @@ final class ActiveMapper extends Mapper {
 			
 			$res = $ds->getResult();
 			$res->setRowClass($class);
-			$res->detectTypes(); // intentionally not $res->setTypes($record->types) in selection to database must be used detection from DibiColumnInfo::detectType
+			$res->detectTypes(); // intentionally not $res->setTypes($record->types) - in selection to database must be used detection from DibiColumnInfo::detectType to detect types 100% correctly
 			return $res->fetch();
 
 		} else {
-			$class = self::$collectionClass;
-			return new $class($ds, $record); // $collection = new $class($ds, $record);
+			$collection = self::$collectionClass;
+			return new $collection($ds, $class); // $collection = new $class($ds, $record);
 			// return $scope == 'all' ? $collection : ($scope == 'first' ? $collection->first() : $collection->last());
 		}
 	}

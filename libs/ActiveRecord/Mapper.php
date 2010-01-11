@@ -33,7 +33,6 @@ abstract class Mapper extends Object implements IMapper {
 	}
 
 
-
 	/**
 	 * Disconnects from database (destroys DibiConnection object).
 	 * @param  string $name  connection name
@@ -46,7 +45,6 @@ abstract class Mapper extends Object implements IMapper {
 	}
 
 
-
 	/**
 	 * Returns TRUE when connection was established.
 	 * @param  string $name  connection name
@@ -55,7 +53,6 @@ abstract class Mapper extends Object implements IMapper {
 	public static function isConnected($name = self::DEFAULT_CONNECTION) {
 		return self::getConnection($name)->isConnected();
 	}
-
 
 
 	/**

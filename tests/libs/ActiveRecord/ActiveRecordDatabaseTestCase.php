@@ -11,19 +11,20 @@ abstract class ActiveRecordDatabaseTestCase extends PHPUnit_Framework_TestCase {
 	protected $config = array(
 		'driver' => 'sqlite3',
 		'database' => ':memory:',
+		'formatDateTime' => "'Y-m-d H:i:s'",
 	);
 
 
 	public function setUp() {
-		$connection = Mapper::connect($this->config);
+		$connection = ActiveMapper::connect($this->config);
 		$connection->loadFile(APP_DIR . '/models/birt/birt.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/birt/birt.data.sql');
 
-		$connection = Mapper::connect($this->config, '#authors');
+		$connection = ActiveMapper::connect($this->config, '#authors');
 		$connection->loadFile(APP_DIR . '/models/authors.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/authors.data.sql');
 
-		$connection = Mapper::connect($this->config, '#nette_style');
+		$connection = ActiveMapper::connect($this->config, '#nette_style');
 		$connection->loadFile(APP_DIR . '/models/one-to-one/o2o_nette.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/one-to-one/o2o_nette.data.sql');
 		$connection->loadFile(APP_DIR . '/models/many-to-one/m2o_nette.structure.sql');
@@ -31,7 +32,7 @@ abstract class ActiveRecordDatabaseTestCase extends PHPUnit_Framework_TestCase {
 		$connection->loadFile(APP_DIR . '/models/many-to-many/m2m_nette.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/many-to-many/m2m_nette.data.sql');
 
-		$connection = Mapper::connect($this->config, '#rails_style');
+		$connection = ActiveMapper::connect($this->config, '#rails_style');
 		$connection->loadFile(APP_DIR . '/models/one-to-one/o2o_rails.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/one-to-one/o2o_rails.data.sql');
 		$connection->loadFile(APP_DIR . '/models/many-to-one/m2o_rails.structure.sql');
@@ -45,10 +46,10 @@ abstract class ActiveRecordDatabaseTestCase extends PHPUnit_Framework_TestCase {
 	}
 
 	public function tearDown() {
-		Mapper::disconnect();
-		Mapper::disconnect('#authors');
-		Mapper::disconnect('#nette_style');
-		Mapper::disconnect('#rails_style');
+		ActiveMapper::disconnect();
+		ActiveMapper::disconnect('#authors');
+		ActiveMapper::disconnect('#nette_style');
+		ActiveMapper::disconnect('#rails_style');
 		RecordHelper::cleanCache();
 	}
 

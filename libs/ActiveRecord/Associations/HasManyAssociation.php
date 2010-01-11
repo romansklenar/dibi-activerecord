@@ -63,7 +63,7 @@ final class HasManyAssociation extends Association {
 			$through = new $this->through;
 			$sub = $through->getDataSource()->select($referenced->foreignMask)->where('%and', $record->foreignCondition);
 			$ds = $referenced->getDataSource()->where('%n IN (%sql)', $referenced->primaryName, (string) $sub);
-			return new ActiveRecordCollection($ds, $referenced->getMapper());
+			return new ActiveRecordCollection($ds, $this->referenced);
 		}
 	}
 }
