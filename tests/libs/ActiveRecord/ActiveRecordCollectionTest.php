@@ -8,439 +8,459 @@ require_once __DIR__ . '/ActiveRecordDatabaseTestCase.php';
  */
 class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 
+	/** @var ActiveRecordCollection */
+	public $object;
+
+	public function setUp() {
+		parent::setUp();
+		$this->object = self::createCollection();
+	}
+
+	private static function createCollection() {
+		$ds = ActiveMapper::getConnection()->dataSource('Offices');
+		return new ActiveRecordCollection($ds, 'Office');
+	}
+
 	public function testConstruct() {
-		$mapper = new Mapper(new Office);
-		$ds = $mapper->getConnection()->dataSource('SELECT * FROM [Offices]');
-		$rs = new ActiveRecordCollection($ds, $mapper);
-		
-		$this->assertFalse($rs->isLoaded());
+		$this->assertEquals('SELECT * FROM [Offices]', strip((string) ActiveMapper::getConnection()->dataSource('Offices')));
+
+		ActiveRecordCollection::$loadImmediately = FALSE;
+		$collection = self::createCollection();
+		$this->assertFalse($collection->isLoaded());
+		$collection->load();
+		$this->assertTrue($collection->isLoaded());
+		$this->assertEquals('SELECT * FROM [Offices]', strip(dibi::$sql));
+
+		ActiveRecordCollection::$loadImmediately = TRUE;
+		$collection = self::createCollection();
+		$this->assertTrue($collection->isLoaded());
+		$this->assertEquals('SELECT * FROM [Offices]', strip(dibi::$sql));
 	}
 
 	public function testGetItemType() {
-		$offices = Office::objects();
-		$this->assertEquals('Office', $offices->getItemType());
+		$this->assertEquals('Office', $this->object->getItemType());
 	}
 
 	public function testIsLoaded() {
-		$offices = Office::objects();
-		$this->assertFalse($offices->isLoaded());
+		$collection = self::createCollection();
+		$this->assertFalse($collection->isLoaded());
 
-		$offices = Office::objects();
-		$offices->count();
-		$this->assertFalse($offices->isLoaded());
+		$collection = self::createCollection();
+		$collection->count();
+		$this->assertFalse($collection->isLoaded());
 
-		$offices = Office::objects()->filter('[officeCode] > 2');
-		$this->assertFalse($offices->isLoaded());
+		$collection = self::createCollection();
+		$collection->filter('[officeCode] > 2');
+		$this->assertFalse($collection->isLoaded());
 
-		$offices = Office::objects()->orderBy('officeCode', 'DESC');
-		$this->assertFalse($offices->isLoaded());
+		$collection = self::createCollection();
+		$collection->orderBy('officeCode', 'DESC');
+		$this->assertFalse($collection->isLoaded());
 
-		$offices = Office::objects();
-		$offices->first();
-		$this->assertFalse($offices->isLoaded());
+		$collection = self::createCollection();
+		$collection->first();
+		$this->assertFalse($collection->isLoaded());
 
-		$offices = Office::objects();
-		$offices->last();
-		$this->assertFalse($offices->isLoaded());
+		$collection = self::createCollection();
+		$collection->last();
+		$this->assertFalse($collection->isLoaded());
 
-		$offices = Office::objects()->reverse();
-		$this->assertTrue($offices->isLoaded());
+		$collection = self::createCollection();
+		$collection->reverse();
+		$this->assertTrue($collection->isLoaded());
 
-		$offices = Office::objects()->reverse();
-		$offices->first();
-		$this->assertTrue($offices->isLoaded());
+		$collection = self::createCollection();
+		$collection->reverse();
+		$collection->first();
+		$this->assertTrue($collection->isLoaded());
 
-		$offices = Office::objects()->reverse();
-		$offices->last();
-		$this->assertTrue($offices->isLoaded());
+		$collection = self::createCollection();
+		$collection->reverse();
+		$collection->last();
+		$this->assertTrue($collection->isLoaded());
 
-		$offices = Office::objects();
-		$offices->clear();
-		$this->assertTrue($offices->isLoaded()); // co je vice logicke? TRUE/FALSE ?
+		$collection = self::createCollection();
+		$collection->clear();
+		$this->assertTrue($collection->isLoaded()); // co je vice logicke? TRUE/FALSE ?
 
-		$offices = Office::objects();
-		$this->assertFalse($offices->isLoaded());
-		$offices[0];
-		$this->assertTrue($offices->isLoaded());
+		$collection = self::createCollection();
+		$collection[0];
+		$this->assertTrue($collection->isLoaded());
 
-		$offices = Office::objects();
-		$this->assertFalse($offices->isLoaded());
-		$this->assertTrue(isset($offices[0]));
-		$this->assertTrue($offices->isLoaded());
+		$collection = self::createCollection();
+		$this->assertTrue(isset($collection[0]));
+		$this->assertTrue($collection->isLoaded());
 
-		$offices = Office::objects();
-		$this->assertFalse($offices->isLoaded());
-		$this->assertTrue($offices->contains(Office::find(1)));
-		$this->assertTrue($offices->isLoaded());
+		$this->markTestIncomplete();
 
-		$offices = Office::objects();
-		$this->assertFalse($offices->isLoaded());
-		$offices->import(Office::find(1,2,3)->toArray());
-		$this->assertTrue($offices->isLoaded());
+		$collection = self::createCollection();
+		$this->assertTrue($collection->contains(Office::find(1)));
+		$this->assertTrue($collection->isLoaded());
+
+		$collection = self::createCollection();
+		$collection->import(Office::find(1,2,3)->toArray());
+		$this->assertTrue($collection->isLoaded());
 	}
 
 	public function testCount() {
-		$offices = Office::objects();
-
-		$this->assertType('object', $offices);
-		$this->assertTrue($offices instanceof ActiveRecordCollection);
-		$this->assertEquals(8, $offices->count());
-		$this->assertEquals(8, count($offices));
+		$this->assertEquals(8, $this->object->count());
+		$this->assertEquals(8, count($this->object));
 	}
 
 	public function testFilter() {
-		$offices = Office::objects();
-		$this->assertEquals(8, $offices->count());
+		$collection = self::createCollection();
+		$this->assertEquals(8, $collection->count());
 
-		$offices->filter('[officeCode] > 2');
-		$this->assertEquals(6, $offices->count());
-		$this->assertEquals(3, $offices->first()->officeCode);
-		$this->assertEquals(8, $offices->last()->officeCode);
+		$collection->filter('[officeCode] > 2');
+		$this->assertEquals(6, $collection->count());
+		$this->assertEquals(3, $collection->first()->officeCode);
+		$this->assertEquals(8, $collection->last()->officeCode);
 
-		$offices->filter('[officeCode] < 6');
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(3, $offices->first()->officeCode);
-		$this->assertEquals(5, $offices->last()->officeCode);
+		$collection->filter('[officeCode] < 6');
+		$this->assertEquals(3, $collection->count());
+		$this->assertEquals(3, $collection->first()->officeCode);
+		$this->assertEquals(5, $collection->last()->officeCode);
 
-		$offices = Office::objects()->filter('[officeCode] > 2')->filter('[officeCode] < 6');
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(3, $offices->first()->officeCode);
-		$this->assertEquals(5, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->filter('[officeCode] > 2')->filter('[officeCode] < 6');
+		$this->assertEquals(3, $collection->count());
+		$this->assertEquals(3, $collection->first()->officeCode);
+		$this->assertEquals(5, $collection->last()->officeCode);
 
-		$offices = Office::objects()->filter('[officeCode] > 2 AND [officeCode] < 6');
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(3, $offices->first()->officeCode);
-		$this->assertEquals(5, $offices->last()->officeCode);
-		
-		$offices = Office::objects()->filter(array('[officeCode] > 2', '[officeCode] < 6'));
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(3, $offices->first()->officeCode);
-		$this->assertEquals(5, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->filter('[officeCode] > 2 AND [officeCode] < 6');
+		$this->assertEquals(3, $collection->count());
+		$this->assertEquals(3, $collection->first()->officeCode);
+		$this->assertEquals(5, $collection->last()->officeCode);
 
-		$offices = Office::objects()->filter(
+		$collection = self::createCollection();
+		$collection->filter(array('[officeCode] > 2', '[officeCode] < 6'));
+		$this->assertEquals(3, $collection->count());
+		$this->assertEquals(3, $collection->first()->officeCode);
+		$this->assertEquals(5, $collection->last()->officeCode);
+
+		$collection = self::createCollection();
+		$collection->filter(
 			array(
 				array('%n > %i', 'position', 2),
 				array('%n < %i', 'position', 6),
 			)
 		);
-		$this->assertEquals(3, count($offices));
-		$this->assertEquals(3, $offices->first()->officeCode);
-		$this->assertEquals(5, $offices->last()->officeCode);
+		$this->assertEquals(3, count($collection));
+		$this->assertEquals(3, $collection->first()->officeCode);
+		$this->assertEquals(5, $collection->last()->officeCode);
+
+		$this->markTestIncomplete('NotImplemented');
+
+		$collection = self::createCollection();
+		$collection->filter(array('officeCode' => 2, 'officeCode' => 6));
+		$this->assertEquals(2, $collection->count());
+		$this->assertEquals(2, $collection->first()->officeCode);
+		$this->assertEquals(6, $collection->last()->officeCode);
 	}
 
 	public function testFilterWithReverse() {
-		$offices = Office::objects()->reverse();
-		$this->assertEquals(8, $offices->count());
+		$collection = self::createCollection();
+		$collection->reverse();
+		$this->assertEquals(8, $collection->count());
 
-		$offices->filter('[officeCode] > 2');
-		$this->assertEquals(6, $offices->count());
-		$this->assertEquals(8, $offices->first()->officeCode);
-		$this->assertEquals(3, $offices->last()->officeCode);
+		$collection->filter('[officeCode] > 2');
+		$this->assertEquals(6, $collection->count());
+		$this->assertEquals(8, $collection->first()->officeCode);
+		$this->assertEquals(3, $collection->last()->officeCode);
 
-		$offices->filter('[officeCode] < 6');
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(3, $offices->last()->officeCode);
+		$collection->filter('[officeCode] < 6');
+		$this->assertEquals(3, $collection->count());
+		$this->assertEquals(5, $collection->first()->officeCode);
+		$this->assertEquals(3, $collection->last()->officeCode);
 
-		$offices = Office::objects()->filter('[officeCode] > 2')->filter('[officeCode] < 6')->reverse();
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(3, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->filter('[officeCode] > 2')->filter('[officeCode] < 6')->reverse();
+		$this->assertEquals(3, $collection->count());
+		$this->assertEquals(5, $collection->first()->officeCode);
+		$this->assertEquals(3, $collection->last()->officeCode);
 
-		$offices = Office::objects()->reverse()->filter('[officeCode] > 2')->filter('[officeCode] < 6');
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(3, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->filter('[officeCode] > 2 AND [officeCode] < 6')->reverse();
+		$this->assertEquals(3, $collection->count());
+		$this->assertEquals(5, $collection->first()->officeCode);
+		$this->assertEquals(3, $collection->last()->officeCode);
 
-		$offices = Office::objects()->filter('[officeCode] > 2')->reverse()->filter('[officeCode] < 6');
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(3, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->filter(array('[officeCode] > 2', '[officeCode] < 6'))->reverse();
+		$this->assertEquals(3, $collection->count());
+		$this->assertEquals(5, $collection->first()->officeCode);
+		$this->assertEquals(3, $collection->last()->officeCode);
 
-		$offices = Office::objects()->filter('[officeCode] > 2 AND [officeCode] < 6')->reverse();
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(3, $offices->last()->officeCode);
-
-		$offices = Office::objects()->reverse()->filter('[officeCode] > 2 AND [officeCode] < 6');
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(3, $offices->last()->officeCode);
-
-		$offices = Office::objects()->filter(array('[officeCode] > 2', '[officeCode] < 6'))->reverse();
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(3, $offices->last()->officeCode);
-
-		$offices = Office::objects()->reverse()->filter(array('[officeCode] > 2', '[officeCode] < 6'));
-		$this->assertEquals(3, $offices->count());
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(3, $offices->last()->officeCode);
-
-		$offices = Office::objects()->filter(
+		$collection = self::createCollection();
+		$collection->filter(
 			array(
 				array('%n > %i', 'position', 2),
 				array('%n < %i', 'position', 6),
 			)
 		)->reverse();
-		$this->assertEquals(3, count($offices));
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(3, $offices->last()->officeCode);
+		$this->assertEquals(3, count($collection));
+		$this->assertEquals(5, $collection->first()->officeCode);
+		$this->assertEquals(3, $collection->last()->officeCode);
+		
+		$this->markTestIncomplete('NotImplemented');
 
-		$offices = Office::objects()->reverse()->filter(
-			array(
-				array('%n > %i', 'position', 2),
-				array('%n < %i', 'position', 6),
-			)
-		);
-		$this->assertEquals(3, count($offices));
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(3, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->filter(array('officeCode' => 2, 'officeCode' => 6))->reverse();
+		$this->assertEquals(2, $collection->count());
+		$this->assertEquals(6, $collection->first()->officeCode);
+		$this->assertEquals(2, $collection->last()->officeCode);
 	}
 
 	public function testOrderBy() {
-		$offices = Office::objects()->orderBy('officeCode', 'DESC');
-		$this->assertEquals(8, $offices->count());
-		$this->assertEquals(8, $offices->first()->officeCode);
-		$this->assertEquals(1, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->orderBy('officeCode', 'DESC');
+		$this->assertEquals(8, $collection->count());
+		$this->assertEquals(8, $collection->first()->officeCode);
+		$this->assertEquals(1, $collection->last()->officeCode);
 
-		$offices = Office::objects()->orderBy('officeCode', 'DESC')->orderBy('position', 'ASC');
-		$this->assertEquals(8, $offices->count());
-		$this->assertEquals(8, $offices->first()->officeCode);
-		$this->assertEquals(1, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->orderBy('officeCode', 'DESC')->orderBy('position', 'ASC');
+		$this->assertEquals(8, $collection->count());
+		$this->assertEquals(8, $collection->first()->officeCode);
+		$this->assertEquals(1, $collection->last()->officeCode);
 
-		$offices = Office::objects()->orderBy('[officeCode] DESC, [position] ASC');
-		$this->assertEquals(8, $offices->count());
-		$this->assertEquals(8, $offices->first()->officeCode);
-		$this->assertEquals(1, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->orderBy('[officeCode] DESC, [position] ASC');
+		$this->assertEquals(8, $collection->count());
+		$this->assertEquals(8, $collection->first()->officeCode);
+		$this->assertEquals(1, $collection->last()->officeCode);
 
-		$offices = Office::objects()->orderBy(
+		$collection = self::createCollection();
+		$collection->orderBy(
 			array('officeCode' => 'DESC', 'position' => 'ASC')
 		);
-		$this->assertEquals(8, $offices->count());
-		$this->assertEquals(8, $offices->first()->officeCode);
-		$this->assertEquals(1, $offices->last()->officeCode);
-		
-		$offices = Office::objects()->orderBy('officeCode', 'DESC')->applyLimit(5);
-		$this->assertEquals(5, $offices->count());
-		$this->assertEquals(8, $offices->first()->officeCode);
-		$this->assertEquals(4, $offices->last()->officeCode);
+		$this->assertEquals(8, $collection->count());
+		$this->assertEquals(8, $collection->first()->officeCode);
+		$this->assertEquals(1, $collection->last()->officeCode);
 
-		$offices = Office::objects()->orderBy('officeCode', 'DESC')->applyLimit(5,2);
-		$this->assertEquals(5, $offices->count());
-		$this->assertEquals(6, $offices->first()->officeCode);
-		$this->assertEquals(2, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->orderBy('officeCode', 'DESC')->applyLimit(5);
+		$this->assertEquals(5, $collection->count());
+		$this->assertEquals(8, $collection->first()->officeCode);
+		$this->assertEquals(4, $collection->last()->officeCode);
+
+		$collection = self::createCollection();
+		$collection->orderBy('officeCode', 'DESC')->applyLimit(5,2);
+		$this->assertEquals(5, $collection->count());
+		$this->assertEquals(6, $collection->first()->officeCode);
+		$this->assertEquals(2, $collection->last()->officeCode);
 	}
 
 	public function testOrderByWithReverse() {
-		$offices = Office::objects()->orderBy('officeCode', 'DESC')->reverse();
-		$this->assertEquals(8, $offices->count());
-		$this->assertEquals(1, $offices->first()->officeCode);
-		$this->assertEquals(8, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->orderBy('officeCode', 'DESC')->reverse();
+		$this->assertEquals(8, $collection->count());
+		$this->assertEquals(1, $collection->first()->officeCode);
+		$this->assertEquals(8, $collection->last()->officeCode);
 
-		$offices = Office::objects()->orderBy('officeCode', 'DESC')->orderBy('position', 'ASC')->reverse();
-		$this->assertEquals(8, $offices->count());
-		$this->assertEquals(1, $offices->first()->officeCode);
-		$this->assertEquals(8, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->orderBy('officeCode', 'DESC')->orderBy('position', 'ASC')->reverse();
+		$this->assertEquals(8, $collection->count());
+		$this->assertEquals(1, $collection->first()->officeCode);
+		$this->assertEquals(8, $collection->last()->officeCode);
 
-		$offices = Office::objects()->orderBy('[officeCode] DESC, [position] ASC')->reverse();
-		$this->assertEquals(8, $offices->count());
-		$this->assertEquals(1, $offices->first()->officeCode);
-		$this->assertEquals(8, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->orderBy('[officeCode] DESC, [position] ASC')->reverse();
+		$this->assertEquals(8, $collection->count());
+		$this->assertEquals(1, $collection->first()->officeCode);
+		$this->assertEquals(8, $collection->last()->officeCode);
 
-		$offices = Office::objects()->reverse()->orderBy(
-			array('officeCode' => 'DESC', 'position' => 'ASC')
-		);
-		$this->assertEquals(8, $offices->count());
-		$this->assertEquals(1, $offices->first()->officeCode);
-		$this->assertEquals(8, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->orderBy('officeCode', 'DESC')->applyLimit(5)->reverse();
+		$this->assertEquals(5, $collection->count());
+		$this->assertEquals(4, $collection->first()->officeCode);
+		$this->assertEquals(8, $collection->last()->officeCode);
 
-		$offices = Office::objects()->orderBy('officeCode', 'DESC')->applyLimit(5)->reverse();
-		$this->assertEquals(5, $offices->count());
-		$this->assertEquals(4, $offices->first()->officeCode);
-		$this->assertEquals(8, $offices->last()->officeCode);
-
-		$offices = Office::objects()->orderBy('officeCode', 'DESC')->applyLimit(5,2)->reverse();
-		$this->assertEquals(5, $offices->count());
-		$this->assertEquals(2, $offices->first()->officeCode);
-		$this->assertEquals(6, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->orderBy('officeCode', 'DESC')->applyLimit(5,2)->reverse();
+		$this->assertEquals(5, $collection->count());
+		$this->assertEquals(2, $collection->first()->officeCode);
+		$this->assertEquals(6, $collection->last()->officeCode);
 	}
 
 	public function testApplyLimit() {
-		$offices = Office::objects()->applyLimit(5);
-		$this->assertEquals(1, $offices->first()->officeCode);
-		$this->assertEquals(5, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->applyLimit(5);
+		$this->assertEquals(1, $collection->first()->officeCode);
+		$this->assertEquals(5, $collection->last()->officeCode);
 
-		$offices = Office::objects()->applyLimit(5, 3);
-		$this->assertEquals(4, $offices->first()->officeCode);
-		$this->assertEquals(8, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->applyLimit(5, 3);
+		$this->assertEquals(4, $collection->first()->officeCode);
+		$this->assertEquals(8, $collection->last()->officeCode);
 	}
 
 	public function testApplyLimitWithReverse() {
-		$offices = Office::objects()->applyLimit(5)->reverse();
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(1, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->applyLimit(5)->reverse();
+		$this->assertEquals(5, $collection->first()->officeCode);
+		$this->assertEquals(1, $collection->last()->officeCode);
 
-		$offices = Office::objects()->applyLimit(5, 3)->reverse();
-		$this->assertEquals(8, $offices->first()->officeCode);
-		$this->assertEquals(4, $offices->last()->officeCode);
-		
-
-		$offices = Office::objects()->reverse()->applyLimit(5);
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$this->assertEquals(1, $offices->last()->officeCode);
-
-		$offices = Office::objects()->reverse()->applyLimit(5, 3);
-		$this->assertEquals(8, $offices->first()->officeCode);
-		$this->assertEquals(4, $offices->last()->officeCode);
+		$collection = self::createCollection();
+		$collection->applyLimit(5, 3)->reverse();
+		$this->assertEquals(8, $collection->first()->officeCode);
+		$this->assertEquals(4, $collection->last()->officeCode);
 	}
 
 	public function testContains() {
-		$offices = Office::objects()->applyLimit(3);
-		$this->assertEquals(3, $offices->count());
-		$this->assertTrue($offices->contains(Office::find(1)));
-		$this->assertTrue($offices->contains(Office::find(2)));
-		$this->assertTrue($offices->contains(Office::find(3)));
-		$this->assertFalse($offices->contains(Office::find(4)));
-		$this->assertFalse($offices->contains(Office::find(5)));
+		$this->object->applyLimit(3);
+		$this->assertEquals(3, $this->object->count());
+		$this->assertTrue($this->object->contains(Office::find(1)));
+		$this->assertTrue($this->object->contains(Office::find(2)));
+		$this->assertTrue($this->object->contains(Office::find(3)));
+		$this->assertFalse($this->object->contains(Office::find(4)));
+		$this->assertFalse($this->object->contains(Office::find(5)));
 	}
 
 	public function testReverse() {
 		$this->assertEquals(8, Office::count());
-		$this->assertEquals(array_reverse(Office::objects()->toArray()), Office::objects()->reverse()->toArray());
+		$this->assertEquals(array_reverse(Office::objects()->getArrayCopy()), Office::objects()->reverse()->getArrayCopy());
 	}
 
 	public function testFirst() {
-		$offices = Office::objects();
-		$this->assertEquals(8, $offices->count());
-		$this->assertFalse($offices->isLoaded());
+		$collection = self::createCollection();
+		$this->assertEquals(8, $collection->count());
+		$this->assertFalse($collection->isLoaded());
 
-		$this->assertEquals(1, $offices->first()->officeCode);
-		$this->assertFalse($offices->isLoaded());
+		$this->assertEquals(1, $collection->first()->officeCode);
+		$this->assertFalse($collection->isLoaded());
 		$this->assertEquals('SELECT * FROM ( SELECT * FROM [Offices] ) t LIMIT 1', strip(dibi::$sql));
-		$offices->remove($offices->first());
-		$this->assertTrue($offices->isLoaded());
+		$collection->remove($collection->first());
+		$this->assertTrue($collection->isLoaded());
 
-		$this->assertEquals(2, $offices->first()->officeCode);
-		$offices->remove($offices->first());
-		$this->assertEquals(3, $offices->first()->officeCode);
-		$offices->remove($offices->first());
-		$this->assertEquals(4, $offices->first()->officeCode);
-		$offices->remove($offices->first());
-		$this->assertEquals(5, $offices->first()->officeCode);
-		$offices->remove($offices->first());
-		$this->assertEquals(6, $offices->first()->officeCode);
+		$this->assertEquals(2, $collection->first()->officeCode);
+		$collection->remove($collection->first());
+		$this->assertEquals(3, $collection->first()->officeCode);
+		$collection->remove($collection->first());
+		$this->assertEquals(4, $collection->first()->officeCode);
+		$collection->remove($collection->first());
+		$this->assertEquals(5, $collection->first()->officeCode);
+		$collection->remove($collection->first());
+		$this->assertEquals(6, $collection->first()->officeCode);
 
-		$offices->remove($offices->first());
-		$offices->remove($offices->first());
-		$offices->remove($offices->first());
-		$this->assertEquals(0, $offices->count());
-		$this->assertEquals(NULL, $offices->first());
+		$collection->remove($collection->first());
+		$collection->remove($collection->first());
+		$collection->remove($collection->first());
+		$this->assertEquals(0, $collection->count());
+		$this->assertEquals(NULL, $collection->first());
 	}
 
 	public function testFirstWithReverse() {
-		$offices = Office::objects()->reverse();
-		$this->assertEquals(8, $offices->count());
+		$collection = self::createCollection();
+		$collection->reverse();
+		$this->assertEquals(8, $collection->count());
 
-		$this->assertEquals(8, $offices->first()->officeCode);
-		unset($offices[0]);
-		$this->assertEquals(7, $offices->first()->officeCode);
-		unset($offices[0]);
-		$this->assertEquals(6, $offices->first()->officeCode);
-		unset($offices[0]);
-		$this->assertEquals(5, $offices->first()->officeCode);
-		unset($offices[0]);
-		$this->assertEquals(4, $offices->first()->officeCode);
-		unset($offices[0]);
-		$this->assertEquals(3, $offices->first()->officeCode);
+		$this->assertEquals(8, $collection->first()->officeCode);
+		unset($collection[0]);
+		$this->assertEquals(7, $collection->first()->officeCode);
+		unset($collection[0]);
+		$this->assertEquals(6, $collection->first()->officeCode);
+		unset($collection[0]);
+		$this->assertEquals(5, $collection->first()->officeCode);
+		unset($collection[0]);
+		$this->assertEquals(4, $collection->first()->officeCode);
+		unset($collection[0]);
+		$this->assertEquals(3, $collection->first()->officeCode);
 
-		unset($offices[0], $offices[0], $offices[0]);
-		$this->assertEquals(0, $offices->count());
-		$this->assertEquals(NULL, $offices->first());
+		unset($collection[0], $collection[0], $collection[0]);
+		$this->assertEquals(0, $collection->count());
+		$this->assertEquals(NULL, $collection->first());
 	}
 
 	public function testLast() {
-		$offices = Office::objects();
-		$this->assertEquals(8, $offices->count());
+		$collection = self::createCollection();
+		$this->assertEquals(8, $collection->count());
 
-		$this->assertEquals(8, $offices->last()->officeCode);
-		$this->assertFalse($offices->isLoaded());
+		$this->assertEquals(8, $collection->last()->officeCode);
+		$this->assertFalse($collection->isLoaded());
 		$this->assertEquals('SELECT * FROM ( SELECT * FROM [Offices] ) t LIMIT 1 OFFSET 7', strip(dibi::$sql));
-		$offices->remove($offices->last());
-		$this->assertTrue($offices->isLoaded());
+		$collection->remove($collection->last());
+		$this->assertTrue($collection->isLoaded());
 		
-		$this->assertEquals(7, $offices->last()->officeCode);
-		$offices->remove($offices->last());
-		$this->assertEquals(6, $offices->last()->officeCode);
-		$offices->remove($offices->last());
-		$this->assertEquals(5, $offices->last()->officeCode);
-		$offices->remove($offices->last());
-		$this->assertEquals(4, $offices->last()->officeCode);
-		$offices->remove($offices->last());
-		$this->assertEquals(3, $offices->last()->officeCode);
+		$this->assertEquals(7, $collection->last()->officeCode);
+		$collection->remove($collection->last());
+		$this->assertEquals(6, $collection->last()->officeCode);
+		$collection->remove($collection->last());
+		$this->assertEquals(5, $collection->last()->officeCode);
+		$collection->remove($collection->last());
+		$this->assertEquals(4, $collection->last()->officeCode);
+		$collection->remove($collection->last());
+		$this->assertEquals(3, $collection->last()->officeCode);
 
-		$offices->remove($offices->last());
-		$offices->remove($offices->last());
-		$offices->remove($offices->last());
-		$this->assertEquals(0, $offices->count());
-		$this->assertEquals(NULL, $offices->last());
+		$collection->remove($collection->last());
+		$collection->remove($collection->last());
+		$collection->remove($collection->last());
+		$this->assertEquals(0, $collection->count());
+		$this->assertEquals(NULL, $collection->last());
 	}
 
 	public function testLastWithReverse() {
-		$offices = Office::objects()->reverse();
-		$this->assertEquals(8, $offices->count());
+		$collection = self::createCollection();
+		$collection->reverse();
+		$this->assertEquals(8, $collection->count());
 
-		$this->assertEquals(1, $offices->last()->officeCode);
-		unset($offices[7]);
-		$this->assertEquals(2, $offices->last()->officeCode);
-		unset($offices[6]);
-		$this->assertEquals(3, $offices->last()->officeCode);
-		unset($offices[5]);
-		$this->assertEquals(4, $offices->last()->officeCode);
-		unset($offices[4]);
-		$this->assertEquals(5, $offices->last()->officeCode);
-		unset($offices[3]);
-		$this->assertEquals(6, $offices->last()->officeCode);
+		$this->assertEquals(1, $collection->last()->officeCode);
+		unset($collection[7]);
+		$this->assertEquals(2, $collection->last()->officeCode);
+		unset($collection[6]);
+		$this->assertEquals(3, $collection->last()->officeCode);
+		unset($collection[5]);
+		$this->assertEquals(4, $collection->last()->officeCode);
+		unset($collection[4]);
+		$this->assertEquals(5, $collection->last()->officeCode);
+		unset($collection[3]);
+		$this->assertEquals(6, $collection->last()->officeCode);
 
-		unset($offices[2], $offices[1], $offices[0]);
-		$this->assertEquals(0, $offices->count());
-		$this->assertEquals(NULL, $offices->last());
+		unset($collection[2], $collection[1], $collection[0]);
+		$this->assertEquals(0, $collection->count());
+		$this->assertEquals(NULL, $collection->last());
 	}
 
 	public function testAppend() {
-		$offices = Office::objects();
-		$this->assertEquals(8, $offices->count());
-
-		$offices->append(new Office);
-		$this->assertEquals(9, $offices->count());
-
-		$this->setExpectedException('InvalidArgumentException');
-		$offices->append(new Employee);
+		$this->assertEquals(8, $this->object->count());
+		$this->object->append(new Office);
+		$this->assertEquals(9, $this->object->count());
 	}
 
 	public function testAsort() {
-		$offices = Office::objects();
-		$offices->asort();
-		$this->assertEquals(8, $offices->count());
+		$this->object->asort();
+		$this->assertEquals(8, $this->object->count());
 	}
 
 	public function testClear() {
-		$offices = Office::objects();
-		$this->assertEquals(8, $offices->count());
-		$offices->clear();
-		$this->assertEquals(0, $offices->count());
+		$this->assertEquals(8, $this->object->count());
+		$this->object->clear();
+		$this->assertEquals(0, $this->object->count());
 	}
 
 	public function testImport() {
-		$offices = Office::objects();
-		$this->assertEquals(8, $offices->count());
-		$offices->import(Office::find(1,2,3)->toArray());
-		$this->assertEquals(3, $offices->count());
+		$this->assertEquals(8, $this->object->count());
+		$this->object->import(Office::find(1,2,3)->getArrayCopy());
+		$this->assertEquals(3, $this->object->count());
+	}
+
+	public function testAppendWrongDataType() {
+		$this->setExpectedException('InvalidArgumentException');
+		$this->object->append(new Employee);
 	}
 
 	public function testOffsetSet() {
+		$this->assertEquals(8, $this->object->count());
+		$this->object[] = new Office;
+		$this->assertEquals(9, $this->object->count());
+
+		$this->markTestIncomplete();
+	}
+
+	public function testOffsetSetWrongDataType() {
 		$this->setExpectedException('InvalidArgumentException');
-		$offices[] = new Employee;
+		$this->object[] = new Employee;
 
 		$this->markTestIncomplete();
 	}

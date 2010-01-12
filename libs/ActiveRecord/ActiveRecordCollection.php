@@ -2,7 +2,7 @@
 
 
 /**
- * The ActiveRecordCollection class represents a list of records identified by a query.
+ * An ActiveRecordCollection class represents a list of records identified by a query.
  * An ActiveRecordCollection should act like an array in every way, except that it will attempt to defer loading until the records are needed.
  * An ActiveRecordCollection is typically returned by the ActiveRecord::findAll() or objects() methods.
  *
@@ -11,16 +11,10 @@
  * @license    New BSD License
  * @example    http://wiki.github.com/romansklenar/dibi-activerecord
  */
-class ActiveRecordCollection extends ArrayList {
-
-	/** @var Record */
-	private $record;
+class ActiveRecordCollection extends LazyArrayList {
 
 	/** @var DibiDataSource */
-	private $ds;
-
-	/** @var bool */
-	private $loaded = FALSE;
+	private $source;
 
 	/** @var bool */
 	private $reversed = FALSE;
@@ -30,14 +24,15 @@ class ActiveRecordCollection extends ArrayList {
 
 
 	/**
-	 * @param DibiDataSource $ds
-	 * @param Record         $record
+	 * @param DibiDataSource $source
+	 * @param string         $class
 	 */
-	public function __construct(DibiDataSource $ds, Record $record) {
-		$this->ds = $ds;
-		$this->record = $record;
+	public function __construct(DibiDataSource $source, $class) {
+		if (!class_exists($class))
+			throw new InvalidArgumentException("Class '$class' not found.");
 
-		parent::__construct(NULL, get_class($record));
+		$this->source = $source;
+		parent::__construct(NULL, $class);
 
 		if (self::$loadImmediately)
 			$this->load();
@@ -49,12 +44,10 @@ class ActiveRecordCollection extends ArrayList {
 	 * @return ActiveRecordCollection  provides a fluent interface
 	 */
 	public function load() {
-		$res = $this->ds->getResult();
+		$res = $this->source->getResult();
 		$res->setRowClass($this->getItemType());
 		$res->detectTypes();
-
 		$this->import($res->fetchAll());
-		//$this->loaded = TRUE;
 
 		if ($this->reversed)
 			$this->reverse();
@@ -64,29 +57,20 @@ class ActiveRecordCollection extends ArrayList {
 
 
 	/**
-	 * Check if is the Collection loaded from the repository.
-	 * @return bool
-	 */
-	public function isLoaded() {
-		return (bool) $this->loaded;
-	}
-
-
-	/**
-	 * Public getter.
+	 * Public property getter.
 	 * @return DibiDataSource
 	 */
-	public function getDataSource() {
-		return $this->ds;
+	public function getSource() {
+		return $this->source;
 	}
 
 
 	/**
-	 * Public setter.
-	 * @param  DibiDataSource $ds
+	 * Public property setter.
+	 * @param  DibiDataSource $source
 	 */
-	public function setDataSource(DibiDataSource $ds) {
-		$this->ds = $ds;
+	public function setSource(DibiDataSource $source) {
+		$this->source = $source;
 	}
 
 
@@ -103,9 +87,9 @@ class ActiveRecordCollection extends ArrayList {
 	public function filter($cond) {
 		if (is_array($cond))
 			foreach ($cond as $c)
-				$this->ds->where($c);
+				$this->source->where($c);
 		else
-			$this->ds->where(func_get_args());
+			$this->source->where(func_get_args());
 
 		$this->loaded = FALSE;
 		return $this;
@@ -120,7 +104,7 @@ class ActiveRecordCollection extends ArrayList {
 	 */
 	public function orderBy($column, $sorting = 'ASC') {
 		if (is_array($column)) {
-			$this->ds->orderBy($column);
+			$this->source->orderBy($column);
 
 		} else if (is_string($column) && preg_match('/[, ]+/', $column)) {
 			$tmp = $column;
@@ -129,10 +113,10 @@ class ActiveRecordCollection extends ArrayList {
 				$order = explode(' ', trim($order));
 				$column[trim($order[0], '[]')] = trim($order[1]);
 			}
-			$this->ds->orderBy($column);
+			$this->source->orderBy($column);
 
 		} else {
-			$this->ds->orderBy($column, $sorting);
+			$this->source->orderBy($column, $sorting);
 		}
 
 		$this->loaded = FALSE;
@@ -147,7 +131,7 @@ class ActiveRecordCollection extends ArrayList {
 	 * @return ActiveRecordCollection  provides a fluent interface
 	 */
 	public function applyLimit($limit, $offset = NULL) {
-		$this->ds->applyLimit($limit, $offset);
+		$this->source->applyLimit($limit, $offset);
 		$this->loaded = FALSE;
 		return $this;
 	}
@@ -223,7 +207,7 @@ class ActiveRecordCollection extends ArrayList {
 	public function first() {
 		if (!$this->isLoaded() && !$this->reversed) {
 			$clone = clone $this;
-			$clone->dataSource = $clone->dataSource->toDataSource()->applyLimit(1);
+			$clone->source = $clone->source->toDataSource()->applyLimit(1);
 			$clone->load();
 			return $clone->first();
 		}
@@ -241,7 +225,7 @@ class ActiveRecordCollection extends ArrayList {
 	public function last() {
 		if (!$this->isLoaded() && !$this->reversed) {
 			$clone = clone $this;
-			$clone->dataSource = $clone->dataSource->toDataSource()->applyLimit(1, $this->count()-1);
+			$clone->source = $clone->source->toDataSource()->applyLimit(1, $this->count()-1);
 			$clone->load();
 			return $clone->last();
 		}
@@ -254,10 +238,9 @@ class ActiveRecordCollection extends ArrayList {
 
 	/**
 	 * Return a copy of the Collection sorted in reverse.
-	 * @return ActiveRecordCollection
+	 * @return void  intentionally not fluent
 	 */
 	public function reverse() {
-		// TODO: optimalizace na nenactene kolekci
 		$this->import(array_reverse($this->getArrayCopy()));
 		$this->loaded = TRUE;
 		$this->reversed = TRUE;
@@ -302,21 +285,6 @@ class ActiveRecordCollection extends ArrayList {
 
 
 	/**
-	 * Appends the specified element to the end of this collection.
-	 * @param  mixed
-	 * @return void
-	 * @throws InvalidArgumentException
-	 */
-	public function _append($item) {
-		//neni treba, pokud se do updating() prida load()
-		//neni treba, osefovano v beforeAdd()
-		$this->fetchCheck();
-		parent::append($item);
-	}
-
-
-
-	/**
 	 * Removes the first occurrence of the specified element.
 	 * @param  mixed
 	 * @return bool  true if this collection changed as a result of the call
@@ -330,7 +298,6 @@ class ActiveRecordCollection extends ArrayList {
 			$item->destroy();
 
 		return $removed;
-		//neni treba -> fetchne se v search ktere vola rekurzivne getArrayCopy()
 	}
 
 
@@ -342,58 +309,7 @@ class ActiveRecordCollection extends ArrayList {
 	 * @return int|FALSE
 	 */
 	protected function search($item) {
-		//neni treba delat kontrolu isLoaded() -> fetchne se v getArrayCopy()
-		//je treba jen zmenit 3. parametr na FALSE
 		return array_search($item, $this->getArrayCopy(), FALSE);
-	}
-
-
-
-	/**
-	 * Removes all Records from the Collection.
-	 * @return void
-	 */
-	public function clear() {
-		parent::clear();
-		$this->loaded = TRUE;
-	}
-
-
-
-	/**
-	 * Returns true if this collection contains the specified item.
-	 * @param  mixed
-	 * @return bool
-	 */
-	public function _contains($item) {
-		//neni treba -> fetchne se v search ktere vola rekurzivne getArrayCopy()
-	}
-
-
-
-	/**
-	 * Import from array or any traversable object.
-	 * @param  array|Traversable
-	 * @return void
-	 * @throws InvalidArgumentException
-	 */
-	public function import($arr) {
-		parent::import($arr);
-		$this->loaded = TRUE;
-	}
-
-
-
-	/********************* internal notifications *********************/
-
-
-
-	/**
-	 * @return void
-	 */
-	protected function fetchCheck() {
-		if (!$this->isLoaded())
-			$this->load();
 	}
 
 
@@ -403,13 +319,13 @@ class ActiveRecordCollection extends ArrayList {
 	 * @throws InvalidArgumentException
 	 */
 	protected function typeCheck($item) {
-		if ($this->itemType !== NULL && !($item instanceof $this->itemType))
+		if (!($item instanceof $this->itemType))
 			throw new InvalidArgumentException("Item must be '$this->itemType' object.");
 	}
 
 
 
-	/********************* counting *********************/
+	/********************* Countable interface *********************/
 
 
 
@@ -418,9 +334,7 @@ class ActiveRecordCollection extends ArrayList {
 	 * @return int
 	 */
 	public function count() {
-		return $this->isLoaded() ? parent::count() : $this->ds->count();
-		//$this->fetchCheck();
-		//return parent::count();
+		return $this->isLoaded() ? parent::count() : $this->source->count();
 	}
 
 
@@ -429,100 +343,12 @@ class ActiveRecordCollection extends ArrayList {
 	 * @return int
 	 */
 	public function getTotalCount() {
-		return $this->ds->getTotalCount();
+		return $this->source->getTotalCount();
 	}
 
 
 
-	/********************* ArrayObject cooperation *********************/
-
-
-
-	/**
-	 * Returns the iterator.
-	 * @return ArrayIterator
-	 */
-	public function _getIterator() {
-		//neni treba delat kontrolu isLoaded() -> fetchne se v getArrayCopy()
-	}
-
-
-
-	/**
-	 * Protected exchangeArray().
-	 * @param  array  new array
-	 * @return Collection  provides a fluent interface
-	 */
-	protected function setArray($array) {
-		parent::setArray($array);
-		$this->loaded = TRUE;
-		return $this;
-	}
-
-
-
-	/**
-	 * Creates a copy of the ArrayObject.
-	 * @return array
-	 */
-	public function getArrayCopy() {
-		$this->fetchCheck();
-		return parent::getArrayCopy();
-	}
-
-
-
-	/**
-	 * Creates a copy of the ArrayObject. Alias for getArrayCopy().
-	 * @return array
-	 */
-	public function toArray() {
-		return $this->getArrayCopy();
-	}
-
-
-
-	/********************* interface ArrayAccess ********************/
-
-
-
-	/**
-	 * Replaces (or appends) the item (ArrayAccess implementation).
-	 * @param  int index
-	 * @param  object
-	 * @return void
-	 * @throws InvalidArgumentException, NotSupportedException, ArgumentOutOfRangeException
-	 */
-	public function offsetSet($index, $item) {
-		// TODO: podpora na hromadné settery
-		$this->fetchCheck();
-		parent::offsetSet($index, $item);
-	}
-
-
-
-	/**
-	 * Returns item (ArrayAccess implementation).
-	 * @param  int index
-	 * @return mixed
-	 * @throws ArgumentOutOfRangeException
-	 */
-	public function offsetGet($index) {
-		$this->fetchCheck();
-		return parent::offsetGet($index);
-	}
-
-
-
-	/**
-	 * Exists item? (ArrayAccess implementation).
-	 * @param  int index
-	 * @return bool
-	 */
-	public function offsetExists($index) {
-		$this->fetchCheck();
-		return parent::offsetExists($index);
-	}
+	/********************* ArrayAccess interface *********************/
 
 
 
@@ -533,11 +359,36 @@ class ActiveRecordCollection extends ArrayList {
 	 * @throws NotSupportedException, ArgumentOutOfRangeException
 	 */
 	public function offsetUnset($index) {
-		$this->fetchCheck();
+		$this->loadCheck();
 		if ($this->offsetExists($index))
 			$this->offsetGet($index)->destroy();
 		
 		parent::offsetUnset($index);
+	}
+
+
+
+	/********************* magic methods *********************/
+
+
+
+	/**
+	 * Returns property value. Do not call directly.
+	 * @throws MemberAccessException if the property is not defined.
+	 */
+	public function &__get($name) {
+		// TODO: mass getter
+		return parent::__get($name);
+	}
+
+
+	/**
+	 * Sets value of a property. Do not call directly.
+	 * @throws MemberAccessException if the property is not defined or is read-only
+	 */
+	public function __set($name, $value) {
+		// TODO: mass setter
+		return parent::__set($name, $value);
 	}
 	
 }
