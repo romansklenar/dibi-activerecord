@@ -91,7 +91,7 @@ class ActiveRecordCollection extends LazyArrayList {
 		else
 			$this->source->where(func_get_args());
 
-		$this->loaded = FALSE;
+		$this->invalidate();
 		return $this;
 	}
 
