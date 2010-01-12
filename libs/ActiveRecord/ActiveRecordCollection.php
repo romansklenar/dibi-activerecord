@@ -119,7 +119,7 @@ class ActiveRecordCollection extends LazyArrayList {
 			$this->source->orderBy($column, $sorting);
 		}
 
-		$this->loaded = FALSE;
+		$this->invalidate();
 		return $this;
 	}
 
@@ -132,7 +132,7 @@ class ActiveRecordCollection extends LazyArrayList {
 	 */
 	public function applyLimit($limit, $offset = NULL) {
 		$this->source->applyLimit($limit, $offset);
-		$this->loaded = FALSE;
+		$this->invalidate();
 		return $this;
 	}
 
@@ -242,7 +242,6 @@ class ActiveRecordCollection extends LazyArrayList {
 	 */
 	public function reverse() {
 		$this->import(array_reverse($this->getArrayCopy()));
-		$this->loaded = TRUE;
 		$this->reversed = TRUE;
 		return $this;
 	}
