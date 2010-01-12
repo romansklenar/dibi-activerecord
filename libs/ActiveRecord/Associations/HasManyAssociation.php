@@ -52,7 +52,7 @@ final class HasManyAssociation extends Association {
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
 		if ($this->through == NULL) {
-			$key = $record->foreignMask;
+			$key = $record->foreign;
 			$referenced = new $this->referenced;
 			$type = '%' . $referenced->types[$key];
 			$class = $this->referenced;
@@ -61,7 +61,7 @@ final class HasManyAssociation extends Association {
 		} else {
 			$referenced = new $this->referenced;
 			$through = new $this->through;
-			$sub = $through->getDataSource()->select($referenced->foreignMask)->where('%and', $record->foreignCondition);
+			$sub = $through->getDataSource()->select($referenced->foreign)->where('%and', $record->foreignCondition);
 			$ds = $referenced->getDataSource()->where('%n IN (%sql)', $referenced->primaryName, (string) $sub);
 			return new ActiveRecordCollection($ds, $this->referenced);
 		}

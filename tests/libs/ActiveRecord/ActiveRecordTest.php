@@ -113,15 +113,15 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals('id', $author->primaryName);
 	}
 
-	public function testGetForeignMask() {
-		$this->assertEquals('productCode', Product::create()->foreignMask);
-		$this->assertEquals('officeCode', Office::create()->foreignMask);
-		$this->assertEquals('officeCode', MockOffice::create()->foreignMask);
-		$this->assertEquals('orderNumber', Order::create()->foreignMask);
-		$this->assertEquals('customerNumber', Customer::create()->foreignMask);
-		$this->assertEquals('employeeNumber', Employee::create()->foreignMask);
-		//$this->assertEquals(array('customerNumber', 'checkNumber'), Payment::create()->foreignMask);
-		$this->assertEquals('authorId', Author::create()->foreignMask);
+	public function testGetForeign() {
+		$this->assertEquals('productCode', Product::create()->foreign);
+		$this->assertEquals('officeCode', Office::create()->foreign);
+		$this->assertEquals('officeCode', MockOffice::create()->foreign);
+		$this->assertEquals('orderNumber', Order::create()->foreign);
+		$this->assertEquals('customerNumber', Customer::create()->foreign);
+		$this->assertEquals('employeeNumber', Employee::create()->foreign);
+		//$this->assertEquals(array('customerNumber', 'checkNumber'), Payment::create()->foreign);
+		$this->assertEquals('authorId', Author::create()->foreign);
 
 		$order = Order::create();
 		$product = Product::create();
@@ -132,14 +132,14 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		//$payment = Payment::create();
 		$author = Author::create();
 
-		$this->assertEquals('orderNumber', $order->foreignMask);
-		$this->assertEquals('productCode', $product->foreignMask);
-		$this->assertEquals('officeCode', $office->foreignMask);
-		$this->assertEquals('officeCode', $mock->foreignMask);
-		$this->assertEquals('customerNumber', $customer->foreignMask);
-		$this->assertEquals('employeeNumber', $employee->foreignMask);
-		//$this->assertEquals(array('customerNumber', 'checkNumber'), $payment->foreignMask);
-		$this->assertEquals('authorId', $author->foreignMask);
+		$this->assertEquals('orderNumber', $order->foreign);
+		$this->assertEquals('productCode', $product->foreign);
+		$this->assertEquals('officeCode', $office->foreign);
+		$this->assertEquals('officeCode', $mock->foreign);
+		$this->assertEquals('customerNumber', $customer->foreign);
+		$this->assertEquals('employeeNumber', $employee->foreign);
+		//$this->assertEquals(array('customerNumber', 'checkNumber'), $payment->foreign);
+		$this->assertEquals('authorId', $author->foreign);
 	}
 
 	public function testGetState() {

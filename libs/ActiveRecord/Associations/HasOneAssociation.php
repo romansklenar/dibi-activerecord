@@ -26,7 +26,7 @@ final class HasOneAssociation extends Association {
 	 * @return ActiveRecord|ActiveRecordCollection|NULL
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
-		$key = $record->foreignMask;
+		$key = $record->foreign;
 		$referenced = new $this->referenced;
 		$type = '%' . $referenced->types[$key];
 		$class = $this->referenced;

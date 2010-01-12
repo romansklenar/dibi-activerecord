@@ -24,8 +24,8 @@ class OfficeTest extends BirtBaseTestCase {
 		$this->assertEquals('officeCode', $this->record->primaryName);
 	}
 
-	public function testGetForeignMask() {
-		$this->assertEquals('officeCode', $this->record->foreignMask);
+	public function testGetForeign() {
+		$this->assertEquals('officeCode', $this->record->foreign);
 	}
 
 	public function testGetColumnNames() {

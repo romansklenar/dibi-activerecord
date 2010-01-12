@@ -9,5 +9,5 @@
  */
 class Order extends ActiveRecord {
 
-	protected static $foreingMask = '%primary%';
+	protected static $foreing = '%primary%';
 }

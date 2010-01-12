@@ -35,7 +35,7 @@ class HasAndBelongsToManyAssociation extends Association {
 	public function retreiveReferenced(ActiveRecord $local) {
 		$referenced = new $this->referenced;
 		$entity = $this->getIntersectEntity($local->getConnection()->getDatabaseInfo());
-		$sub = $local->getConnection()->dataSource($entity)->select($referenced->foreignMask)->where('%and', $local->foreignCondition);
+		$sub = $local->getConnection()->dataSource($entity)->select($referenced->foreign)->where('%and', $local->foreignCondition);
 		$ds = $referenced->getDataSource()->where('%n IN (%sql)', $referenced->primaryName, (string) $sub);
 		return new ActiveRecordCollection($ds, $this->referenced);
 	}

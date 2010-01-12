@@ -8,5 +8,5 @@
  */
 class ProductLine extends ActiveRecord {
 
-	protected static $foreingMask = '%primary%';
+	protected static $foreing = '%primary%';
 }

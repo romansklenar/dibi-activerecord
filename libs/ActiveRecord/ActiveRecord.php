@@ -18,7 +18,7 @@ abstract class ActiveRecord extends Record {
 	protected static $primary;
 
 	/** @var string  foreign key mask, if not set uses Inflector::foreignKey() to detect foreign key names */
-	protected static $foreingMask; # i.e. '%table%Id', '%table%_id', '%table%_%primary%', '%primary%'
+	protected static $foreing; # i.e. '%table%Id', '%table%_id', '%table%_%primary%', '%primary%'
 
 	/** @var string  used connection name */
 	protected static $connection = ActiveMapper::DEFAULT_CONNECTION;
@@ -108,12 +108,12 @@ abstract class ActiveRecord extends Record {
 	 * Gets record's foreign key mask
 	 * @return string
 	 */
-	public function getForeignMask() {
-		if (isset(static::$foreingMask) && static::$foreingMask !== NULL) {
+	public function getForeign() {
+		if (isset(static::$foreing) && static::$foreing !== NULL) {
 			return str_replace(
 				array('%table%', '%primary%'),
 				array($this->getTableName(), $this->getPrimaryName()),
-				static::$foreingMask
+				static::$foreing
 			);
 
 		} else {
@@ -186,7 +186,7 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets current primary key(s) formated for use in array-style-condition.
+	 * Gets current primary key(s) type(s) and value(s) formated for use in array-style-condition.
 	 * @return array
 	 */
 	public function getPrimaryCondition() {
@@ -199,7 +199,7 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets current primary key(s) formated for use in array-style-condition.
+	 * Gets current foreign key type and value formated for use in array-style-condition.
 	 * @return array
 	 */
 	public function getForeignCondition() {
@@ -208,7 +208,7 @@ abstract class ActiveRecord extends Record {
 
 		$column = $this->getPrimaryInfo()->columns[0];
 		$cond = array();
-		$cond[$this->getForeignMask() . '%' . $column->type] = $this->getPrimaryValue(); // $this->getStorage()->original[$column->name];
+		$cond[$this->getForeign() . '%' . $column->type] = $this->getPrimaryValue(); // $this->getStorage()->original[$column->name];
 		return $cond;
 	}
 

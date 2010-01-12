@@ -25,7 +25,7 @@ final class BelongsToAssociation extends Association {
 
 		if ($referringAttribute === NULL) {
 			$referenced = new $this->referenced;
-			$this->referringAttribute = $referenced->foreignMask;
+			$this->referringAttribute = $referenced->foreign;
 		} else {
 			$this->referringAttribute = $referringAttribute;
 		}
