@@ -29,15 +29,13 @@ class HasOneAssociationTest extends ActiveRecordDatabaseTestCase {
 		$office = Office::find(1);
 		$asc = new HasOneAssociation('Office', 'Employee');
 		$ref = $asc->retreiveReferenced($office);
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof Employee);
+		$this->assertType('Employee', $ref);
 		$this->assertEquals(1002, $ref->employeeNumber);
 
 		$student = Student::find(1);
 		$asc = new HasOneAssociation('Student', 'Assignment');
 		$ref = $asc->retreiveReferenced($student);
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof Assignment);
+		$this->assertType('Assignment', $ref);
 		$this->assertEquals(1, $ref->id);
 
 
@@ -46,8 +44,7 @@ class HasOneAssociationTest extends ActiveRecordDatabaseTestCase {
 		$guest = Guest::find(1);
 		$asc = new HasOneAssociation('Guest', 'Car');
 		$ref = $asc->retreiveReferenced($guest);
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof Car);
+		$this->assertType('Car', $ref);
 		$this->assertEquals(1, $ref->id);
 	}
 }

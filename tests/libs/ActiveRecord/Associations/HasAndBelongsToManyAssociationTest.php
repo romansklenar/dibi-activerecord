@@ -98,8 +98,7 @@ class HasAndBelongsToManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasAndBelongsToManyAssociation('Order', 'Products', 'OrderDetails');
 		
 		$ref = $asc->retreiveReferenced($order)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(4, $ref->count());
 		$this->assertEquals('S18_1749', $ref->first()->productCode);
 		$this->assertEquals('S24_3969', $ref->last()->productCode);
@@ -109,8 +108,7 @@ class HasAndBelongsToManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasAndBelongsToManyAssociation('Products', 'Orders', 'OrderDetails');
 
 		$ref = $asc->retreiveReferenced($product)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(28, $ref->count());
 		$this->assertEquals('10107', $ref->first()->orderNumber);
 		$this->assertEquals('10417', $ref->last()->orderNumber);
@@ -118,19 +116,19 @@ class HasAndBelongsToManyAssociationTest extends ActiveRecordDatabaseTestCase {
 
 
 		$post = Post::find(4);
-		$this->assertTrue($post->tags instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $post->tags);
 		$this->assertEquals(2, count($post->tags));
-		$this->assertTrue(($tag = $post->tags->first()) instanceof Tag);
+		$this->assertType('Tag', $tag = $post->tags->first());
 		$this->assertEquals(1, $tag->id);
-		$this->assertTrue(($tag = $post->tags->last()) instanceof Tag);
+		$this->assertType('Tag', $tag = $post->tags->last());
 		$this->assertEquals(3, $tag->id);
 
 		$tag = Tag::find(1);
-		$this->assertTrue($tag->posts instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $tag->posts);
 		$this->assertEquals(5, count($tag->posts));
-		$this->assertTrue(($post = $tag->posts->first()) instanceof Post);
+		$this->assertType('Post', $post = $tag->posts->first());
 		$this->assertEquals(1, $post->id);
-		$this->assertTrue(($post = $tag->posts->last()) instanceof Post);
+		$this->assertType('Post', $post = $tag->posts->last());
 		$this->assertEquals(7, $post->id);
 
 
@@ -138,19 +136,19 @@ class HasAndBelongsToManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		Inflector::$railsStyle = TRUE;
 
 		$album = Album::find(3);
-		$this->assertTrue($album->songs instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $album->songs);
 		$this->assertEquals(6, count($album->songs));
-		$this->assertTrue(($song = $album->songs->first()) instanceof Song);
+		$this->assertType('Song', $song = $album->songs->first());
 		$this->assertEquals(2, $song->id);
-		$this->assertTrue(($song = $album->songs->last()) instanceof Song);
+		$this->assertType('Song', $song = $album->songs->last());
 		$this->assertEquals(8, $song->id);
 
 		$song = Song::find(7);
-		$this->assertTrue($song->albums instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $song->albums);
 		$this->assertEquals(3, count($song->albums));
-		$this->assertTrue(($album = $song->albums->first()) instanceof Album);
+		$this->assertType('Album', $album = $song->albums->first());
 		$this->assertEquals(1, $album->id);
-		$this->assertTrue(($album = $song->albums->last()) instanceof Album);
+		$this->assertType('Album', $album = $song->albums->last());
 		$this->assertEquals(3, $album->id);
 	}
 }

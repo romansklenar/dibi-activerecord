@@ -286,14 +286,14 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		Inflector::$railsStyle = FALSE;
 		$student = Student::find(1);
 		$this->assertTrue(isset($student->assignment));
-		$this->assertTrue($student->assignment instanceof Assignment);
+		$this->assertType('Assignment', $student->assignment);
 		$this->assertEquals(1, $student->assignment->id);
 
 
 		Inflector::$railsStyle = TRUE;
 		$guest = Guest::find(1);
 		$this->assertTrue(isset($guest->car));
-		$this->assertTrue($guest->car instanceof Car);
+		$this->assertType('Car', $guest->car);
 		$this->assertEquals(1, $guest->car->id);
 	}
 
@@ -304,14 +304,14 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$assignment = Assignment::find(2);
 		$this->assertTrue(isset($assignment->studentId));
 		$this->assertTrue(isset($assignment->student));
-		$this->assertTrue($assignment->student instanceof Student);
+		$this->assertType('Student', $assignment->student);
 		$this->assertEquals(2, $assignment->student->id);
 
 		// referenced by attribute
 		$student = Student::find(1);
 		$this->assertTrue(isset($student->reportsTo));
 		$this->assertTrue(isset($student->supervisor));
-		$this->assertTrue($student->supervisor instanceof Supervisor);
+		$this->assertType('Supervisor', $student->supervisor);
 		$this->assertEquals(3, $student->supervisor->id);
 
 
@@ -321,14 +321,14 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$car = Car::find(1);
 		$this->assertFalse(isset($car->car_id));
 		$this->assertTrue(isset($car->guest));
-		$this->assertTrue($car->guest instanceof Guest);
+		$this->assertType('Guest', $car->guest);
 		$this->assertEquals(1, $car->guest->id);
 
 		// referenced by attribute
 		$guest = Guest::find(1);
 		$this->assertTrue(isset($guest->belongs_to));
 		$this->assertTrue(isset($guest->guide));
-		$this->assertTrue($guest->guide instanceof Guide);
+		$this->assertType('Guide', $guest->guide);
 		$this->assertEquals(1, $guest->guide->id);
 	}
 	
@@ -338,19 +338,19 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		Inflector::$railsStyle = FALSE;
 
 		$programmer = Programmer::find(4);
-		$this->assertTrue($programmer->tasks instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $programmer->tasks);
 		$this->assertEquals(2, count($programmer->tasks));
-		$this->assertTrue(($task = $programmer->tasks->first()) instanceof Task);
+		$this->assertType('Task', $task = $programmer->tasks->first());
 		$this->assertEquals(1003, $task->id);
-		$this->assertTrue(($task = $programmer->tasks->last()) instanceof Task);
+		$this->assertType('Task', $task = $programmer->tasks->last());
 		$this->assertEquals(1009, $task->id);
 
 		$project = Project::find(1);
-		$this->assertTrue($project->tasks instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $project->tasks);
 		$this->assertEquals(5, count($project->tasks));
-		$this->assertTrue(($task = $project->tasks->first()) instanceof Task);
+		$this->assertType('Task', $task = $project->tasks->first());
 		$this->assertEquals(1001, $task->id);
-		$this->assertTrue(($task = $project->tasks->last()) instanceof Task);
+		$this->assertType('Task', $task = $project->tasks->last());
 		$this->assertEquals(1005, $task->id);
 
 
@@ -358,19 +358,19 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		Inflector::$railsStyle = TRUE;
 
 		$food = Food::find(3);
-		$this->assertTrue($food->compositions instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $food->compositions);
 		$this->assertEquals(6, count($food->compositions));
-		$this->assertTrue(($composition = $food->compositions->first()) instanceof Composition);
+		$this->assertType('Composition', $composition = $food->compositions->first());
 		$this->assertEquals(105, $composition->id);
-		$this->assertTrue(($composition = $food->compositions->last()) instanceof Composition);
+		$this->assertType('Composition', $composition = $food->compositions->last());
 		$this->assertEquals(110, $composition->id);
 
 		$ingredient = Ingredient::find(7);
-		$this->assertTrue($ingredient->compositions instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ingredient->compositions);
 		$this->assertEquals(3, count($ingredient->compositions));
-		$this->assertTrue(($composition = $ingredient->compositions->first()) instanceof Composition);
+		$this->assertType('Composition', $composition = $ingredient->compositions->first());
 		$this->assertEquals(102, $composition->id);
-		$this->assertTrue(($composition = $ingredient->compositions->last()) instanceof Composition);
+		$this->assertType('Composition', $composition = $ingredient->compositions->last());
 		$this->assertEquals(110, $composition->id);
 	}
 
@@ -380,19 +380,19 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		Inflector::$railsStyle = FALSE;
 
 		$programmer = Programmer::find(4);
-		$this->assertTrue($programmer->projects instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $programmer->projects);
 		$this->assertEquals(2, count($programmer->projects));
-		$this->assertTrue(($project = $programmer->projects->first()) instanceof Project);
+		$this->assertType('Project', $project = $programmer->projects->first());
 		$this->assertEquals(1, $project->id);
-		$this->assertTrue(($project = $programmer->projects->last()) instanceof Project);
+		$this->assertType('Project', $project = $programmer->projects->last());
 		$this->assertEquals(3, $project->id);
 
 		$project = Project::find(1);
-		$this->assertTrue($project->programmers instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $project->programmers);
 		$this->assertEquals(5, count($project->programmers));
-		$this->assertTrue(($programmer = $project->programmers->first()) instanceof Programmer);
+		$this->assertType('Programmer', $programmer = $project->programmers->first());
 		$this->assertEquals(1, $programmer->id);
-		$this->assertTrue(($programmer = $project->programmers->last()) instanceof Programmer);
+		$this->assertType('Programmer', $programmer = $project->programmers->last());
 		$this->assertEquals(7, $programmer->id);
 
 
@@ -400,19 +400,19 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		Inflector::$railsStyle = TRUE;
 
 		$food = Food::find(3);
-		$this->assertTrue($food->ingredients instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $food->ingredients);
 		$this->assertEquals(6, count($food->ingredients));
-		$this->assertTrue(($ingredient = $food->ingredients->first()) instanceof Ingredient);
+		$this->assertType('Ingredient', $ingredient = $food->ingredients->first());
 		$this->assertEquals(2, $ingredient->id);
-		$this->assertTrue(($ingredient = $food->ingredients->last()) instanceof Ingredient);
+		$this->assertType('Ingredient', $ingredient = $food->ingredients->last());
 		$this->assertEquals(8, $ingredient->id);
 
 		$ingredient = Ingredient::find(7);
-		$this->assertTrue($ingredient->foods instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ingredient->foods);
 		$this->assertEquals(3, count($ingredient->foods));
-		$this->assertTrue(($food = $ingredient->foods->first()) instanceof Food);
+		$this->assertType('Food', $food = $ingredient->foods->first());
 		$this->assertEquals(1, $food->id);
-		$this->assertTrue(($food = $ingredient->foods->last()) instanceof Food);
+		$this->assertType('Food', $food = $ingredient->foods->last());
 		$this->assertEquals(3, $food->id);
 	}
 
@@ -422,19 +422,19 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		Inflector::$railsStyle = FALSE;
 
 		$post = Post::find(4);
-		$this->assertTrue($post->tags instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $post->tags);
 		$this->assertEquals(2, count($post->tags));
-		$this->assertTrue(($tag = $post->tags->first()) instanceof Tag);
+		$this->assertType('Tag', $tag = $post->tags->first());
 		$this->assertEquals(1, $tag->id);
-		$this->assertTrue(($tag = $post->tags->last()) instanceof Tag);
+		$this->assertType('Tag', $tag = $post->tags->last());
 		$this->assertEquals(3, $tag->id);
 
 		$tag = Tag::find(1);
-		$this->assertTrue($tag->posts instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $tag->posts);
 		$this->assertEquals(5, count($tag->posts));
-		$this->assertTrue(($post = $tag->posts->first()) instanceof Post);
+		$this->assertType('Post', $post = $tag->posts->first());
 		$this->assertEquals(1, $post->id);
-		$this->assertTrue(($post = $tag->posts->last()) instanceof Post);
+		$this->assertType('Post', $post = $tag->posts->last());
 		$this->assertEquals(7, $post->id);
 
 
@@ -442,19 +442,19 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		Inflector::$railsStyle = TRUE;
 
 		$album = Album::find(3);
-		$this->assertTrue($album->songs instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $album->songs);
 		$this->assertEquals(6, count($album->songs));
-		$this->assertTrue(($song = $album->songs->first()) instanceof Song);
+		$this->assertType('Song', $song = $album->songs->first());
 		$this->assertEquals(2, $song->id);
-		$this->assertTrue(($song = $album->songs->last()) instanceof Song);
+		$this->assertType('Song', $song = $album->songs->last());
 		$this->assertEquals(8, $song->id);
 
 		$song = Song::find(7);
-		$this->assertTrue($song->albums instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $song->albums);
 		$this->assertEquals(3, count($song->albums));
-		$this->assertTrue(($album = $song->albums->first()) instanceof Album);
+		$this->assertType('Album', $album = $song->albums->first());
 		$this->assertEquals(1, $album->id);
-		$this->assertTrue(($album = $song->albums->last()) instanceof Album);
+		$this->assertType('Album', $album = $song->albums->last());
 		$this->assertEquals(3, $album->id);
 	}
 
@@ -527,14 +527,14 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		if (!TestHelper::isPhpVersion('5.3'))
 			$this->markTestSkipped("Test is only for PHP 5.3.*");
 		
-		$this->assertTrue(Order::objects()->first() instanceof Order);
-		$this->assertTrue(Product::objects()->first() instanceof Product);
-		$this->assertTrue(Office::objects()->first() instanceof Office);
-		$this->assertTrue(MockOffice::objects()->first() instanceof MockOffice);
-		$this->assertTrue(Customer::objects()->first() instanceof Customer);
-		$this->assertTrue(Employee::objects()->first() instanceof Employee);
-		$this->assertTrue(Payment::objects()->first() instanceof Payment);
-		$this->assertTrue(Author::objects()->first() instanceof Author);
+		$this->assertType('Order', Order::objects()->first());
+		$this->assertType('Product', Product::objects()->first());
+		$this->assertType('Office', Office::objects()->first());
+		$this->assertType('MockOffice', MockOffice::objects()->first());
+		$this->assertType('Customer', Customer::objects()->first());
+		$this->assertType('Employee', Employee::objects()->first());
+		$this->assertType('Payment', Payment::objects()->first());
+		$this->assertType('Author', Author::objects()->first());
 	}
 
 	public function testStaticCreate() {
@@ -551,7 +551,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		);
 
 		$author = Author::create();
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertEquals($cmp, $author->values);
 		$this->assertTrue($author->isRecordNew());
 		$this->assertFalse($author->isRecordExisting());
@@ -566,7 +566,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		);
 
 		$author = Author::create($this->authorValues);
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertType('array', $author->values);
 		$this->assertEquals(6, count($author->values));
 		$this->assertEquals($cmp, $author->values);
@@ -583,7 +583,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		);
 
 		$author = Author::create($this->authorValues + array('non-existing-column' => '***'));
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertType('array', $author->values);
 		$this->assertEquals(6, count($author->values));
 		$this->assertEquals($cmp, $author->values);
@@ -592,7 +592,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 
 		$author = Author::create(new ArrayObject($this->authorValues));
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertType('array', $author->values);
 		$this->assertEquals(6, count($author->values));
 		$this->assertEquals($cmp, $author->values);
@@ -601,7 +601,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 
 		$author = Author::create(new ArrayObject($this->authorValues + array('non-existing-column' => '***')));
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertType('array', $author->values);
 		$this->assertEquals(6, count($author->values));
 		$this->assertEquals($cmp, $author->values);
@@ -619,7 +619,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 			$this->markTestSkipped("Test is only for PHP 5.3.*");
 
 		$authors = Author::find(1,2);
-		$this->assertTrue($authors instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $authors);
 		$this->assertEquals(2, count($authors));
 		$this->assertEquals(1, $authors[0]->id);
 		$this->assertFalse($authors[0]->isRecordNew());
@@ -629,7 +629,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertTrue($authors[1]->isRecordExisting());
 
 		$authors = Author::find('1','2');
-		$this->assertTrue($authors instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $authors);
 		$this->assertEquals(2, count($authors));
 		$this->assertEquals(1, $authors[0]->id);
 		$this->assertFalse($authors[0]->isRecordNew());
@@ -639,20 +639,20 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertTrue($authors[1]->isRecordExisting());
 
 		$products = Product::find('S10_1678', 'S24_2000');
-		$this->assertTrue($products instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $products);
 		$this->assertEquals(2, count($products));
 		$this->assertEquals('S10_1678', $products->first()->productCode);
 		$this->assertEquals('S24_2000', $products->last()->productCode);
 
 		$author = Author::find(array('[id] = 3'));
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());
 		$this->assertEquals(3, $author->id);
 
 		// alternative way of previous command
 		$author = Author::find(3);
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());
 		$this->assertEquals(3, $author->id);
@@ -666,7 +666,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 				'credit' => 'ASC'
 			)
 		);
-		$this->assertTrue($authors instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $authors);
 		$this->assertEquals(2, count($authors));
 		$this->assertTrue($authors[0]->credit <= $authors[1]->credit);
 		$this->assertGreaterThanOrEqual($authors[0]->credit, $authors[1]->credit);
@@ -677,25 +677,25 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 			$this->markTestSkipped("Test is only for PHP 5.3.*");
 
 		$author = Author::find();
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());
 		$this->assertEquals(1, $author->id);
 
 		$author = Author::find(1);
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());
 		$this->assertEquals(1, $author->id);
 
 		$author = Author::find(array('[id] = 3'));
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());
 		$this->assertEquals(3, $author->id);
 
 		$author = Author::find(array("[firstname] = 'John'"));
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertFalse($author->isRecordNew());
 		$this->assertTrue($author->isRecordExisting());
 		$this->assertEquals(1, $author->id);
@@ -737,7 +737,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		);
 
 		$author = Author::create($cmp);
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertType('array', $author->values);
 		$this->assertEquals(6, count($author->values));
 		$this->assertEquals($cmp, $author->values);
@@ -757,7 +757,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 		$this->assertEquals(1, Author::count(array('[id] = 55')));
 		$tmp = Author::findAll(array('[id] = 55'))->first();
-		$this->assertTrue($tmp instanceof Author);
+		$this->assertType('Author', $tmp);
 	}
 
 	public function testSaveWithEmptyMandatoryField() {
@@ -780,7 +780,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		);
 
 		$author = Author::create($values);
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertTrue($author->isRecordNew());
 		$this->assertFalse($author->isRecordExisting());
 		$this->assertType('array', $author->values);
@@ -813,7 +813,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		);
 
 		$author = new Author($values);
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertTrue($author->isRecordNew());
 		$this->assertFalse($author->isRecordExisting());
 		$this->assertType('array', $author->values);
@@ -838,33 +838,33 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 			$this->markTestSkipped("Test is only for PHP 5.3.*");
 
 		$author = Author::findByLogin('john007');
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertEquals('john007', $author->login);
 
 		$authors = Author::findAllByFirstname('John');
-		$this->assertTrue($authors instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $authors);
 		$this->assertEquals(1, count($authors));
-		$this->assertTrue($authors->first() instanceof Author);
+		$this->assertType('Author', $authors->first());
 		$this->assertEquals('John', $author->firstname);
 
 		$author = Author::findByFirstname('John');
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertEquals('John', $author->firstname);
 
 		$authors = Author::findAllByLastname('Doe');
-		$this->assertTrue($authors instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $authors);
 		$this->assertEquals(3, count($authors));
-		$this->assertTrue($authors->first() instanceof Author);
+		$this->assertType('Author', $authors->first());
 
 		$authors = Author::findAllByFirstnameAndLastname('John', 'Doe');
-		$this->assertTrue($authors instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $authors);
 		$this->assertEquals(1, count($authors));
-		$this->assertTrue($authors->first() instanceof Author);
+		$this->assertType('Author', $authors->first());
 		$this->assertEquals('John', $author->firstname);
 		$this->assertEquals('Doe', $author->lastname);
 
 		$author = Author::findByFirstnameAndLastname('John', 'Doe');
-		$this->assertTrue($author instanceof Author);
+		$this->assertType('Author', $author);
 		$this->assertEquals('John', $author->firstname);
 		$this->assertEquals('Doe', $author->lastname);
 

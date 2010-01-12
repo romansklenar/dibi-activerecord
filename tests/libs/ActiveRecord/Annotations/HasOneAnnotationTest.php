@@ -13,8 +13,8 @@ class HasOneAnnotationTest extends PHPUnit_Framework_TestCase {
 
 		$this->assertType('array', $ann);
 		$this->assertEquals(2, count($ann));
-		$this->assertTrue($ann[0] instanceof HasOneAnnotation);
-		$this->assertTrue($ann[1] instanceof HasOneAnnotation);
+		$this->assertType('HasOneAnnotation', $ann[0]);
+		$this->assertType('HasOneAnnotation', $ann[1]);
 
 		$this->assertEquals(array('Employees'), $ann[0]->values);
 		$this->assertEquals(array('Orders', 'Invoices'), $ann[1]->values);

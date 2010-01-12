@@ -167,7 +167,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 
 	public function testGetStorage() {
 		$storage = $this->object->storage;
-		$this->assertTrue($storage instanceof DataStorage);
+		$this->assertType('DataStorage', $storage);
 	}
 
 	public function testState() {
@@ -790,7 +790,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function testCasting() {
-		$this->assertTrue($this->object->registered instanceof DateTime);
+		$this->assertType('DateTime', $this->object->registered);
 
 		$this->markTestSkipped('TODO: Bug or feature?');
 		// zpusobem jako je ukazano v metode getBypassedAttribute() se da pretypovani obejit
@@ -798,7 +798,7 @@ class RecordTest extends PHPUnit_Framework_TestCase {
 		// v pripade ze nechtene, muselo by se pretypovani presunout primo do tridy DataStorage
 		// ale spojecne i s datavymi typy/reference na Record, ktera by byla u kazde instance DataStorage,
 		// coz by byla rezie navic
-		$this->assertTrue($this->object->getBypassedAttribute('registered') instanceof DateTime);
+		$this->assertType('DateTime', $this->object->getBypassedAttribute('registered'));
 	}
 }
 

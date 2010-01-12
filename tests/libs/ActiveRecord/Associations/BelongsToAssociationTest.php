@@ -72,23 +72,20 @@ class BelongsToAssociationTest extends ActiveRecordDatabaseTestCase {
 
 		$asc = new BelongsToAssociation('Employee', 'Office');
 		$ref = $asc->retreiveReferenced($employee);
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof Office);
+		$this->assertType('Office', $ref);
 		$this->assertEquals(1, $ref->officeCode);
 		
 
 		$asc = new BelongsToAssociation('Employee', 'Office', 'officeCode');
 		$ref = $asc->retreiveReferenced($employee);
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof Office);
+		$this->assertType('Office', $ref);
 		$this->assertEquals(1, $ref->officeCode);
 
 
 		// self reference test
 		$asc = new BelongsToAssociation('Employee', 'Manager', 'reportsTo');
 		$ref = $asc->retreiveReferenced($employee);
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof Manager);
+		$this->assertType('Manager', $ref);
 		$this->assertEquals(1002, $ref->employeeNumber);
 
 
@@ -96,16 +93,14 @@ class BelongsToAssociationTest extends ActiveRecordDatabaseTestCase {
 		$assignment = Assignment::find(2);
 		$asc = new BelongsToAssociation('Assignment', 'Student');
 		$ref = $asc->retreiveReferenced($assignment);
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof Student);
+		$this->assertType('Student', $ref);
 		$this->assertEquals(2, $ref->id);
 
 		// referenced by attribute
 		$student = Student::find(1);
 		$asc = new BelongsToAssociation('Student', 'Supervisor', 'reportsTo');
 		$ref = $asc->retreiveReferenced($student);
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof Supervisor);
+		$this->assertType('Supervisor', $ref);
 		$this->assertEquals(3, $ref->id);
 
 
@@ -115,16 +110,14 @@ class BelongsToAssociationTest extends ActiveRecordDatabaseTestCase {
 		$car = Car::find(1);
 		$asc = new BelongsToAssociation('Car', 'Guest');
 		$ref = $asc->retreiveReferenced($car);
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof Guest);
+		$this->assertType('Guest', $ref);
 		$this->assertEquals(1, $ref->id);
 
 		// referenced by attribute
 		$guest = Guest::find(1);
 		$asc = new BelongsToAssociation('Guest', 'Guide', 'belongs_to');
 		$ref = $asc->retreiveReferenced($guest);
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof Guide);
+		$this->assertType('Guide', $ref);
 		$this->assertEquals(1, $ref->id);
 	}
 }

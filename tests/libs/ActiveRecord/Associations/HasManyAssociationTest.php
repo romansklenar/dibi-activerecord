@@ -65,19 +65,17 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$office = Office::find(1);
 		$asc = new HasManyAssociation('Office', 'Employee');
 		$ref = $asc->retreiveReferenced($office)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(6, $ref->count());
-		$this->assertTrue($ref->first() instanceof Employee);
+		$this->assertType('Employee', $ref->first());
 
 		$employee = Employee::find(1370);
 		$asc = new HasManyAssociation('Employee', 'Customer');
 		$asc = new HasManyAssociation('Employee', 'Customers');
 		$ref = $asc->retreiveReferenced($employee)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(7, $ref->count());
-		$this->assertTrue($ref->first() instanceof Customer);
+		$this->assertType('Customer', $ref->first());
 
 
 
@@ -85,19 +83,17 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Programmer', 'Task');
 		$asc = new HasManyAssociation('Programmer', 'Tasks');
 		$ref = $asc->retreiveReferenced($programmer)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(2, $ref->count());
-		$this->assertTrue($ref->first() instanceof Task);
+		$this->assertType('Task', $ref->first());
 
 		$project = Project::find(1);
 		$asc = new HasManyAssociation('Project', 'Task');
 		$asc = new HasManyAssociation('Project', 'Tasks');
 		$ref = $asc->retreiveReferenced($project)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(5, $ref->count());
-		$this->assertTrue($ref->first() instanceof Task);
+		$this->assertType('Task', $ref->first());
 
 
 
@@ -107,19 +103,17 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Food', 'Composition');
 		$asc = new HasManyAssociation('Food', 'Compositions');
 		$ref = $asc->retreiveReferenced($food)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(6, $ref->count());
-		$this->assertTrue($ref->first() instanceof Composition);
+		$this->assertType('Composition', $ref->first());
 
 		$ingredient = Ingredient::find(7);
 		$asc = new HasManyAssociation('Ingredient', 'Composition');
 		$asc = new HasManyAssociation('Ingredient', 'Compositions');
 		$ref = $asc->retreiveReferenced($ingredient)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(3, $ref->count());
-		$this->assertTrue($ref->first() instanceof Composition);
+		$this->assertType('Composition', $ref->first());
 	}
 
 	public function testRetreiveReferencedViaThrough() {
@@ -129,24 +123,22 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Order', 'Product', 'OrderDetail');
 		$asc = new HasManyAssociation('Order', 'Products', 'OrderDetail');
 		$ref = $asc->retreiveReferenced($order)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(4, $ref->count());
-		$this->assertTrue($ref->first() instanceof Product);
+		$this->assertType('Product', $ref->first());
 		$this->assertEquals('S18_1749', $ref->first()->productCode);
-		$this->assertTrue($ref->last() instanceof Product);
+		$this->assertType('Product', $ref->last());
 		$this->assertEquals('S24_3969', $ref->last()->productCode);
 
 		$product = Product::find('S10_1678');
 		$asc = new HasManyAssociation('Product', 'Order', 'OrderDetail');
 		$asc = new HasManyAssociation('Product', 'Orders', 'OrderDetail');
 		$ref = $asc->retreiveReferenced($product)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(28, $ref->count());
-		$this->assertTrue($ref->first() instanceof Order);
+		$this->assertType('Order', $ref->first());
 		$this->assertEquals(10107, $ref->first()->orderNumber);
-		$this->assertTrue($ref->last() instanceof Order);
+		$this->assertType('Order', $ref->last());
 		$this->assertEquals(10417, $ref->last()->orderNumber);
 
 
@@ -155,24 +147,22 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Programmer', 'Project', 'Task');
 		$asc = new HasManyAssociation('Programmer', 'Projects', 'Tasks');
 		$ref = $asc->retreiveReferenced($programmer)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(2, $ref->count());
-		$this->assertTrue($ref->first() instanceof Project);
+		$this->assertType('Project', $ref->first());
 		$this->assertEquals(1, $ref->first()->id);
-		$this->assertTrue($ref->last() instanceof Project);
+		$this->assertType('Project', $ref->last());
 		$this->assertEquals(3, $ref->last()->id);
 
 		$project = Project::find(1);
 		$asc = new HasManyAssociation('Project', 'Programmer', 'Task');
 		$asc = new HasManyAssociation('Project', 'Programmers', 'Tasks');
 		$ref = $asc->retreiveReferenced($project)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(5, $ref->count());
-		$this->assertTrue($ref->first() instanceof Programmer);
+		$this->assertType('Programmer', $ref->first());
 		$this->assertEquals(1, $ref->first()->id);
-		$this->assertTrue($ref->last() instanceof Programmer);
+		$this->assertType('Programmer', $ref->last());
 		$this->assertEquals(7, $ref->last()->id);
 
 
@@ -183,24 +173,22 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Food', 'Ingredient', 'Composition');
 		$asc = new HasManyAssociation('Food', 'Ingredients', 'Compositions');
 		$ref = $asc->retreiveReferenced($food)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(6, $ref->count());
-		$this->assertTrue($ref->first() instanceof Ingredient);
+		$this->assertType('Ingredient', $ref->first());
 		$this->assertEquals(2, $ref->first()->id);
-		$this->assertTrue($ref->last() instanceof Ingredient);
+		$this->assertType('Ingredient', $ref->last());
 		$this->assertEquals(8, $ref->last()->id);
 
 		$ingredient = Ingredient::find(7);
 		$asc = new HasManyAssociation('Ingredient', 'Food', 'Composition');
 		$asc = new HasManyAssociation('Ingredient', 'Foods', 'Compositions');
 		$ref = $asc->retreiveReferenced($ingredient)->load();
-		$this->assertType('object', $ref);
-		$this->assertTrue($ref instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $ref);
 		$this->assertEquals(3, $ref->count());
-		$this->assertTrue($ref->first() instanceof Food);
+		$this->assertType('Food', $ref->first());
 		$this->assertEquals(1, $ref->first()->id);
-		$this->assertTrue($ref->last() instanceof Food);
+		$this->assertType('Food', $ref->last());
 		$this->assertEquals(3, $ref->last()->id);
 	}
 }

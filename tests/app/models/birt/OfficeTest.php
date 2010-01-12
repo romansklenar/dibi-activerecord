@@ -62,7 +62,7 @@ class OfficeTest extends BirtBaseTestCase {
 		$this->assertEquals(1, count($asc[Association::HAS_MANY]));
 
 		$a = $asc[Association::HAS_MANY][0];
-		$this->assertTrue($a instanceof HasManyAssociation);
+		$this->assertType('HasManyAssociation', $a);
 		$this->assertEquals('Office', $a->local);
 		$this->assertEquals('Employee', $a->referenced);
 		$this->assertEquals(NULL, $a->through);
@@ -71,11 +71,11 @@ class OfficeTest extends BirtBaseTestCase {
 	public function testRelationEmployees() {
 		ActiveRecordCollection::$loadImmediately = TRUE;
 		$office = Office::find(1);
-		$this->assertTrue($office->employees instanceof ActiveRecordCollection);
+		$this->assertType('ActiveRecordCollection', $office->employees);
 		$this->assertEquals(6, count($office->employees));
-		$this->assertTrue(($employee = $office->employees->first()) instanceof Employee);
+		$this->assertType('Employee', $employee = $office->employees->first());
 		$this->assertEquals(1002, $employee->employeeNumber);
-		$this->assertTrue(($employee = $office->employees->last()) instanceof Employee);
+		$this->assertType('Employee', $employee = $office->employees->last());
 		$this->assertEquals(1166, $employee->employeeNumber);
 	}
 	
