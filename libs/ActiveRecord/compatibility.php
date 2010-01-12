@@ -119,12 +119,13 @@ if (!function_exists('dump')) {
 	/**
 	 * Dumps information about a variable in readable format.
 	 *
-	 * @param  mixed  variable to dump
-	 * @param  bool   return output instead of printing it? (bypasses $productionMode)
+	 * @param  mixed  variable(s) to dump
 	 * @return mixed  variable itself or dump
 	 */
-	function dump($var, $return = FALSE) {
-		return /*\Nette\*/Debug::dump($var, $return);
+	function dump($var) {
+		foreach ($args = func_get_args() as $arg)
+			Debug::dump($arg);
+		return $var;
 	}
 }
 
@@ -143,3 +144,8 @@ if (!$r->hasMethod('isMandatory')) {
 		return !$_this->isNullable() && !$_this->isAutoIncrement() && $_this->getDefault() === NULL;
 	}
 }
+
+
+const FIRST = 'first';
+const LAST = 'last';
+const ALL = 'all';
