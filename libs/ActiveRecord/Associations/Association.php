@@ -27,14 +27,16 @@ abstract class Association extends Object {
 	/** @var string */
 	public $referenced;
 
+	/** @var string */
+	protected $attribute;
+
 
 	/**
 	 * Association constructor.
 	 * 
 	 * @param string $type  association type constant
-	 * @param string $local  local object name
-	 * @param string $referenced  referenced object name
-	 * @param string $by  name of attribute in local object referring to referenced object
+	 * @param string $local  local class name
+	 * @param string $referenced  referenced class name
 	 */
 	public function __construct($type, $local, $referenced) {
 		if (in_array($type, self::$types))
@@ -42,12 +44,16 @@ abstract class Association extends Object {
 		else
 			throw new InvalidArgumentException("Unknown association type '$type' given.");
 
-		if ($type == self::HAS_MANY || $type == self::HAS_AND_BELONGS_TO_MANY)
+		if ($type == self::HAS_MANY || $type == self::HAS_AND_BELONGS_TO_MANY) {
+			$this->attribute = lcfirst(Inflector::pluralize($referenced));
 			if (Inflector::isPlural($referenced))
 				$referenced = Inflector::singularize($referenced);
+		} else {
+			$this->attribute = lcfirst(Inflector::singularize($referenced));
+		}
 
-		$r = new ClassReflection($referenced);
-		if (!$r->isInstantiable())
+		$rc = new ClassReflection($referenced);
+		if (!$rc->isInstantiable())
 			throw new InvalidArgumentException("Invalid class name '$referenced' of referenced object given.");
 
 		$this->local = $local;
@@ -57,11 +63,16 @@ abstract class Association extends Object {
 
 	/**
 	 * Is association in relation with given object name?
-	 * @param string $referenced  referenced object name
+	 * @param string $class  referenced class name
 	 * @return bool
 	 */
-	public function isInRelation($referenced) {
-		return $referenced == $this->referenced;
+	public function isInRelation($class) {
+		return $class == $this->referenced;
+	}
+
+
+	public function getAttribute() {
+		return $this->getAttribute();
 	}
 
 
@@ -72,9 +83,18 @@ abstract class Association extends Object {
 	 */
 	abstract public function retreiveReferenced(ActiveRecord $record);
 
+
+	/**
+	 * Links referenced object to record.
+	 * @param  ActiveRecord $record
+	 * @param  ActiveRecord|ActiveRecordCollection|NULL $new
+	 */
+	abstract public function linkWithReferenced(ActiveRecord $record, $new);
+
+
 	
 	/**
-	 * @return int
+	 * @return string
 	 */
 	public function getType() {
 		return $this->type;

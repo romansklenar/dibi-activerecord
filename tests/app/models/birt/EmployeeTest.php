@@ -17,8 +17,8 @@ class EmployeeTest extends BirtBaseTestCase {
 	}
 
 
-	public function testGetAssotiations() {
-		$asc = $this->record->assotiations;
+	public function testGetAssociations() {
+		$asc = $this->record->associations;
 		$this->assertType('array', $asc);
 		$this->assertEquals(2, count($asc));
 

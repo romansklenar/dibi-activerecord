@@ -10,14 +10,14 @@
 class DataStorage extends Object implements ArrayAccess {
 
 	/** @var array */
-	public $original = array();
+	public $originals = array();
 
 	/** @var array */
-	public $modified = array();
+	public $changes = array();
 
-	public function __construct(array $original = array(), array $modified = array()) {
-		$this->original = $original;
-		$this->modified = $modified;
+	public function __construct(array $originals = array(), array $changes = array()) {
+		$this->originals = $originals;
+		$this->changes = $changes;
 	}
 
 
@@ -29,10 +29,10 @@ class DataStorage extends Object implements ArrayAccess {
 	 * @throws MemberAccessException if the property is not defined.
 	 */
 	public function &__get($name) {
-		if (array_key_exists($name, $this->modified))
-			return $this->modified[$name];
-		else if (array_key_exists($name, $this->original))
-			return $this->original[$name];
+		if (array_key_exists($name, $this->changes))
+			return $this->changes[$name];
+		else if (array_key_exists($name, $this->originals))
+			return $this->originals[$name];
 		else
 			return parent::__get($name);
 	}
@@ -47,9 +47,9 @@ class DataStorage extends Object implements ArrayAccess {
 	 * @throws MemberAccessException if the property is not defined or is read-only
 	 */
 	public function __set($name, $value) {
-		if (array_key_exists($name, $this->original)) {
-			if ($this->original[$name] !== $value)
-				$this->modified[$name] = $value;
+		if (array_key_exists($name, $this->originals)) {
+			if ($this->originals[$name] !== $value)
+				$this->changes[$name] = $value;
 		} else {
 			parent::__set($name, $value);
 		}
@@ -63,7 +63,7 @@ class DataStorage extends Object implements ArrayAccess {
 	 * @return bool
 	 */
 	public function __isset($name) {
-		return array_key_exists($name, $this->original) ? TRUE : parent::__isset($name);
+		return array_key_exists($name, $this->originals) ? TRUE : parent::__isset($name);
 	}
 
 

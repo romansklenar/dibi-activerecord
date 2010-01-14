@@ -24,8 +24,7 @@ final class BelongsToAssociation extends Association {
 		parent::__construct(self::BELONGS_TO, $local, $referenced);
 
 		if ($referringAttribute === NULL) {
-			$referenced = new $this->referenced;
-			$this->referringAttribute = $referenced->foreign;
+			$this->referringAttribute = $referenced::getForeignKey();
 		} else {
 			$this->referringAttribute = $referringAttribute;
 		}
@@ -41,5 +40,15 @@ final class BelongsToAssociation extends Association {
 		$key = $this->referringAttribute;
 		$class = $this->referenced;
 		return $class::find($record->$key);
+	}
+
+
+	/**
+	 * Links referenced object to record.
+	 * @param  ActiveRecord $record
+	 * @param  ActiveRecord|ActiveRecordCollection|NULL $new
+	 */
+	public function linkWithReferenced(ActiveRecord $record, $new) {
+		return $new;
 	}
 }

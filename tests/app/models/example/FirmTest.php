@@ -20,8 +20,8 @@ class FirmTest extends ExampleBaseTestCase {
 		$this->assertEquals('Companies', $this->record->tableName);
 	}
 
-	public function testGetPrimaryName() {
-		$this->assertEquals('id', $this->record->primaryName);
+	public function testGetPrimaryKey() {
+		$this->assertEquals('id', $this->record->primaryKey);
 	}
 
 }

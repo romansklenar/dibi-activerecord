@@ -20,8 +20,8 @@ class ClientTest extends ExampleBaseTestCase {
 		$this->assertEquals('Companies', $this->record->tableName);
 	}
 
-	public function testGetPrimaryName() {
-		$this->assertEquals('id', $this->record->primaryName);
+	public function testGetPrimaryKey() {
+		$this->assertEquals('id', $this->record->primaryKey);
 	}
 
 	public function testGetColumnNames() {
@@ -34,11 +34,11 @@ class ClientTest extends ExampleBaseTestCase {
 		$this->assertEquals($cols, $this->record->types);
 	}
 
-	public function testGetAssotiations() {
+	public function testGetAssociations() {
 		$this->markTestSkipped();
 		$this->assertEquals(array('Milestones', new ArrayObject(array('ProjectManager', 'bossId' => '> Author'))), Annotations::getAll(new ReflectionClass('C'), 'hasOne', TRUE));
 		$asoc = new Association;
-		$this->assertEquals($asoc, $this->record->assotiations);
+		$this->assertEquals($asoc, $this->record->associations);
 	}
 	
 }

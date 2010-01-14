@@ -52,18 +52,28 @@ final class HasManyAssociation extends Association {
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
 		if ($this->through == NULL) {
-			$key = $record->foreign;
+			$key = $record->foreignKey;
 			$referenced = new $this->referenced;
 			$type = '%' . $referenced->types[$key];
 			$class = $this->referenced;
-			return $class::objects()->filter("%n = {$type}", $key, $record[$record->primaryName]);
+			return $class::objects()->filter("%n = {$type}", $key, $record[$record->primaryKey]);
 			
 		} else {
 			$referenced = new $this->referenced;
 			$through = new $this->through;
-			$sub = $through->getDataSource()->select($referenced->foreign)->where('%and', $record->foreignCondition);
-			$ds = $referenced->getDataSource()->where('%n IN (%sql)', $referenced->primaryName, (string) $sub);
+			$sub = $through->dataSource->select($referenced->foreignKey)->where('%and', RecordHelper::formatForeignKey($record));
+			$ds = $referenced->dataSource->where('%n IN (%sql)', $referenced->primaryKey, (string) $sub);
 			return new ActiveRecordCollection($ds, $this->referenced);
 		}
+	}
+
+
+	/**
+	 * Links referenced object to record.
+	 * @param  ActiveRecord $record
+	 * @param  ActiveRecord|ActiveRecordCollection|NULL $new
+	 */
+	public function linkWithReferenced(ActiveRecord $record, $new) {
+		return $new;
 	}
 }

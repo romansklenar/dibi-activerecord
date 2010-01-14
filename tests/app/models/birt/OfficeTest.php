@@ -20,12 +20,12 @@ class OfficeTest extends BirtBaseTestCase {
 		$this->assertEquals('Offices', $this->record->tableName);
 	}
 
-	public function testGetPrimaryName() {
-		$this->assertEquals('officeCode', $this->record->primaryName);
+	public function testGetPrimaryKey() {
+		$this->assertEquals('officeCode', $this->record->primaryKey);
 	}
 
-	public function testGetForeign() {
-		$this->assertEquals('officeCode', $this->record->foreign);
+	public function testGetForeignKey() {
+		$this->assertEquals('officeCode', $this->record->foreignKey);
 	}
 
 	public function testGetColumnNames() {
@@ -52,8 +52,8 @@ class OfficeTest extends BirtBaseTestCase {
 		$this->assertEquals($types, $this->record->types);
 	}
 
-	public function testGetAssotiations() {
-		$asc = $this->record->assotiations;
+	public function testGetAssociations() {
+		$asc = $this->record->associations;
 		
 		$this->assertType('array', $asc);
 		$this->assertEquals(1, count($asc));

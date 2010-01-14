@@ -10,8 +10,7 @@
  */
 final class ActiveMapper extends Mapper {
 
-	/** @var string */
-	static $collectionClass = 'ActiveRecordCollection';
+	const COLLECTION_CLASS = 'ActiveRecordCollection';
 
 
 	private static function sanatizeOptions(& $options = array()) {
@@ -63,8 +62,8 @@ final class ActiveMapper extends Mapper {
 	 * @param string $scope
 	 * @return ActiveRecordCollection|ActiveRecord
 	 */
-	public function find($class, $options = array(), $scope = 'all') {
-		static $scopes = array('all', 'first', 'last');
+	public function find($class, $options = array(), $scope = IMapper::ALL) {
+		static $scopes = array(IMapper::ALL, IMapper::FIRST, IMapper::LAST);
 		if (!in_array($scope, $scopes))
 			throw new InvalidArgumentException("Invalid scope given, one of values " . implode(', ', $scopes) . " expected, '$scope' given.");
 
@@ -78,12 +77,11 @@ final class ActiveMapper extends Mapper {
 			throw new InvalidArgumentException("Invalid argument given, class name or 'ActiveRecord' instance expected, '$type' given.");
 		}
 
-		$ds = $record->getDataSource();
+		$ds = $record->dataSource;
 		self::applyOptions($ds, self::sanatizeOptions($options));
 
-		if ($scope == 'first' || $scope == 'last') {
-			// optimalization
-			if ($scope == 'last')
+		if ($scope == IMapper::FIRST || $scope == IMapper::LAST) {
+			if ($scope == IMapper::LAST)
 				$ds = $ds->toDataSource()->applyLimit(1, $ds->count()-1);
 			
 			$res = $ds->getResult();
@@ -92,30 +90,29 @@ final class ActiveMapper extends Mapper {
 			return $res->fetch();
 
 		} else {
-			$collection = self::$collectionClass;
-			return new $collection($ds, $class); // $collection = new $class($ds, $record);
-			// return $scope == 'all' ? $collection : ($scope == 'first' ? $collection->first() : $collection->last());
+			$collection = self::COLLECTION_CLASS;
+			return new $collection($ds, $class);
 		}
 	}
 
 	public function save(Record $record) {
 		// TODO: do transakce
 		if ($record->isDirty()) {
-			if ($record->isRecordNew()) {
+			if ($record->isNewRecord()) {
 				$value = self::insert($record);
 
-				$pk = $record->getPrimaryInfo();
-				if (count($pk->columns) == 1) {
-					if ($pk->columns[0]->isAutoincrement())
-						$record->{$record->getPrimaryName()} = $value;
-					else if ($value = $record->getConnection()->getDriver()->getInsertId(NULL))
+				$primary = $record->primaryInfo;
+				if (TableHelper::isPrimarySingle($primary)) {
+					if (TableHelper::isPrimaryAutoIncrement($primary))
+						$record->{$record->primaryKey} = $value;
+					else if ($value = $record->connection->getDriver()->getInsertId(NULL))
 						$record = self::find($record, $value);
 					else
 						throw new InvalidStateException("Unable to refresh record's primary key value after INSERT.");
 
 				} else {
 					$cond = array();
-					foreach ($pk->columns as $column)
+					foreach ($primary->columns as $column)
 						$cond[] = array("%n = {$column->type}", $column->name, $record->$column);
 					$record = self::find($record, array('where' => $cond))->first();
 				}
@@ -128,32 +125,30 @@ final class ActiveMapper extends Mapper {
 	}
 
 	public function update(Record $record) {
-		if ($record->isRecordNew())
+		if ($record->isNewRecord())
 			throw new LogicException("Cannot update non-existing record.");
 
-		$record->getConnection()
-			->update($record->getTableName(), $record->getModifiedValues())
-			->where('%and', $record->getPrimaryCondition())
+		$record->connection
+			->update($record->tableName, RecordHelper::formatChanges($record))
+			->where('%and', RecordHelper::formatPrimary($record))
 			->execute();
 
-		return $record->getConnection()->affectedRows();
+		return $record->connection->affectedRows();
 	}
 
 	public function insert(Record $record) {
-		if ($record->isRecordExisting())
+		if ($record->isExistingRecord())
 			throw new LogicException("Cannot insert existing record.");
-
-		$values = $record->getModifiedValues();
-		if ($record->getPrimaryInfo()->columns[0]->isAutoincrement())
-			unset($values[$record->getPrimaryInfo()->columns[0]->getName()]);
 		
-		return $record->getConnection()->insert($record->getTableName(), $values)->execute(dibi::IDENTIFIER);
+		return $record->connection
+			->insert($record->tableName, RecordHelper::formatChanges($record))
+			->execute(dibi::IDENTIFIER);
 	}
 
 	public function delete(Record $record) {
-		$record->getConnection()->delete($record->getTableName())
-			->where('%and', $record->getPrimaryCondition())->execute();
-		return $record->getConnection()->affectedRows();
+		$record->connection->delete($record->tableName)
+			->where('%and', RecordHelper::formatPrimary($record))->execute();
+		return $record->connection->affectedRows();
 	}
 
 }

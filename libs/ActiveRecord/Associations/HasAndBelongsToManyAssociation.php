@@ -29,14 +29,14 @@ class HasAndBelongsToManyAssociation extends Association {
 	/**
 	 * Retreives referenced object(s).
 	 * 
-	 * @param  ActiveRecord $local
+	 * @param  ActiveRecord $record
 	 * @return ActiveRecord|ActiveRecordCollection|NULL
 	 */
-	public function retreiveReferenced(ActiveRecord $local) {
+	public function retreiveReferenced(ActiveRecord $record) {
 		$referenced = new $this->referenced;
-		$entity = $this->getIntersectEntity($local->getConnection()->getDatabaseInfo());
-		$sub = $local->getConnection()->dataSource($entity)->select($referenced->foreign)->where('%and', $local->foreignCondition);
-		$ds = $referenced->getDataSource()->where('%n IN (%sql)', $referenced->primaryName, (string) $sub);
+		$entity = $this->getIntersectEntity($record->connection->getDatabaseInfo());
+		$sub = $record->connection->dataSource($entity)->select($referenced->foreignKey)->where('%and', RecordHelper::formatForeignKey($record));
+		$ds = $referenced->dataSource->where('%n IN (%sql)', $referenced->primaryKey, (string) $sub);
 		return new ActiveRecordCollection($ds, $this->referenced);
 	}
 
@@ -45,7 +45,7 @@ class HasAndBelongsToManyAssociation extends Association {
 	 * Intersect entity name lazy getter.
 	 * 
 	 * @param DibiDatabaseInfo $database
-	 * @return string  intersect entity name
+	 * @return string  intersect entity table name
 	 */
 	public function getIntersectEntity(DibiDatabaseInfo $database) {
 		if ($this->intersectEntity == NULL) {
@@ -57,5 +57,15 @@ class HasAndBelongsToManyAssociation extends Association {
 				throw new InvalidStateException("Intersect entity '$name' or '$alternate' of many-to-many relation not found in a database $database->name");
 		}
 		return $this->intersectEntity;
+	}
+
+
+	/**
+	 * Links referenced object to record.
+	 * @param  ActiveRecord $record
+	 * @param  ActiveRecord|ActiveRecordCollection|NULL $new
+	 */
+	public function linkWithReferenced(ActiveRecord $record, $new) {
+		return $new;
 	}
 }
