@@ -32,18 +32,21 @@ abstract class ActiveRecord extends Record {
 	/** @var IValidator */
 	private static $validator;
 
-	/** @var DataStorage  internal record attributes storage */
-	private $attributes;
+	/** @var Storage */
+	private $values;
+
+	/** @var Storage */
+	private $dirty;
 
 	/** @var bool  record state sign */
 	private $state;
 
-	
+	/**#@+ Configuration options */
 	const DEFAULT_MAPPER = 'ActiveMapper';
-
-	const NOT_LOADED = '#not-loaded';
+	/**#@-*/
 
 	/**#@+ state */
+	const STATE_INICIALIZING = '%I';
 	const STATE_EXISTING = '%E';
 	const STATE_NEW = '%N';
 	const STATE_DELETED = '%D';
@@ -66,17 +69,15 @@ abstract class ActiveRecord extends Record {
 			throw new InvalidArgumentException("Unknow record state '$state' given.");
 
 		$this->state = $state;
-		$this->attributes = new DataStorage;
+		$this->values = new Storage;
+		$this->dirty = new Storage;
 
-		$values = (array) $input + self::getDefaults();
-		foreach (self::getColumnNames() as $attr)
-			$this->attributes->originals[$attr] = isset($values[$attr]) ? $values[$attr] : NULL;
+		$values = (array) $input + $this->getDefaults();
+		$this->setValues($values);
 
-		foreach (array_keys(self::getAssociations()) as $attr)
-			$this->attributes->originals[$attr] = self::NOT_LOADED;
-
-		if ($this->isNewRecord())
-			$this->attributes->changes = $this->attributes->originals;
+		$this->values = $this->dirty;
+		if ($this->isExistingRecord())
+			$this->dirty = new Storage;
 	}
 
 
@@ -115,8 +116,8 @@ abstract class ActiveRecord extends Record {
 
 		return $state;
 	}
-	
-	
+
+
 	/**
 	 * Is record existing?
 	 * @return bool
@@ -253,7 +254,7 @@ abstract class ActiveRecord extends Record {
 			return TableHelper::getPrimaryInfo(self::getClass());
 		}
 	}
-	
+
 
 	/**
 	 * Generates virtual DibiIndexInfo object.
@@ -358,14 +359,15 @@ abstract class ActiveRecord extends Record {
 	 * @return bool|Association
 	 */
 	private function hasAssociation($name) {
-		return array_key_exists($name, self::getAssociations());
-/*
-		// deprecated
+		$asc = self::getAssociations();
+		$exists = array_key_exists($name, $asc);
+		if ($exists || $this->state === self::STATE_INICIALIZING)
+			return $exists;
+
 		foreach ($asc as $association)
 			if ($association->isInRelation(Inflector::classify($name)))
-				return $association;
+				return TRUE;
 		return FALSE;
-*/
 	}
 
 
@@ -400,8 +402,8 @@ abstract class ActiveRecord extends Record {
 	 * Returns list of attributes.
 	 * @return array
 	 */
-	public function getAttributes() {
-		return array_keys($this->attributes->originals);
+	public static function getAttributes() {
+		return array_merge(self::getColumnNames(), array_keys(self::getAssociations()));
 	}
 
 
@@ -410,7 +412,7 @@ abstract class ActiveRecord extends Record {
 	 * @bool
 	 */
 	protected function hasAttribute($name) {
-		return isset($this->attributes->$name);
+		return in_array($name, self::getAttributes());
 	}
 
 
@@ -422,18 +424,24 @@ abstract class ActiveRecord extends Record {
 	 */
 	protected function getAttribute($name) {
 		if ($this->hasAssociation($name)) {
-			$value = $this->attributes->$name;
-			if ($value === self::NOT_LOADED) {
-				$this->attributes->$name = $this->getAssociation($name)->retreiveReferenced($this);
-			}
-			return $this->attributes->$name;
+			if (array_key_exists($name, $this->dirty))
+				return $this->dirty->$name;
+			else if (array_key_exists($name, $this->values))
+				return $this->values->$name;
+			else // lazy load
+				return $this->values->$name = $this->getAssociation($name)->retreiveReferenced($this);
 
-		} else if ($this->hasAttribute($name)) {
-			$value = $this->attributes->$name;
+		} else if ($this->hasColumn($name)) {
+			if (array_key_exists($name, $this->dirty))
+				$value = $this->dirty->$name;
+			else if (array_key_exists($name, $this->values))
+				$value = $this->values->$name;
+			else // not inicialized yet
+				return NULL;
 			return $this->typeCast($name, $value);
 
 		} else {
-			throw MemberAccessException("Unknow record attribute $this->class::\$$name.");
+			throw MemberAccessException("Unknown record attribute $this->class::\$$name.");
 		}
 	}
 
@@ -446,22 +454,20 @@ abstract class ActiveRecord extends Record {
 	 * @throws MemberAccessException if the attribute is not defined or is read-only
 	 */
 	protected function setAttribute($name, $value) {
-		if ($this->hasAssociation($name)) {
-			$association = $this->getAssociation($name);
-			$this->getAssociation($name)->saveReferenced($this, $value);
-
-		} else if ($this->hasColumn($name)) {
-			$value = $this->typeCast($name, $value);
-			$this->attributes->$name = $value;
-
+		if ($this->hasColumn($name) || $this->hasAssociation($name)) {
+			$current = $this->getAttribute($name);
+			if ($current !== $value) {
+				$value = $this->typeCast($name, $value);
+				$this->dirty->$name = $value;
+			}
 		} else {
-			throw MemberAccessException("Unknow record attribute $this->class::\$$name.");
+			throw MemberAccessException("Unknown record attribute $this->class::\$$name.");
 		}
 	}
 
 
 	private function typeCast($name, $value) {
-		if ($value === NULL || is_object($value))
+		if ($value === NULL || $value instanceof ActiveRecord || $value instanceof ActiveRecordCollection)
 			return $value;
 
 		switch ($this->types[$name]) {
@@ -472,9 +478,9 @@ abstract class ActiveRecord extends Record {
 			case dibi::DATE:
 			case dibi::TIME:
 			case dibi::DATETIME:
-				/*if ($value instanceof DateTime)
+				if ($value instanceof DateTime)
 					return $value;
-				else */if ((int) $value === 0) // '', NULL, FALSE, '0000-00-00', ...
+				else if ((int) $value === 0) // '', NULL, FALSE, '0000-00-00', ...
 					return NULL;
 				else
 					$value = new DateTime(is_numeric($value) ? date('Y-m-d H:i:s', $value) : $value);
@@ -500,7 +506,7 @@ abstract class ActiveRecord extends Record {
 		return TableHelper::getColumnTypes(self::getClass());
 	}
 
-	
+
 	/**
 	 * Gets record's values in array(column => value)
 	 * @retrun array
@@ -533,7 +539,7 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	public function getChanges() {
-		return $this->attributes->changes;
+		return clone $this->dirty;
 	}
 
 
@@ -542,7 +548,27 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	public function getOriginals() {
-		return $this->attributes->originals;
+		return clone $this->values;
+	}
+
+
+	/**
+	 * Returns value of changed attribute
+	 * @param string $attr
+	 * @return array
+	 */
+	public function getChange($attr) {
+		return $this->dirty->$attr;
+	}
+
+
+	/**
+	 * Returns value of original attribute
+	 * @param string $attr
+	 * @return array
+	 */
+	public function getOriginal($attr) {
+		return $this->values->$attr;
 	}
 
 
@@ -600,8 +626,7 @@ abstract class ActiveRecord extends Record {
 	 * @return bool
 	 */
 	public function isDirty() {
-		// TODO: zohlednit asociace
-		return (bool) count($this->attributes->changes);
+		return (bool) count($this->dirty) || $this->isNewRecord();
 	}
 
 
@@ -612,7 +637,10 @@ abstract class ActiveRecord extends Record {
 	protected function discard() {
 		// TODO: zohlednit asociace
 		$this->updating();
-		$this->attributes->changes = $this->isNewRecord() ? $this->attributes->originals : array();
+		$this->dirty = $this->isNewRecord() ? $this->values : array();
+		foreach ($this->dirty as $unsaved) {
+			if ($unsaved->isDirty())
+				$unsaved->discard();
 	}
 
 
@@ -627,8 +655,8 @@ abstract class ActiveRecord extends Record {
 				$mapper::save($this);
 
 				$this->updating();
-				$this->attributes->originals = $this->getValues();
-				$this->attributes->changes = array(); // $this->clean();
+				$this->values = $this->getValues();
+				$this->dirty= array();
 				$this->state = self::STATE_EXISTING;
 
 			} catch (DibiException $e) {
@@ -648,8 +676,8 @@ abstract class ActiveRecord extends Record {
 			$deleted = (bool) $mapper::delete($this);
 
 			$this->updating();
-			$this->attributes->changes = array(); // $this->clean();
-			foreach ($this->attributes->originals as & $v)
+			$this->dirty = array();
+			foreach ($this->values as & $v)
 				$v = NULL;
 			$this->state = self::STATE_DELETED;
 			$this->freeze();
@@ -657,7 +685,7 @@ abstract class ActiveRecord extends Record {
 		} catch (DibiException $e) {
 				throw new ActiveRecordException("Unable to destroy record.", 500, $e);
 		}
-		
+
 		return $deleted;
 	}
 
