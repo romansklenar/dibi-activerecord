@@ -309,13 +309,24 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testContains() {
-		$this->object->applyLimit(3);
+		$this->object->applyLimit(3,1);
 		$this->assertEquals(3, $this->object->count());
-		$this->assertTrue($this->object->contains(Office::find(1)));
+		$this->assertFalse($this->object->contains(Office::find(1)));
 		$this->assertTrue($this->object->contains(Office::find(2)));
 		$this->assertTrue($this->object->contains(Office::find(3)));
-		$this->assertFalse($this->object->contains(Office::find(4)));
+		$this->assertTrue($this->object->contains(Office::find(4)));
 		$this->assertFalse($this->object->contains(Office::find(5)));
+		$this->assertFalse($this->object->contains(123));
+	}
+
+	public function testSearch() {
+		$this->object->applyLimit(3,1);
+		$this->assertEquals(3, $this->object->count());
+		$this->assertEquals(FALSE, $this->object->search(Office::find(1)));
+		$this->assertEquals(0, $this->object->search(Office::find(2)));
+		$this->assertEquals(1, $this->object->search(Office::find(3)));
+		$this->assertEquals(2, $this->object->search(Office::find(4)));
+		$this->assertEquals(FALSE, $this->object->search(Office::find(5)));
 	}
 
 	public function testReverse() {
@@ -465,18 +476,6 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 		$this->markTestIncomplete();
 	}
 
-	public function offsetExists() {
-		$this->markTestIncomplete();
-	}
-
-	public function testOffsetGet() {
-		$this->markTestIncomplete();
-	}
-
-	public function testOffsetUnset() {
-		$this->markTestIncomplete();
-	}
-
 	public function testMassGetter() {
 		$collection = self::createCollection();
 		$arr = $collection->officeCode;
@@ -509,4 +508,39 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals($cmp, $pairs);
 	}
 
+	public function testIsDirty() {
+		$collection = self::createCollection();
+		$this->assertFalse($collection->isDirty());
+
+		$collection->first()->officeCode = 555;
+		$this->assertTrue($collection->isDirty());
+	}
+
+	public function testSave() {
+		$collection = self::createCollection();
+		$collection[0]->officeCode = 555;
+		$collection->save();
+
+		$cmp = Office::find(555);
+		$this->assertTrue($collection->contains($cmp));
+		$this->assertEquals(1, Office::getDataSource()->where('[officeCode] = 555')->count());
+	}
+
+	public function testDestroy() {
+		$collection = self::createCollection();
+		$collection->destroy();
+
+		$this->assertEquals(0, count($collection));
+		$this->assertEquals(0, Office::getDataSource()->count());
+		$this->assertEquals(NULL, $collection->first());
+	}
+
+	public function testDiscard() {
+		$collection = self::createCollection();
+		$collection[0]->officeCode = 555;
+		$this->assertEquals(555, $collection[0]->officeCode);
+		$collection->discard();
+		$this->assertEquals(1, $collection[0]->officeCode);
+		$this->assertEquals(0, Office::getDataSource()->where('[officeCode] = 555')->count());
+	}
 }

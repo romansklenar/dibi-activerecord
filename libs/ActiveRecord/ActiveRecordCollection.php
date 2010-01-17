@@ -44,7 +44,8 @@ class ActiveRecordCollection extends LazyArrayList {
 	 * @return ActiveRecordCollection  provides a fluent interface
 	 */
 	public function load() {
-		$res = $this->source->getResult();
+		$ds = clone $this->getSource(); // intentionally clone (to not seek)
+		$res = $ds->getResult();
 		$res->setRowClass($this->getItemType());
 		$res->detectTypes();
 		$this->import($res->fetchAll());
@@ -87,8 +88,8 @@ class ActiveRecordCollection extends LazyArrayList {
 
 		$pairs = array();
 		$this->loadCheck();
-		foreach ($this as $record)
-			$pairs[$record->$key] = $record->$value;
+		foreach ($this->getIterator() as $item)
+			$pairs[$item->$key] = $item->$value;
 		return $pairs;
 	}
 
@@ -160,21 +161,16 @@ class ActiveRecordCollection extends LazyArrayList {
 	/********************* ActiveRecordCollection mapper shortcuts ********************/
 
 
+
 	/**
 	 * Checks if any Records have unsaved changes.
 	 * @return bool
 	 */
 	public function isDirty() {
-		throw new NotImplementedException;
-	}
-
-
-	/**
-	 * Checks if all the Records have no changes to save.
-	 * @return bool
-	 */
-	public function isClean() {
-		throw new NotImplementedException;
+		foreach ($this->getIterator() as $item)
+			if ($item->isDirty())
+				return TRUE;
+		return FALSE;
 	}
 
 
@@ -183,7 +179,9 @@ class ActiveRecordCollection extends LazyArrayList {
 	 * @return ActiveRecordCollection
 	 */
 	public function save() {
-		throw new NotImplementedException;
+		foreach ($this->getIterator() as $item)
+			$item->save();
+		$this->invalidate();
 	}
 
 
@@ -192,7 +190,9 @@ class ActiveRecordCollection extends LazyArrayList {
 	 * @return void
 	 */
 	public function destroy() {
-		throw new NotImplementedException;
+		foreach ($this->getIterator() as $item)
+			$item->destroy();
+		$this->invalidate();
 	}
 
 
@@ -201,7 +201,9 @@ class ActiveRecordCollection extends LazyArrayList {
 	 * @return ActiveRecordCollection
 	 */
 	public function discard() {
-		throw new NotImplementedException;
+		foreach ($this->getIterator() as $item)
+			$item->discard();
+		$this->invalidate();
 	}
 
 
@@ -209,8 +211,10 @@ class ActiveRecordCollection extends LazyArrayList {
 	 * Create a Record in the Collection. / Initializes a Record and appends it to the Collection.
 	 * @return ActiveRecord
 	 */
-	public function create() {
-		throw new NotImplementedException;
+	public function create($input = array()) {
+		$class = $this->getItemType();
+		$item = $class::create($input);
+		$this->append($item);
 	}
 
 
@@ -326,11 +330,11 @@ class ActiveRecordCollection extends LazyArrayList {
 	 * @param  mixed
 	 * @return int|FALSE
 	 */
-	protected function search($item) {
+	public function search($item) {
 		$class = $this->getItemType();
 		$primary = $class::getPrimaryKey();
-		foreach ($this as $key => $record)
-			if ($record->originals->$primary === $item->originals->$primary)
+		foreach ($this->getIterator() as $key => $element)
+			if ($item instanceof ActiveRecord && $element->originals->$primary === $item->originals->$primary)
 				return $key;
 		return FALSE;
 	}
@@ -404,8 +408,8 @@ class ActiveRecordCollection extends LazyArrayList {
 		$class = $this->getItemType();
 		if ($class::hasAttribute($name)) {
 			$arr = array();
-			foreach ($this as $record)
-				$arr[] = $record->$name;
+			foreach ($this->getIterator() as $item)
+				$arr[] = $item->$name;
 			return $arr;
 		} else
 			return parent::__get($name);
@@ -420,8 +424,8 @@ class ActiveRecordCollection extends LazyArrayList {
 		$this->loadCheck();
 		$class = $this->getItemType();
 		if ($class::hasAttribute($name)) {
-			foreach ($this as $record)
-				$record->$name = $value;
+			foreach ($this->getIterator() as $item)
+				$item->$name = $value;
 		} else
 			return parent::__set($name, $value);
 	}
