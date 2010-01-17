@@ -51,6 +51,11 @@ class LazyArrayListTest extends PHPUnit_Framework_TestCase {
 		$this->assertSame(2, count($this->object));
 	}
 
+	public function testContains() {
+		$this->assertTrue($this->object->contains(2));
+		$this->assertFalse($this->object->contains(4));
+	}
+
 }
 
 
