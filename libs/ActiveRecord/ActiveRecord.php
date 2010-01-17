@@ -454,12 +454,23 @@ abstract class ActiveRecord extends Record {
 	 * @throws MemberAccessException if the attribute is not defined or is read-only
 	 */
 	protected function setAttribute($name, $value) {
-		if ($this->hasColumn($name) || $this->hasAssociation($name)) {
+		if ($this->hasAssociation($name)) {
 			$current = $this->getAttribute($name);
-			if ($current !== $value) {
-				$value = $this->typeCast($name, $value);
-				$this->dirty->$name = $value;
+			$asc = $this->getAssociation($name);
+			if ($asc->typeCheck($value)) {
+				$this->dirty->$name = $asc->linkWithReferenced($this, $value);
+			} else {
+				$many = $asc->type == Association::HAS_MANY || $asc->type == Association::HAS_AND_BELONGS_TO_MANY;
+				$type = $many ? "collection of $asc->referenced objects" : "object of $asc->referenced";
+				$class = get_class($value);
+				throw new InvalidArgumentException("Cannot assign object of $class, $type expected.");
 			}
+
+		} else if ($this->hasColumn($name)) {
+			$current = $this->getAttribute($name);
+			if ($current != $value)
+				$this->dirty->$name = $this->typeCast($name, $value);
+
 		} else {
 			throw MemberAccessException("Unknown record attribute $this->class::\$$name.");
 		}
@@ -508,7 +519,7 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets record's values in array(column => value)
+	 * Gets record's columns values in array(column => value)
 	 * @retrun array
 	 */
 	public function getValues() {
@@ -517,7 +528,7 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Sets record's values in array(column => value)
+	 * Sets record's columns values in array(column => value)
 	 * @param array $input
 	 */
 	public function setValues(array $input) {
@@ -634,11 +645,10 @@ abstract class ActiveRecord extends Record {
 	 * Discards Record's unsaved changes to a similar state as was initialized (thus making all properties non dirty).
 	 * @return void
 	 */
-	protected function discard() {
-		// TODO: zohlednit asociace
+	public function discard() {
 		$this->updating();
-		$this->dirty = $this->isNewRecord() ? $this->values : array();
-		foreach ($this->dirty as $unsaved) {
+		$this->dirty = $this->isNewRecord() ? $this->values : new Storage;
+		foreach ($this->dirty as $unsaved)
 			if ($unsaved->isDirty())
 				$unsaved->discard();
 	}
@@ -653,10 +663,14 @@ abstract class ActiveRecord extends Record {
 			try {
 				$mapper = self::getMapper();
 				$mapper::save($this);
+				
+				foreach ($this->dirty as $unsaved)
+					if ($unsaved instanceof ActiveRecord || $unsaved instanceof ActiveRecordCollection)
+						$unsaved->save();
 
 				$this->updating();
-				$this->values = $this->getValues();
-				$this->dirty= array();
+				$this->values = new Storage($this->getValues());
+				$this->dirty = new Storage();
 				$this->state = self::STATE_EXISTING;
 
 			} catch (DibiException $e) {
@@ -676,7 +690,7 @@ abstract class ActiveRecord extends Record {
 			$deleted = (bool) $mapper::delete($this);
 
 			$this->updating();
-			$this->dirty = array();
+			$this->dirty = new Storage();
 			foreach ($this->values as & $v)
 				$v = NULL;
 			$this->state = self::STATE_DELETED;
@@ -695,7 +709,70 @@ abstract class ActiveRecord extends Record {
 	 * @return ActiveRecord
 	 */
 	public static function create($data = array()) {
-		return new static($data, self::STATE_NEW);
+		$record = new static($data, self::STATE_NEW);
+		$record->save();
+		return $record;
+	}
+
+
+
+	/********************* counting *********************/
+
+
+
+	/**
+	 * Counter.
+	 * @param array $where
+	 * @param array $limit
+	 * @param array $offset
+	 * @return int
+	 */
+	public static function count($where = array(), $limit = NULL, $offset = NULL) {
+		if (!is_array($where) && (is_numeric($where) || (is_string($where) && str_word_count($where) == 1)))
+			$where = array(RecordHelper::formatArguments(self::getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from helper
+
+		$mapper = self::getMapper();
+		return $mapper::find(self::getClass(), array('where' => $where, 'limit' => $limit, 'offset' => $offset), IMapper::ALL)->count();
+	}
+
+
+	/**
+	 * Counter.
+	 * @param string $column
+	 * @return float|int
+	 */
+	public static function avarage($column) {
+		return self::getConnection()->query('SELECT A(%n) FROM (%sql)', $column, (string) self::getDataSource())->fetchSingle();
+	}
+
+
+	/**
+	 * Counter.
+	 * @param string $column
+	 * @return float|int
+	 */
+	public static function minimum($column) {
+		return self::getConnection()->query('SELECT MIN(%n) FROM (%sql)', $column, (string) self::getDataSource())->fetchSingle();
+	}
+
+
+	/**
+	 * Counter.
+	 * @param string $column
+	 * @return float|int
+	 */
+	public static function maximum($column) {
+		return self::getConnection()->query('SELECT MAX(%n) FROM (%sql)', $column, (string) self::getDataSource())->fetchSingle();
+	}
+
+
+	/**
+	 * Counter.
+	 * @param string $column
+	 * @return float|int
+	 */
+	public static function sum($column) {
+		return self::getConnection()->query('SELECT SUM(%n) FROM (%sql)', $column, (string) self::getDataSource())->fetchSingle();
 	}
 
 
@@ -714,22 +791,6 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Counter.
-	 * @param array $where
-	 * @param array $limit
-	 * @param array $offset
-	 * @return int
-	 */
-	public static function count($where = array(), $limit = NULL, $offset = NULL) {
-		if (!is_array($where) && (is_numeric($where) || (is_string($where) && str_word_count($where) == 1)))
-			$where = array(RecordHelper::formatArguments(self::create()->primaryInfo, func_get_args())); // intentionally not getPrimaryInfo() from helper
-
-		$mapper = self::getMapper();
-		return $mapper::find(self::getClass(), array('where' => $where, 'limit' => $limit, 'offset' => $offset), IMapper::ALL)->count();
-	}
-
-
-	/**
 	 * Static finder.
 	 * @param array $where
 	 * @param array $order
@@ -740,7 +801,7 @@ abstract class ActiveRecord extends Record {
 
 		if (!is_array($where) && (is_numeric($where) || (is_string($where) && str_word_count($where) == 1))) {
 			$params = func_get_args();
-			$where = RecordHelper::formatArguments(self::create()->primaryInfo, $params); // intentionally not getPrimaryInfo() from helper
+			$where = RecordHelper::formatArguments(self::getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from helper
 			return $mapper::find(self::getClass(), array('where' => array($where)), count($params) == 1 ? IMapper::FIRST : IMapper::ALL);
 
 		} else {
