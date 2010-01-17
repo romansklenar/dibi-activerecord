@@ -189,7 +189,7 @@ abstract class Record implements ArrayAccess {
 	 * Is attribute defined?
 	 * @bool
 	 */
-	abstract protected function hasAttribute($name);
+	abstract public static function hasAttribute($name);
 
 
 	/**

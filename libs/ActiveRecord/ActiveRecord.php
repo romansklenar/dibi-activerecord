@@ -313,7 +313,7 @@ abstract class ActiveRecord extends Record {
 	 * Has record's table given column?
 	 * @retrun array
 	 */
-	private static function hasColumn($name) {
+	private function hasColumn($name) {
 		return self::getTableInfo()->hasColumn($name);
 	}
 
@@ -411,7 +411,7 @@ abstract class ActiveRecord extends Record {
 	 * Is attribute defined?
 	 * @bool
 	 */
-	protected function hasAttribute($name) {
+	public static function hasAttribute($name) {
 		return in_array($name, self::getAttributes());
 	}
 
@@ -908,7 +908,7 @@ abstract class ActiveRecord extends Record {
 			return $value;
 
 		} catch(MemberAccessException $e) {
-			if ($this->hasAttribute($name)) {
+			if (self::hasAttribute($name)) {
 				$value = $this->getAttribute($name);
 				return $value;
 
@@ -934,7 +934,7 @@ abstract class ActiveRecord extends Record {
 			ObjectMixin::set($this, $name, $value);
 
 		} catch(MemberAccessException $e) {
-			if ($this->hasAttribute($name)) {
+			if (self::hasAttribute($name)) {
 				$this->setAttribute($name, $value);
 
 			} else {
@@ -951,7 +951,7 @@ abstract class ActiveRecord extends Record {
 	 * @return bool
 	 */
 	final public function __isset($name) {
-		return ObjectMixin::has($this, $name) ? TRUE : ($this->hasAssociation($name) || $this->hasAttribute($name) ? TRUE : FALSE);
+		return ObjectMixin::has($this, $name) ? TRUE : self::hasAttribute($name);
 	}
 
 

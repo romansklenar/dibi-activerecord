@@ -74,6 +74,25 @@ class ActiveRecordCollection extends LazyArrayList {
 	}
 
 
+	/**
+	 * Returns all records array like $key => $value pairs.
+	 * @param  string  associative key
+	 * @param  string  value
+	 * @return array
+	 */
+	public function getPairs($key = NULL, $value = NULL) {
+		$class = $this->getItemType();
+		if ($key === NULL)
+			$key = $class::getPrimaryKey();
+
+		$pairs = array();
+		$this->loadCheck();
+		foreach ($this as $record)
+			$pairs[$record->$key] = $record->$value;
+		return $pairs;
+	}
+
+
 
 	/********************* ActiveRecordCollection data manipulators ********************/
 
@@ -308,7 +327,12 @@ class ActiveRecordCollection extends LazyArrayList {
 	 * @return int|FALSE
 	 */
 	protected function search($item) {
-		return array_search($item, $this->getArrayCopy(), FALSE);
+		$class = $this->getItemType();
+		$primary = $class::getPrimaryKey();
+		foreach ($this as $key => $record)
+			if ($record->originals->$primary === $item->originals->$primary)
+				return $key;
+		return FALSE;
 	}
 
 
@@ -376,8 +400,15 @@ class ActiveRecordCollection extends LazyArrayList {
 	 * @throws MemberAccessException if the property is not defined.
 	 */
 	public function &__get($name) {
-		// TODO: mass getter
-		return parent::__get($name);
+		$this->loadCheck();
+		$class = $this->getItemType();
+		if ($class::hasAttribute($name)) {
+			$arr = array();
+			foreach ($this as $record)
+				$arr[] = $record->$name;
+			return $arr;
+		} else
+			return parent::__get($name);
 	}
 
 
@@ -386,8 +417,13 @@ class ActiveRecordCollection extends LazyArrayList {
 	 * @throws MemberAccessException if the property is not defined or is read-only
 	 */
 	public function __set($name, $value) {
-		// TODO: mass setter
-		return parent::__set($name, $value);
+		$this->loadCheck();
+		$class = $this->getItemType();
+		if ($class::hasAttribute($name)) {
+			foreach ($this as $record)
+				$record->$name = $value;
+		} else
+			return parent::__set($name, $value);
 	}
 	
 }

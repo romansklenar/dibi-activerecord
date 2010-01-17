@@ -382,7 +382,7 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals('SELECT * FROM ( SELECT * FROM [Offices] ) t LIMIT 1 OFFSET 7', strip(dibi::$sql));
 		$collection->remove($collection->last());
 		$this->assertTrue($collection->isLoaded());
-		
+
 		$this->assertEquals(7, $collection->last()->officeCode);
 		$collection->remove($collection->last());
 		$this->assertEquals(6, $collection->last()->officeCode);
@@ -475,6 +475,38 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 
 	public function testOffsetUnset() {
 		$this->markTestIncomplete();
+	}
+
+	public function testMassGetter() {
+		$collection = self::createCollection();
+		$arr = $collection->officeCode;
+		$cmp = array('1','2','3','4','5','6','7','8');
+		$this->assertEquals($cmp, $arr);
+	}
+
+	public function testMassSetter() {
+		$collection = self::createCollection();
+		$collection->officeCode = 3;
+
+		foreach ($collection as $record)
+			$this->assertEquals(3, $record->officeCode);
+	}
+
+	public function testGetPairs() {
+		$collection = self::createCollection();
+		$pairs = $collection->getPairs('officeCode', 'city');
+
+		$cmp = array(
+			1 => "San Francisco",
+			2 => "Boston",
+			3 => "NYC",
+			4 => "Paris",
+			5 => "Tokyo",
+			6 => "Sydney",
+			7 => "London",
+			8 => "Ostrava",
+		);
+		$this->assertEquals($cmp, $pairs);
 	}
 
 }
