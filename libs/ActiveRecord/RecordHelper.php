@@ -21,14 +21,16 @@ class RecordHelper {
 	/********************* values expander *********************/
 
 
+
 	/**
 	 * @param  Record $record
-	 * @param  array  $fields
+	 * @param  array  $attrs  filtered attributes
 	 * @return array
 	 */
-	public static function getValues(Record $record, array $fields = array()) {
+	public static function getValues(Record $record, array $attrs = array()) {
+		$attrs = empty($attrs) ? $record->attributes : $attrs;
 		$output = array();
-		foreach ($fields as $field)
+		foreach ($attrs as $field)
 			$output[$field] = $record->$field;
 		return $output;
 	}
@@ -36,11 +38,11 @@ class RecordHelper {
 
 	/**
 	 * @param Record $record
-	 * @param array  $input
+	 * @param array  $values
 	 */
-	public static function setValues(Record $record, array $input = array()) {
-		foreach ($input as $field => $value)
-			$this->$field = $value;
+	public static function setValues(Record $record, array $values = array()) {
+		foreach ($values as $attr => $value)
+			$record->$attr = $value;
 	}
 
 
