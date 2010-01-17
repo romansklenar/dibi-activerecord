@@ -71,8 +71,12 @@ abstract class Association extends Object {
 	}
 
 
+	/**
+	 * Returns intersectional attribute name.
+	 * @return string
+	 */
 	public function getAttribute() {
-		return $this->getAttribute();
+		return $this->attribute;
 	}
 
 
@@ -92,12 +96,25 @@ abstract class Association extends Object {
 	abstract public function linkWithReferenced(ActiveRecord $record, $new);
 
 
-	
 	/**
 	 * @return string
 	 */
 	public function getType() {
 		return $this->type;
+	}
+
+
+	/**
+	 * @return bool
+	 */
+	public function typeCheck($entry) {
+		if ($this->type == self::HAS_MANY || $this->type == self::HAS_AND_BELONGS_TO_MANY)
+			if (!$entry instanceof ActiveRecordCollection)
+				return FALSE;
+			else 
+				return $entry->itemType === $this->referenced;
+		else
+			return get_class($entry) === $this->referenced;
 	}
 
 }
