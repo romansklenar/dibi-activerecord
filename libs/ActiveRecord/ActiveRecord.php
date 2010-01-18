@@ -30,7 +30,7 @@ abstract class ActiveRecord extends Record {
 	private static $register = array();
 
 	/** @var IValidator */
-	private static $validator;
+	protected static $validator;
 
 	/** @var Storage  internal data storage */
 	private $values;
@@ -634,6 +634,30 @@ abstract class ActiveRecord extends Record {
 
 
 
+	/********************* events *********************/
+
+
+
+	/**
+	 * Calls public method if exists.
+	 * @param  string
+	 * @param  array
+	 * @return bool  does method exist?
+	 */
+	private function tryCall($method, array $params) {
+		$rc = $this->getReflection();
+		if ($rc->hasMethod($method)) {
+			$rm = $rc->getMethod($method);
+			if ($rm->isPublic() && !$rm->isAbstract() && $rm->isStatic()) {
+				$rm->invokeNamedArgs($this, $params);
+				return TRUE;
+			}
+		}
+		return FALSE;
+	}
+
+
+
 	/********************* validation *********************/
 
 
@@ -657,7 +681,9 @@ abstract class ActiveRecord extends Record {
 	 * @return void
 	 */
 	public function validate() {
-		$this->getValidator()->validate($this);
+		$this->tryCall('beforeValidation', array('sender' => $this));
+		// $this->getValidator()->validate($this);
+		$this->tryCall('afterValidation', array('sender' => $this));
 	}
 
 
@@ -720,9 +746,11 @@ abstract class ActiveRecord extends Record {
 	 * @return ActiveRecord
 	 */
 	public function save() {
-		if ($this->isDirty()) {
+		if ($this->isValid() && $this->isDirty()) {
 			try {
 				$this->updating();
+				$this->tryCall('beforeSave', array('sender' => $this));
+
 				foreach ($this->getChanges() as $attr => $unsaved)
 					if ($unsaved instanceof ActiveRecord || $unsaved instanceof ActiveCollection)
 						$this->getAssociation($attr)->saveReferenced($this, $unsaved)->save();
@@ -734,6 +762,7 @@ abstract class ActiveRecord extends Record {
 				$this->values = new Storage($this->getValues());
 				$this->dirty = new Storage;
 				$this->state = self::STATE_EXISTING;
+				$this->tryCall('afterSave', array('sender' => $this));
 
 			} catch (DibiException $e) {
 				throw new ActiveRecordException("Unable to save record.", 500, $e);
@@ -751,6 +780,8 @@ abstract class ActiveRecord extends Record {
 	public function destroy() {
 		try {
 			$this->updating();
+			$this->tryCall('beforeDestroy', array('sender' => $this));
+
 			$mapper = self::getMapper();
 			$deleted = (bool) $mapper::delete($this);
 
@@ -758,13 +789,14 @@ abstract class ActiveRecord extends Record {
 			foreach ($this->values as & $v)
 				$v = NULL;
 			$this->state = self::STATE_DELETED;
+
+			$this->tryCall('afterDestroy', array('sender' => $this));
 			$this->freeze();
+			return $deleted;
 
 		} catch (DibiException $e) {
 				throw new ActiveRecordException("Unable to destroy record.", 500, $e);
 		}
-
-		return $deleted;
 	}
 
 
