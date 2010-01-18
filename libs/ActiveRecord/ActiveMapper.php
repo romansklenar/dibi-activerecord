@@ -10,7 +10,7 @@
  */
 final class ActiveMapper extends Mapper {
 
-	const COLLECTION_CLASS = 'ActiveRecordCollection';
+	const COLLECTION_CLASS = 'ActiveCollection';
 
 
 	private static function sanatizeOptions(& $options = array()) {
@@ -60,7 +60,7 @@ final class ActiveMapper extends Mapper {
 	 * @param ActiveRecord|string $class
 	 * @param array $options
 	 * @param string $scope
-	 * @return ActiveRecordCollection|ActiveRecord
+	 * @return ActiveCollection|ActiveRecord
 	 */
 	public function find($class, $options = array(), $scope = IMapper::ALL) {
 		static $scopes = array(IMapper::ALL, IMapper::FIRST, IMapper::LAST);

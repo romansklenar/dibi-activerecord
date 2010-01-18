@@ -173,7 +173,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 	function testObjects() {
 		$authors = Author::objects();
-		$this->assertType('ActiveRecordCollection', $authors);
+		$this->assertType('ActiveCollection', $authors);
 	}
 /*
 	function testCount() {
@@ -209,7 +209,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 	function testFindAll() {
 		$authors = Author::objects();
-		$this->assertType('ActiveRecordCollection', $authors);
+		$this->assertType('ActiveCollection', $authors);
 	}
 
 	function testStaticMagicFind() {
@@ -220,14 +220,14 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 	function testStaticMagicFindAll() {
 		$authors = Author::findAllById(array(1,2));
-		$this->assertType('ActiveRecordCollection', $authors);
+		$this->assertType('ActiveCollection', $authors);
 		$this->assertEquals(2, $authors->count());
 	}
 
 	function testInstanceMagicFindAll() {
 		$author = new Author;
 		$authors = $author->findAllById(array(1,2));
-		$this->assertType('ActiveRecordCollection', $authors);
+		$this->assertType('ActiveCollection', $authors);
 		$this->assertEquals(2, $authors->count());
 	}
 
@@ -264,7 +264,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 
 	public function testReadAssociationHasOne() {
-		ActiveRecordCollection::$loadImmediately = TRUE;
+		ActiveCollection::$loadImmediately = TRUE;
 
 		Inflector::$railsStyle = FALSE;
 		$student = Student::find(1);
@@ -281,7 +281,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testReadAssociationBelongsTo() {
-		ActiveRecordCollection::$loadImmediately = TRUE;
+		ActiveCollection::$loadImmediately = TRUE;
 
 		Inflector::$railsStyle = FALSE;
 		$assignment = Assignment::find(2);
@@ -316,12 +316,12 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testReadAssociationHasMany() {
-		ActiveRecordCollection::$loadImmediately = TRUE;
+		ActiveCollection::$loadImmediately = TRUE;
 
 		Inflector::$railsStyle = FALSE;
 
 		$programmer = Programmer::find(4);
-		$this->assertType('ActiveRecordCollection', $programmer->tasks);
+		$this->assertType('ActiveCollection', $programmer->tasks);
 		$this->assertEquals(2, count($programmer->tasks));
 		$this->assertType('Task', $task = $programmer->tasks->first());
 		$this->assertEquals(1003, $task->id);
@@ -329,7 +329,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals(1009, $task->id);
 
 		$project = Project::find(1);
-		$this->assertType('ActiveRecordCollection', $project->tasks);
+		$this->assertType('ActiveCollection', $project->tasks);
 		$this->assertEquals(5, count($project->tasks));
 		$this->assertType('Task', $task = $project->tasks->first());
 		$this->assertEquals(1001, $task->id);
@@ -341,7 +341,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		Inflector::$railsStyle = TRUE;
 
 		$food = Food::find(3);
-		$this->assertType('ActiveRecordCollection', $food->compositions);
+		$this->assertType('ActiveCollection', $food->compositions);
 		$this->assertEquals(6, count($food->compositions));
 		$this->assertType('Composition', $composition = $food->compositions->first());
 		$this->assertEquals(105, $composition->id);
@@ -349,7 +349,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals(110, $composition->id);
 
 		$ingredient = Ingredient::find(7);
-		$this->assertType('ActiveRecordCollection', $ingredient->compositions);
+		$this->assertType('ActiveCollection', $ingredient->compositions);
 		$this->assertEquals(3, count($ingredient->compositions));
 		$this->assertType('Composition', $composition = $ingredient->compositions->first());
 		$this->assertEquals(102, $composition->id);
@@ -358,12 +358,12 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testReadAssociationHasManyViaThrough() {
-		ActiveRecordCollection::$loadImmediately = TRUE;
+		ActiveCollection::$loadImmediately = TRUE;
 
 		Inflector::$railsStyle = FALSE;
 
 		$programmer = Programmer::find(4);
-		$this->assertType('ActiveRecordCollection', $programmer->projects);
+		$this->assertType('ActiveCollection', $programmer->projects);
 		$this->assertEquals(2, count($programmer->projects));
 		$this->assertType('Project', $project = $programmer->projects->first());
 		$this->assertEquals(1, $project->id);
@@ -371,7 +371,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals(3, $project->id);
 
 		$project = Project::find(1);
-		$this->assertType('ActiveRecordCollection', $project->programmers);
+		$this->assertType('ActiveCollection', $project->programmers);
 		$this->assertEquals(5, count($project->programmers));
 		$this->assertType('Programmer', $programmer = $project->programmers->first());
 		$this->assertEquals(1, $programmer->id);
@@ -383,7 +383,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		Inflector::$railsStyle = TRUE;
 
 		$food = Food::find(3);
-		$this->assertType('ActiveRecordCollection', $food->ingredients);
+		$this->assertType('ActiveCollection', $food->ingredients);
 		$this->assertEquals(6, count($food->ingredients));
 		$this->assertType('Ingredient', $ingredient = $food->ingredients->first());
 		$this->assertEquals(2, $ingredient->id);
@@ -391,7 +391,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals(8, $ingredient->id);
 
 		$ingredient = Ingredient::find(7);
-		$this->assertType('ActiveRecordCollection', $ingredient->foods);
+		$this->assertType('ActiveCollection', $ingredient->foods);
 		$this->assertEquals(3, count($ingredient->foods));
 		$this->assertType('Food', $food = $ingredient->foods->first());
 		$this->assertEquals(1, $food->id);
@@ -400,12 +400,12 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testReadAssociationHasManyAndBelongsTo() {
-		ActiveRecordCollection::$loadImmediately = TRUE;
+		ActiveCollection::$loadImmediately = TRUE;
 
 		Inflector::$railsStyle = FALSE;
 
 		$post = Post::find(4);
-		$this->assertType('ActiveRecordCollection', $post->tags);
+		$this->assertType('ActiveCollection', $post->tags);
 		$this->assertEquals(2, count($post->tags));
 		$this->assertType('Tag', $tag = $post->tags->first());
 		$this->assertEquals(1, $tag->id);
@@ -413,7 +413,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals(3, $tag->id);
 
 		$tag = Tag::find(1);
-		$this->assertType('ActiveRecordCollection', $tag->posts);
+		$this->assertType('ActiveCollection', $tag->posts);
 		$this->assertEquals(5, count($tag->posts));
 		$this->assertType('Post', $post = $tag->posts->first());
 		$this->assertEquals(1, $post->id);
@@ -425,7 +425,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		Inflector::$railsStyle = TRUE;
 
 		$album = Album::find(3);
-		$this->assertType('ActiveRecordCollection', $album->songs);
+		$this->assertType('ActiveCollection', $album->songs);
 		$this->assertEquals(6, count($album->songs));
 		$this->assertType('Song', $song = $album->songs->first());
 		$this->assertEquals(2, $song->id);
@@ -433,7 +433,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals(8, $song->id);
 
 		$song = Song::find(7);
-		$this->assertType('ActiveRecordCollection', $song->albums);
+		$this->assertType('ActiveCollection', $song->albums);
 		$this->assertEquals(3, count($song->albums));
 		$this->assertType('Album', $album = $song->albums->first());
 		$this->assertEquals(1, $album->id);
@@ -506,7 +506,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 		// write wrong type
 		$programmer = Programmer::find(4);
-		$this->assertType('ActiveRecordCollection', $programmer->tasks);
+		$this->assertType('ActiveCollection', $programmer->tasks);
 		$this->assertEquals('Task', $programmer->tasks->getItemType());
 		$this->setExpectedException('InvalidArgumentException');
 		$programmer->tasks = new Task;
@@ -551,7 +551,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 		// write wrong type
 		$programmer = Programmer::find(4);
-		$this->assertType('ActiveRecordCollection', $programmer->projects);
+		$this->assertType('ActiveCollection', $programmer->projects);
 		$this->assertEquals('Project', $programmer->projects->getItemType());
 		$this->setExpectedException('InvalidArgumentException');
 		$programmer->projects = new Project;
@@ -592,7 +592,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 		// write wrong type
 		$post = Post::find(4);
-		$this->assertType('ActiveRecordCollection', $post->tags);
+		$this->assertType('ActiveCollection', $post->tags);
 		$this->assertEquals('Tag', $post->tags->getItemType());
 		$this->setExpectedException('InvalidArgumentException');
 		$post->tags = new Tag;

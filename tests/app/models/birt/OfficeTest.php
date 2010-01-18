@@ -69,9 +69,9 @@ class OfficeTest extends BirtBaseTestCase {
 	}
 
 	public function testRelationEmployees() {
-		ActiveRecordCollection::$loadImmediately = TRUE;
+		ActiveCollection::$loadImmediately = TRUE;
 		$office = Office::find(1);
-		$this->assertType('ActiveRecordCollection', $office->employees);
+		$this->assertType('ActiveCollection', $office->employees);
 		$this->assertEquals(6, count($office->employees));
 		$this->assertType('Employee', $employee = $office->employees->first());
 		$this->assertEquals(1002, $employee->employeeNumber);

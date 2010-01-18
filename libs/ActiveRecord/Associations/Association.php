@@ -83,7 +83,7 @@ abstract class Association extends Object {
 	/**
 	 * Retreives referenced object(s).
 	 * @param  ActiveRecord $record
-	 * @return ActiveRecord|ActiveRecordCollection|NULL
+	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
 	abstract public function retreiveReferenced(ActiveRecord $record);
 
@@ -91,7 +91,7 @@ abstract class Association extends Object {
 	/**
 	 * Links referenced object to record.
 	 * @param  ActiveRecord $record
-	 * @param  ActiveRecord|ActiveRecordCollection|NULL $new
+	 * @param  ActiveRecord|ActiveCollection|NULL $new
 	 */
 	abstract public function saveReferenced(ActiveRecord $record, $new);
 
@@ -109,7 +109,7 @@ abstract class Association extends Object {
 	 */
 	public function typeCheck($entry) {
 		if ($this->type == self::HAS_MANY || $this->type == self::HAS_AND_BELONGS_TO_MANY)
-			if (!$entry instanceof ActiveRecordCollection)
+			if (!$entry instanceof ActiveCollection)
 				return FALSE;
 			else 
 				return $entry->itemType === $this->referenced;

@@ -477,7 +477,7 @@ abstract class ActiveRecord extends Record {
 
 
 	private function typeCast($name, $value) {
-		if ($value === NULL || $value instanceof ActiveRecord || $value instanceof ActiveRecordCollection)
+		if ($value === NULL || $value instanceof ActiveRecord || $value instanceof ActiveCollection)
 			return $value;
 
 		switch ($this->types[$name]) {
@@ -551,7 +551,7 @@ abstract class ActiveRecord extends Record {
 	public function getChanges() {
 		$dirty = array();
 		foreach ($this->originals as $attr => $orig)
-			if ($orig instanceof ActiveRecord || $orig instanceof ActiveRecordCollection)
+			if ($orig instanceof ActiveRecord || $orig instanceof ActiveCollection)
 				if ($orig->isDirty())
 					$dirty[$attr] = $orig;
 		return new Storage(array_merge((array) $this->dirty, $dirty));
@@ -670,7 +670,7 @@ abstract class ActiveRecord extends Record {
 			try {
 				$this->updating();
 				foreach ($this->getChanges() as $attr => $unsaved)
-					if ($unsaved instanceof ActiveRecord || $unsaved instanceof ActiveRecordCollection)
+					if ($unsaved instanceof ActiveRecord || $unsaved instanceof ActiveCollection)
 						$this->getAssociation($attr)->saveReferenced($this, $unsaved)->save();
 
 				if ($this->isDirty(self::getColumnNames())) {
@@ -791,7 +791,7 @@ abstract class ActiveRecord extends Record {
 
 	/**
 	 * Django-like alias to find().
-	 * @return ActiveRecordCollection
+	 * @return ActiveCollection
 	 */
 	public static function objects() {
 		return self::findAll();
@@ -802,7 +802,7 @@ abstract class ActiveRecord extends Record {
 	 * Static finder.
 	 * @param array $where
 	 * @param array $order
-	 * @return ActiveRecord|ActiveRecordCollection|NULL
+	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
 	public static function find($where = array(), $order = array()) {
 		$mapper = self::getMapper();
@@ -824,7 +824,7 @@ abstract class ActiveRecord extends Record {
 	 * @param array $order
 	 * @param array $limit
 	 * @param array $offset
-	 * @return ActiveRecordCollection|NULL
+	 * @return ActiveCollection|NULL
 	 */
 	public static function findAll($where = array(), $order = array(), $limit = NULL, $offset = NULL) {
 		$mapper = self::getMapper();
@@ -853,7 +853,7 @@ abstract class ActiveRecord extends Record {
 	 *
 	 * @param string $name
 	 * @param array  $args
-	 * @return ActiveRecordCollection|ActiveRecord|NULL
+	 * @return ActiveCollection|ActiveRecord|NULL
 	 */
 	public static function __callStatic($name, $args) {
 		if (strncmp($name, 'findBy', 6) === 0) { // single record

@@ -58,7 +58,7 @@ class EmployeeTest extends BirtBaseTestCase {
 
 	public function testRelationCustomers() {
 		$employee = Employee::find(1370);
-		$this->assertType('ActiveRecordCollection', $employee->customers);
+		$this->assertType('ActiveCollection', $employee->customers);
 		$this->assertEquals(7, count($employee->customers));
 		$this->assertType('Customer', $customer = $employee->customers->first());
 		$this->assertEquals(103, $customer->customerNumber);

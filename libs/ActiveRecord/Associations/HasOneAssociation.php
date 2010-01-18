@@ -23,7 +23,7 @@ final class HasOneAssociation extends Association {
 	/**
 	 * Retreives referenced object(s).
 	 * @param  ActiveRecord $record
-	 * @return ActiveRecord|ActiveRecordCollection|NULL
+	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
 		$class = $this->referenced;
@@ -36,7 +36,7 @@ final class HasOneAssociation extends Association {
 	/**
 	 * Links referenced object to record.
 	 * @param  ActiveRecord $local
-	 * @param  ActiveRecord|ActiveRecordCollection|NULL $referenced
+	 * @param  ActiveRecord|ActiveCollection|NULL $referenced
 	 */
 	public function saveReferenced(ActiveRecord $local, $referenced) {
 		try {

@@ -2,16 +2,16 @@
 
 
 /**
- * An ActiveRecordCollection class represents a list of records identified by a query.
- * An ActiveRecordCollection should act like an array in every way, except that it will attempt to defer loading until the records are needed.
- * An ActiveRecordCollection is typically returned by the ActiveRecord::findAll() or objects() methods.
+ * An ActiveCollection class represents a list of records identified by a query.
+ * An ActiveCollection should act like an array in every way, except that it will attempt to defer loading until the records are needed.
+ * An ActiveCollection is typically returned by the ActiveRecord::findAll() or objects() methods.
  *
  * @author     Roman Sklenář
  * @copyright  Copyright (c) 2009 Roman Sklenář (http://romansklenar.cz)
  * @license    New BSD License
  * @example    http://wiki.github.com/romansklenar/dibi-activerecord
  */
-class ActiveRecordCollection extends LazyArrayList {
+class ActiveCollection extends LazyArrayList {
 
 	/** @var DibiDataSource */
 	private $source;
@@ -41,7 +41,7 @@ class ActiveRecordCollection extends LazyArrayList {
 
 	/**
 	 * Loads the Collection from the repository.
-	 * @return ActiveRecordCollection  provides a fluent interface
+	 * @return ActiveCollection  provides a fluent interface
 	 */
 	public function load() {
 		$ds = clone $this->getSource(); // intentionally clone (to not seek)
@@ -95,14 +95,14 @@ class ActiveRecordCollection extends LazyArrayList {
 
 
 
-	/********************* ActiveRecordCollection data manipulators ********************/
+	/********************* ActiveCollection data manipulators ********************/
 
 
 
 	/**
 	 * Adds conditions to query.
 	 * @param  mixed      conditions
-	 * @return ActiveRecordCollection  provides a fluent interface
+	 * @return ActiveCollection  provides a fluent interface
 	 */
 	public function filter($cond) {
 		if (is_array($cond))
@@ -120,7 +120,7 @@ class ActiveRecordCollection extends LazyArrayList {
 	 * Selects columns to order by.
 	 * @param  string|array  column name or array of column names
 	 * @param  string  		 sorting direction
-	 * @return ActiveRecordCollection     provides a fluent interface
+	 * @return ActiveCollection     provides a fluent interface
 	 */
 	public function orderBy($column, $sorting = 'ASC') {
 		if (is_array($column)) {
@@ -148,7 +148,7 @@ class ActiveRecordCollection extends LazyArrayList {
 	 * Limits number of rows.
 	 * @param  int limit
 	 * @param  int offset
-	 * @return ActiveRecordCollection  provides a fluent interface
+	 * @return ActiveCollection  provides a fluent interface
 	 */
 	public function applyLimit($limit, $offset = NULL) {
 		$this->source->applyLimit($limit, $offset);
@@ -158,7 +158,7 @@ class ActiveRecordCollection extends LazyArrayList {
 
 
 
-	/********************* ActiveRecordCollection mapper shortcuts ********************/
+	/********************* ActiveCollection mapper shortcuts ********************/
 
 
 
@@ -176,7 +176,7 @@ class ActiveRecordCollection extends LazyArrayList {
 
 	/**
 	 * Save every Record in the Collection.
-	 * @return ActiveRecordCollection
+	 * @return ActiveCollection
 	 */
 	public function save() {
 		foreach ($this->getIterator() as $item)
@@ -198,7 +198,7 @@ class ActiveRecordCollection extends LazyArrayList {
 
 	/**
 	 * Reset every Record unsaved changes to a similar state as a new Record (thus making all properties non dirty).
-	 * @return ActiveRecordCollection
+	 * @return ActiveCollection
 	 */
 	public function discard() {
 		foreach ($this->getIterator() as $item)
@@ -219,7 +219,7 @@ class ActiveRecordCollection extends LazyArrayList {
 
 
 
-	/********************* ActiveRecordCollection helpers ********************/
+	/********************* ActiveCollection helpers ********************/
 
 
 

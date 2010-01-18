@@ -65,7 +65,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$office = Office::find(1);
 		$asc = new HasManyAssociation('Office', 'Employee');
 		$ref = $asc->retreiveReferenced($office)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(6, $ref->count());
 		$this->assertType('Employee', $ref->first());
 
@@ -73,7 +73,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Employee', 'Customer');
 		$asc = new HasManyAssociation('Employee', 'Customers');
 		$ref = $asc->retreiveReferenced($employee)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(7, $ref->count());
 		$this->assertType('Customer', $ref->first());
 
@@ -83,7 +83,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Programmer', 'Task');
 		$asc = new HasManyAssociation('Programmer', 'Tasks');
 		$ref = $asc->retreiveReferenced($programmer)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(2, $ref->count());
 		$this->assertType('Task', $ref->first());
 
@@ -91,7 +91,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Project', 'Task');
 		$asc = new HasManyAssociation('Project', 'Tasks');
 		$ref = $asc->retreiveReferenced($project)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(5, $ref->count());
 		$this->assertType('Task', $ref->first());
 
@@ -103,7 +103,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Food', 'Composition');
 		$asc = new HasManyAssociation('Food', 'Compositions');
 		$ref = $asc->retreiveReferenced($food)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(6, $ref->count());
 		$this->assertType('Composition', $ref->first());
 
@@ -111,7 +111,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Ingredient', 'Composition');
 		$asc = new HasManyAssociation('Ingredient', 'Compositions');
 		$ref = $asc->retreiveReferenced($ingredient)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(3, $ref->count());
 		$this->assertType('Composition', $ref->first());
 	}
@@ -123,7 +123,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Order', 'Product', 'OrderDetail');
 		$asc = new HasManyAssociation('Order', 'Products', 'OrderDetail');
 		$ref = $asc->retreiveReferenced($order)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(4, $ref->count());
 		$this->assertType('Product', $ref->first());
 		$this->assertEquals('S18_1749', $ref->first()->productCode);
@@ -134,7 +134,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Product', 'Order', 'OrderDetail');
 		$asc = new HasManyAssociation('Product', 'Orders', 'OrderDetail');
 		$ref = $asc->retreiveReferenced($product)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(28, $ref->count());
 		$this->assertType('Order', $ref->first());
 		$this->assertEquals(10107, $ref->first()->orderNumber);
@@ -147,7 +147,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Programmer', 'Project', 'Task');
 		$asc = new HasManyAssociation('Programmer', 'Projects', 'Tasks');
 		$ref = $asc->retreiveReferenced($programmer)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(2, $ref->count());
 		$this->assertType('Project', $ref->first());
 		$this->assertEquals(1, $ref->first()->id);
@@ -158,7 +158,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Project', 'Programmer', 'Task');
 		$asc = new HasManyAssociation('Project', 'Programmers', 'Tasks');
 		$ref = $asc->retreiveReferenced($project)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(5, $ref->count());
 		$this->assertType('Programmer', $ref->first());
 		$this->assertEquals(1, $ref->first()->id);
@@ -173,7 +173,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Food', 'Ingredient', 'Composition');
 		$asc = new HasManyAssociation('Food', 'Ingredients', 'Compositions');
 		$ref = $asc->retreiveReferenced($food)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(6, $ref->count());
 		$this->assertType('Ingredient', $ref->first());
 		$this->assertEquals(2, $ref->first()->id);
@@ -184,7 +184,7 @@ class HasManyAssociationTest extends ActiveRecordDatabaseTestCase {
 		$asc = new HasManyAssociation('Ingredient', 'Food', 'Composition');
 		$asc = new HasManyAssociation('Ingredient', 'Foods', 'Compositions');
 		$ref = $asc->retreiveReferenced($ingredient)->load();
-		$this->assertType('ActiveRecordCollection', $ref);
+		$this->assertType('ActiveCollection', $ref);
 		$this->assertEquals(3, $ref->count());
 		$this->assertType('Food', $ref->first());
 		$this->assertEquals(1, $ref->first()->id);

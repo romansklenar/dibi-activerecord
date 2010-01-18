@@ -4,11 +4,11 @@ require_once __DIR__ . '/ActiveRecordDatabaseTestCase.php';
 
 
 /**
- * Test class for ActiveRecordCollection.
+ * Test class for ActiveCollection.
  */
-class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
+class ActiveCollectionTest extends ActiveRecordDatabaseTestCase {
 
-	/** @var ActiveRecordCollection */
+	/** @var ActiveCollection */
 	public $object;
 
 	public function setUp() {
@@ -18,20 +18,20 @@ class ActiveRecordCollectionTest extends ActiveRecordDatabaseTestCase {
 
 	private static function createCollection() {
 		$ds = ActiveMapper::getConnection()->dataSource('Offices');
-		return new ActiveRecordCollection($ds, 'Office');
+		return new ActiveCollection($ds, 'Office');
 	}
 
 	public function testConstruct() {
 		$this->assertEquals('SELECT * FROM [Offices]', strip((string) ActiveMapper::getConnection()->dataSource('Offices')));
 
-		ActiveRecordCollection::$loadImmediately = FALSE;
+		ActiveCollection::$loadImmediately = FALSE;
 		$collection = self::createCollection();
 		$this->assertFalse($collection->isLoaded());
 		$collection->load();
 		$this->assertTrue($collection->isLoaded());
 		$this->assertEquals('SELECT * FROM [Offices]', strip(dibi::$sql));
 
-		ActiveRecordCollection::$loadImmediately = TRUE;
+		ActiveCollection::$loadImmediately = TRUE;
 		$collection = self::createCollection();
 		$this->assertTrue($collection->isLoaded());
 		$this->assertEquals('SELECT * FROM [Offices]', strip(dibi::$sql));

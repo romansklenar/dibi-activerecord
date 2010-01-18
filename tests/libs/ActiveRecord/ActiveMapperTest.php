@@ -35,55 +35,55 @@ class ActiveMapperTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testFind() {
-		ActiveRecordCollection::$loadImmediately = TRUE;
+		ActiveCollection::$loadImmediately = TRUE;
 		
 		$offices = ActiveMapper::find('Office');
-		$this->assertType('ActiveRecordCollection', $offices);
+		$this->assertType('ActiveCollection', $offices);
 		$this->assertContains('SELECT * FROM [Offices]', strip(dibi::$sql));
 		$this->assertEquals(8, $offices->count());
 
 		$offices = ActiveMapper::find(new Office);
-		$this->assertType('ActiveRecordCollection', $offices);
+		$this->assertType('ActiveCollection', $offices);
 		$this->assertContains('SELECT * FROM [Offices]', strip(dibi::$sql));
 		$this->assertEquals(8, $offices->count());
 
 		$offices = ActiveMapper::find('Office', array('where' => '[officeCode] > 4'));
-		$this->assertType('ActiveRecordCollection', $offices);
+		$this->assertType('ActiveCollection', $offices);
 		$this->assertContains('WHERE ([officeCode] > 4)', strip(dibi::$sql));
 
 		$offices = ActiveMapper::find('Office', array('where' => array(array('%n > %i', 'officeCode', 4))));
-		$this->assertType('ActiveRecordCollection', $offices);
+		$this->assertType('ActiveCollection', $offices);
 		$this->assertContains('WHERE', strip(dibi::$sql));
 		$this->assertContains('[officeCode] > 4', strip(dibi::$sql));
 
 		$offices = ActiveMapper::find('Office', array('where' => array("[addressLine1] = '25 Old Broad Street'", "[city] = 'London'")));
-		$this->assertType('ActiveRecordCollection', $offices);
+		$this->assertType('ActiveCollection', $offices);
 		$this->assertContains("WHERE (([addressLine1] = '25 Old Broad Street') AND ([city] = 'London'))", strip(dibi::$sql));
 
 		# not implemented: feature of DibiFluent
 		$offices = ActiveMapper::find('Office', array('where' => array('addressLine1' => '25 Old Broad Street', 'city' => 'London')));
-		$this->assertType('ActiveRecordCollection', $offices);
+		$this->assertType('ActiveCollection', $offices);
 		$this->assertContains("WHERE (([addressLine1] = '25 Old Broad Street') AND ([city] = 'London'))", strip(dibi::$sql));
 
 		$offices = ActiveMapper::find('Office', array('order' => 'city ASC'));
-		$this->assertType('ActiveRecordCollection', $offices);
+		$this->assertType('ActiveCollection', $offices);
 		$this->assertContains('ORDER BY [city] ASC', strip(dibi::$sql));
 
 		$offices = ActiveMapper::find('Office', array('order' => 'city ASC, country DESC'));
-		$this->assertType('ActiveRecordCollection', $offices);
+		$this->assertType('ActiveCollection', $offices);
 		$this->assertContains('ORDER BY [city] ASC, [country] DESC', strip(dibi::$sql));
 
 		$offices = ActiveMapper::find('Office', array('order' => array('city' => dibi::ASC, 'country' => dibi::DESC)));
-		$this->assertType('ActiveRecordCollection', $offices);
+		$this->assertType('ActiveCollection', $offices);
 		$this->assertContains('ORDER BY [city] ASC, [country] DESC', strip(dibi::$sql));
 
 		$offices = ActiveMapper::find('Office', array('limit' => 3));
-		$this->assertType('ActiveRecordCollection', $offices);
+		$this->assertType('ActiveCollection', $offices);
 		$this->assertContains('LIMIT 3', strip(dibi::$sql));
 		$this->assertEquals(3, $offices->count());
 
 		$offices = ActiveMapper::find('Office', array('limit' => 3, 'offset' => 4));
-		$this->assertType('ActiveRecordCollection', $offices);
+		$this->assertType('ActiveCollection', $offices);
 		$this->assertContains('LIMIT 3 OFFSET 4', strip(dibi::$sql));
 		$this->assertEquals(3, $offices->count());
 	}
@@ -93,7 +93,7 @@ class ActiveMapperTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testUpdate() {
-		ActiveRecordCollection::$loadImmediately = TRUE;
+		ActiveCollection::$loadImmediately = TRUE;
 
 		$office = ActiveMapper::find('Office', array('where' => '[officeCode] = 8'), 'first');
 		$this->assertType('Office', $office);
@@ -107,7 +107,7 @@ class ActiveMapperTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testInsert() {
-		ActiveRecordCollection::$loadImmediately = TRUE;
+		ActiveCollection::$loadImmediately = TRUE;
 		
 		$office = new Office(array(
 			'officeCode' => 9,
@@ -129,7 +129,7 @@ class ActiveMapperTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testInsertAutoincrement() {
-		ActiveRecordCollection::$loadImmediately = TRUE;
+		ActiveCollection::$loadImmediately = TRUE;
 		
 		$employee = new Employee(array(
 			'lastName' => 'Murphy',

@@ -48,7 +48,7 @@ final class HasManyAssociation extends Association {
 	/**
 	 * Retreives referenced object(s).
 	 * @param  ActiveRecord $record
-	 * @return ActiveRecord|ActiveRecordCollection|NULL
+	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
 		if ($this->through == NULL) {
@@ -62,7 +62,7 @@ final class HasManyAssociation extends Association {
 			$through = $this->through;
 			$sub = $through::getDataSource()->select($class::getForeignKey())->where('%and', RecordHelper::formatForeignKey($record));
 			$ds = $class::getDataSource()->where('%n IN (%sql)', $class::getPrimaryKey(), (string) $sub);
-			return new ActiveRecordCollection($ds, $class);
+			return new ActiveCollection($ds, $class);
 		}
 	}
 
@@ -70,19 +70,19 @@ final class HasManyAssociation extends Association {
 	/**
 	 * Links referenced object to record.
 	 * @param  ActiveRecord $local
-	 * @param  ActiveRecord|ActiveRecordCollection|NULL $referenced
+	 * @param  ActiveRecord|ActiveCollection|NULL $referenced
 	 */
 	public function saveReferenced(ActiveRecord $local, $referenced) {
 		if ($this->through == NULL) {
 			try {
 				$old = $local->originals->{$this->getAttribute()};
-				if ($old instanceof ActiveRecordCollection) {
+				if ($old instanceof ActiveCollection) {
 					$old->{$local->foreignKey} = NULL;
 					$old->save();
 				}
 
 			} catch (ActiveRecordException $e) {
-				if ($old instanceof ActiveRecordCollection)
+				if ($old instanceof ActiveCollection)
 					$old->destroy();
 			}
 
@@ -94,13 +94,13 @@ final class HasManyAssociation extends Association {
 			try {
 				$old = $through->retreiveReferenced($local);
 
-				if ($old instanceof ActiveRecordCollection) {
+				if ($old instanceof ActiveCollection) {
 					$old->{$local->foreignKey} = NULL;
 					$old->save();
 				}
 
 			} catch (ActiveRecordException $e) {
-				if ($old instanceof ActiveRecordCollection)
+				if ($old instanceof ActiveCollection)
 					$old->destroy();
 			}
 

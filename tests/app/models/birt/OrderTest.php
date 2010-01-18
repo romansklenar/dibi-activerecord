@@ -19,7 +19,7 @@ class OrderTest extends BirtBaseTestCase {
 
 	public function testRelationProducts() {
 		$order = Order::find(10100);
-		$this->assertType('ActiveRecordCollection', $order->products);
+		$this->assertType('ActiveCollection', $order->products);
 		$this->assertEquals(4, count($order->products));
 		$this->assertType('Product', $product = $order->products->first());
 		$this->assertEquals('S18_1749', $product->productCode);
