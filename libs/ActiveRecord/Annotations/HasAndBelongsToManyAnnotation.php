@@ -8,7 +8,11 @@
  * @example    http://wiki.github.com/romansklenar/dibi-activerecord
  */
 final class HasAndBelongsToManyAnnotation extends AssociationAnnotation {
-	
+
+	/**
+	 * Object constructor.
+	 * @return void
+	 */
 	public function __construct(array $values) {
 		if (count($values) == 1 && array_key_exists('value', $values))
 			$values = array($values['value']);

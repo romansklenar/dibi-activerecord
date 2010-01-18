@@ -13,6 +13,10 @@ abstract class AssociationAnnotation extends Annotation {
 	protected $values = array();
 	
 
+	/**
+	 * Object constructor.
+	 * @return void
+	 */
 	public function __construct(array $values) {
 		if (count($values) == 1 && array_key_exists('value', $values))
 			$values = array($values['value']);
@@ -24,6 +28,7 @@ abstract class AssociationAnnotation extends Annotation {
 
 
 	/**
+	 * Property getter.
 	 * @return array
 	 */
 	public function getValues() {

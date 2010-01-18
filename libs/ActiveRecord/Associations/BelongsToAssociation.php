@@ -24,8 +24,7 @@ final class BelongsToAssociation extends Association {
 		parent::__construct(self::BELONGS_TO, $local, $referenced);
 
 		if ($referringAttribute === NULL) {
-			$referenced = new $this->referenced;
-			$this->referringAttribute = $referenced->foreignMask;
+			$this->referringAttribute = $referenced::getForeignKey();
 		} else {
 			$this->referringAttribute = $referringAttribute;
 		}
@@ -34,12 +33,38 @@ final class BelongsToAssociation extends Association {
 
 	/**
 	 * Retreives referenced object(s).
+	 *
 	 * @param  ActiveRecord $record
-	 * @return ActiveRecord|ActiveRecordCollection|NULL
+	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
 		$key = $this->referringAttribute;
 		$class = $this->referenced;
 		return $class::find($record->$key);
+	}
+
+
+	/**
+	 * Links referenced object to record.
+	 * 
+	 * @param  ActiveRecord $local
+	 * @param  ActiveRecord|ActiveCollection|NULL $referenced
+	 */
+	public function saveReferenced(ActiveRecord $local, $referenced) {
+		try {
+			$old = $referenced->{$referenced->getAssociation($this->local)->getAttribute()};
+			if ($old instanceof ActiveRecord) {
+				$old->{$referenced->foreignKey} = NULL;
+				$old->save();
+			}
+
+		} catch (ActiveRecordException $e) {
+			if ($old instanceof ActiveRecord)
+				$old->destroy();
+		}
+
+		if ($referenced instanceof ActiveRecord)
+			$local->{$referenced->foreignKey} = $referenced->{$referenced->primaryKey};
+		return $referenced;
 	}
 }

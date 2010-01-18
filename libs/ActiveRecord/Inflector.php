@@ -13,12 +13,12 @@
  * @license    New BSD License
  * @example    http://addons.nettephp.com/inflector
  * @package    Nette\Extras\Inflector
- * @version    0.4
+ * @version    0.5
  */
 class Inflector {
 
-	/** @var array  of plural nouns as rule => replacement */
-	public static $plurals = array(
+	/** @var array  of singular nouns as rule => replacement */
+	public static $singulars = array(
 		'/(quiz)$/i' => '\1zes',
 		'/^(ox)$/i' => '\1en',
 		'/([m|l])ouse$/i' => '\1ice',
@@ -38,8 +38,8 @@ class Inflector {
 		'/$/' => 's',
 	);
 
-	/** @var array  of singular nouns as rule => replacement */
-	public static $singulars = array(
+	/** @var array  of plural nouns as rule => replacement */
+	public static $plurals = array(
 		'/(database)s$/i' => '\1',
 		'/(quiz)zes$/i' => '\1',
 		'/(matr)ices$/i' => '\1ix',
@@ -88,43 +88,23 @@ class Inflector {
 
 	/**
 	 * The reverse of pluralize, returns the singular form of a word.
+	 *
 	 * @param string $word
 	 * @return string
 	 */
 	public static function singularize($word) {
 		$lower = String::lower($word);
 
-		if (self::isUncountable($word))
+		if (self::isSingular($word))
+			return $word;
+
+		if (!self::isCountable($word))
 			return $word;
 
 		if (self::isIrregular($word))
 			foreach (self::$irregular as $single => $plural)
 				if ($lower == $plural)
 					return $single;
-
-		foreach (self::$singulars as $rule => $replacement)
-			if (preg_match($rule, $word))
-				return preg_replace($rule, $replacement, $word);
-
-		return FALSE;
-	}
-
-
-	/**
-	 * Returns the plural form of the word.
-	 * @param string $word
-	 * @return string
-	 */
-	public static function pluralize($word) {
-		$lower = String::lower($word);
-
-		if (self::isUncountable($word))
-			return $word;
-
-		if (self::isIrregular($word))
-			foreach (self::$irregular as $single => $plural)
-				if ($lower == $single)
-					return $plural;
 
 		foreach (self::$plurals as $rule => $replacement)
 			if (preg_match($rule, $word))
@@ -135,12 +115,39 @@ class Inflector {
 
 
 	/**
+	 * Returns the plural form of the word.
+	 *
+	 * @param string $word
+	 * @return string
+	 */
+	public static function pluralize($word) {
+		$lower = String::lower($word);
+
+		if (self::isPlural($word))
+			return $word;
+
+		if (!self::isCountable($word))
+			return $word;
+
+		if (self::isIrregular($word))
+			return self::$irregular[$lower];
+
+		foreach (self::$singulars as $rule => $replacement)
+			if (preg_match($rule, $word))
+				return preg_replace($rule, $replacement, $word);
+
+		return FALSE;
+	}
+
+
+	/**
 	 * Is given string singular noun?
+	 *
 	 * @param string $word
 	 * @return bool
 	 */
 	public static function isSingular($word) {
-		if (self::isUncountable($word))
+		if (!self::isCountable($word))
 			return TRUE;
 
 		return !self::isPlural($word);
@@ -149,62 +156,55 @@ class Inflector {
 
 	/**
 	 * Is given string plural noun?
+	 *
 	 * @param string $word
 	 * @return bool
 	 */
 	public static function isPlural($word) {
-		if (self::isUncountable($word))
+		$lower = String::lower($word);
+
+		if (!self::isCountable($word))
 			return TRUE;
 
-		return self::singularize($word) !== FALSE;
-	}
+		if (self::isIrregular($word))
+			return in_array($lower, array_values(self::$irregular));
 
+		foreach (self::$plurals as $rule => $replacement) 
+			if (preg_match($rule, $word))
+				return TRUE;
 
-	/**
-	 * Is given string regular noun?
-	 * @param string $word
-	 * @return bool
-	 */
-	private static function isRegular($word) {
-		$word = String::lower($word);
-		return (bool) !in_array($word, self::$irregular) && !array_key_exists($word, self::$irregular);
+		return FALSE;
 	}
 
 
 	/**
 	 * Is given string countable noun?
+	 *
 	 * @param string $word
 	 * @return bool
 	 */
-	private static function isCountable($word) {
-		$word = String::lower($word);
-		return (bool) !in_array($word, self::$uncountable);
+	public static function isCountable($word) {
+		$lower = String::lower($word);
+		return (bool) !in_array($lower, self::$uncountable);
 	}
 
 
 	/**
 	 * Is given string irregular noun?
+	 *
 	 * @param string $word
 	 * @return bool
 	 */
-	private static function isIrregular($word) {
-		return !self::isRegular($word);
-	}
-
-
-	/**
-	 * Is given string uncountble noun?
-	 * @param string $word
-	 * @return bool
-	 */
-	private static function isUncountable($word) {
-		return !self::isCountable($word);
+	public static function isIrregular($word) {
+		$lower = String::lower($word);
+		return (bool) in_array($lower, self::$irregular) || array_key_exists($lower, self::$irregular);
 	}
 
 
 	/**
 	 * Ordinalize turns a number into an ordinal string used to denote
 	 * the position in an ordered sequence such as 1st, 2nd, 3rd, 4th.
+	 *
 	 * @param int $number
 	 * @return string
 	 */
@@ -307,6 +307,7 @@ class Inflector {
 	 * @return string
 	 */
 	public static function tableize($class) {
+		$class = substr_count($class, 'Model', 1) ? preg_replace('/Model$/', '', $class) : $class;
 		$table = self::pluralize($class);
 		return self::$railsStyle ? self::underscore($table) : self::camelize($table);
 	}
@@ -339,6 +340,7 @@ class Inflector {
 
 	/**
 	 * Create a name of intersect entity of M:N relation of given tables.
+	 * 
 	 * @param string $local
 	 * @param string $referenced
 	 * @return string

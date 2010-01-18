@@ -18,6 +18,18 @@ class InflectorTest extends PHPUnit_Framework_TestCase {
 		$this->assertSame('people', Inflector::pluralize('person'));
 		$this->assertSame('equipment', Inflector::pluralize('equipment'));
 		$this->assertSame('companies', Inflector::pluralize('company'));
+
+
+		$this->assertSame('dogs', Inflector::pluralize('dogs'));
+		$this->assertSame('Dogs', Inflector::pluralize('Dogs'));
+		$this->assertSame('DOGs', Inflector::pluralize('DOGs'));
+
+		$this->assertSame('quizzes', Inflector::pluralize('quizzes'));
+		$this->assertSame('tomatoes', Inflector::pluralize('tomatoes'));
+		$this->assertSame('mice', Inflector::pluralize('mice'));
+		$this->assertSame('people', Inflector::pluralize('people'));
+		$this->assertSame('equipment', Inflector::pluralize('equipment'));
+		$this->assertSame('companies', Inflector::pluralize('companies'));
 	}
 
 	public function testSingularize() {
@@ -31,6 +43,18 @@ class InflectorTest extends PHPUnit_Framework_TestCase {
 		$this->assertSame('person', Inflector::singularize('people'));
 		$this->assertSame('equipment', Inflector::singularize('equipment'));
 		$this->assertSame('company', Inflector::singularize('companies'));
+
+
+		$this->assertSame('dog', Inflector::singularize('dog'));
+		$this->assertSame('Dog', Inflector::singularize('Dog'));
+		$this->assertSame('DOG', Inflector::singularize('DOG'));
+
+		$this->assertSame('quiz', Inflector::singularize('quiz'));
+		$this->assertSame('tomato', Inflector::singularize('tomato'));
+		$this->assertSame('mouse', Inflector::singularize('mouse'));
+		$this->assertSame('person', Inflector::singularize('person'));
+		$this->assertSame('equipment', Inflector::singularize('equipment'));
+		$this->assertSame('company', Inflector::singularize('company'));
 	}
 
 	public function testIsPlural() {
@@ -75,28 +99,14 @@ class InflectorTest extends PHPUnit_Framework_TestCase {
 		$this->assertTrue(Inflector::isSingular('company'));
 	}
 
-	public function testIsRegular() {
-		$this->markTestSkipped();
-		$this->assertTrue(Inflector::isRegular('dogs'));
-		$this->assertFalse(Inflector::isRegular('person'));
-	}
-
 	public function testIsCountable() {
-		$this->markTestSkipped();
 		$this->assertTrue(Inflector::isCountable('tomatoes'));
 		$this->assertFalse(Inflector::isCountable('equipment'));
 	}
 
 	public function testIsIrregular() {
-		$this->markTestSkipped();
 		$this->assertFalse(Inflector::isIrregular('dogs'));
 		$this->assertTrue(Inflector::isIrregular('person'));
-	}
-
-	public function testIsUncountable() {
-		$this->markTestSkipped();
-		$this->assertFalse(Inflector::isUncountable('tomatoes'));
-		$this->assertTrue(Inflector::isUncountable('equipment'));
 	}
 
 	public function testOrdinalize() {
@@ -244,20 +254,36 @@ class InflectorTest extends PHPUnit_Framework_TestCase {
 		$this->assertSame('egg_and_hams', Inflector::tableize('egg_and_ham'));
 		$this->assertSame('fancy_categories', Inflector::tableize('fancyCategory'));
 
+		$this->assertSame('users', Inflector::tableize('User'));
+		$this->assertSame('users', Inflector::tableize('UserModel'));
+		$this->assertSame('models', Inflector::tableize('Model'));
+		$this->assertSame('models', Inflector::tableize('ModelModel'));
+		$this->assertSame('modelations', Inflector::tableize('Modelation'));
+		$this->assertSame('modelations', Inflector::tableize('ModelationModel'));
+
 		Inflector::$railsStyle = FALSE;
 		$this->assertSame('RawScaledScorers', Inflector::tableize('RawScaledScorer'));
 		$this->assertSame('EggAndHams', Inflector::tableize('egg_and_ham'));
 		$this->assertSame('FancyCategories', Inflector::tableize('fancyCategory'));
+
+		$this->assertSame('Users', Inflector::tableize('User'));
+		$this->assertSame('Users', Inflector::tableize('UserModel'));
+		$this->assertSame('Models', Inflector::tableize('Model'));
+		$this->assertSame('Models', Inflector::tableize('ModelModel'));
+		$this->assertSame('Modelations', Inflector::tableize('Modelation'));
+		$this->assertSame('Modelations', Inflector::tableize('ModelationModel'));
 	}
 
 	public function testClassify() {
 		$this->assertSame('EggAndHam', Inflector::classify('egg_and_hams'));
 		$this->assertSame('Post', Inflector::classify('posts'));
+		$this->assertSame('Post', Inflector::classify('post'));
 		$this->assertSame('RawScaledScorer', Inflector::classify('raw_scaled_scorers'));
 		$this->assertSame('FancyCategory', Inflector::classify('fancy_categories'));
-		
+
 		$this->assertSame('EggAndHam', Inflector::classify('EggAndHams'));
 		$this->assertSame('Post', Inflector::classify('Posts'));
+		$this->assertSame('Post', Inflector::classify('Post'));
 		$this->assertSame('RawScaledScorer', Inflector::classify('RawScaledScorers'));
 		$this->assertSame('FancyCategory', Inflector::classify('FancyCategories'));
 	}

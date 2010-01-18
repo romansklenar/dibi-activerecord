@@ -9,5 +9,5 @@
  */
 class Customer extends ActiveRecord {
 
-	protected static $foreingMask = '%primary%';
+	protected static $foreing = '%primary%';
 }

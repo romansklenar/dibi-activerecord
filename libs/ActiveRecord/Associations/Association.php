@@ -19,7 +19,7 @@ abstract class Association extends Object {
 	public $type;
 
 	/** @var array */
-	static protected $types = array(self::BELONGS_TO, self::HAS_ONE, self::HAS_MANY, self::HAS_AND_BELONGS_TO_MANY);
+	static public $types = array(self::BELONGS_TO, self::HAS_ONE, self::HAS_MANY, self::HAS_AND_BELONGS_TO_MANY);
 
 	/** @var string */
 	public $local;
@@ -27,14 +27,16 @@ abstract class Association extends Object {
 	/** @var string */
 	public $referenced;
 
+	/** @var string */
+	protected $attribute;
+
 
 	/**
 	 * Association constructor.
 	 * 
 	 * @param string $type  association type constant
-	 * @param string $local  local object name
-	 * @param string $referenced  referenced object name
-	 * @param string $by  name of attribute in local object referring to referenced object
+	 * @param string $local  local class name
+	 * @param string $referenced  referenced class name
 	 */
 	public function __construct($type, $local, $referenced) {
 		if (in_array($type, self::$types))
@@ -42,12 +44,16 @@ abstract class Association extends Object {
 		else
 			throw new InvalidArgumentException("Unknown association type '$type' given.");
 
-		if ($type == self::HAS_MANY || $type == self::HAS_AND_BELONGS_TO_MANY)
+		if ($type == self::HAS_MANY || $type == self::HAS_AND_BELONGS_TO_MANY) {
+			$this->attribute = lcfirst(Inflector::pluralize($referenced));
 			if (Inflector::isPlural($referenced))
 				$referenced = Inflector::singularize($referenced);
+		} else {
+			$this->attribute = lcfirst(Inflector::singularize($referenced));
+		}
 
-		$r = new ClassReflection($referenced);
-		if (!$r->isInstantiable())
+		$rc = new ClassReflection($referenced);
+		if (!$rc->isInstantiable())
 			throw new InvalidArgumentException("Invalid class name '$referenced' of referenced object given.");
 
 		$this->local = $local;
@@ -56,70 +62,67 @@ abstract class Association extends Object {
 
 
 	/**
-	 * Gets class assotiations.
-	 * @param  ClassReflection $r
-	 * @return array of Association
+	 * Is association in relation with given object name?
+	 *
+	 * @param string $class  referenced class name
+	 * @return bool
 	 */
-	public static function getAssotiations(ClassReflection $r) {
-		$class = $r->getName();
-		$cache = CacheHelper::getCache();
-		$key = $class . '.assotiations';
-
-		if (isset($cache[$key]))
-			return $cache[$key];
-
-		$associations = array();
-		$arr = $r->getAnnotations();
-
-		foreach ($arr as $type => $annotations)
-			if (in_array($type, self::$types))
-				foreach ($annotations as $annotation)
-					foreach ($annotation->getValues() as $attribute => $referenced) {
-						switch ($type) {
-							case Association::BELONGS_TO:
-								$asc = new BelongsToAssociation($class, $referenced, is_numeric($attribute) ? NULL : $attribute); break;
-							case Association::HAS_ONE:
-								$asc = new HasOneAssociation($class, $referenced); break;
-							case Association::HAS_MANY:
-								$asc = new HasManyAssociation($class, $referenced, is_numeric($attribute) ? NULL : $attribute); break;
-							case Association::HAS_AND_BELONGS_TO_MANY:
-								$asc = new HasAndBelongsToManyAssociation($class, $referenced, is_numeric($attribute) ? NULL : $attribute); break;
-						}
-						$associations[$type][] = $asc;
-					}
-
-		$cache->save($key, $associations, array(
-			'files' => array($r->getFileName())
-			// TODO: vsechny soubory predku
-		));
-
-		return $associations;
+	public function isInRelation($class) {
+		return $class == $this->referenced;
 	}
 
 
 	/**
-	 * Is association in relation with given object name?
-	 * @param string $referenced  referenced object name
-	 * @return bool
+	 * Returns intersectional attribute name.
+	 *
+	 * @return string
 	 */
-	public function isInRelation($referenced) {
-		return $referenced == $this->referenced;
+	public function getAttribute() {
+		return $this->attribute;
 	}
 
 
 	/**
 	 * Retreives referenced object(s).
+	 *
 	 * @param  ActiveRecord $record
-	 * @return ActiveRecord|ActiveRecordCollection|NULL
+	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
 	abstract public function retreiveReferenced(ActiveRecord $record);
 
-	
+
 	/**
-	 * @return int
+	 * Links referenced object to record.
+	 *
+	 * @param  ActiveRecord $record
+	 * @param  ActiveRecord|ActiveCollection|NULL $new
+	 */
+	abstract public function saveReferenced(ActiveRecord $record, $new);
+
+
+	/**
+	 * Property getter.
+	 * 
+	 * @return string
 	 */
 	public function getType() {
 		return $this->type;
+	}
+
+
+	/**
+	 * Provides objects data type check.
+	 *
+	 * @return bool
+	 */
+	public function typeCheck($entry) {
+		if ($this->type == self::HAS_MANY || $this->type == self::HAS_AND_BELONGS_TO_MANY)
+			if (!$entry instanceof ActiveCollection)
+				return FALSE;
+			else 
+				return $entry->itemType === $this->referenced;
+		else
+			return get_class($entry) === $this->referenced;
 	}
 
 }

@@ -18,56 +18,94 @@ abstract class ActiveRecord extends Record {
 	protected static $primary;
 
 	/** @var string  foreign key mask, if not set uses Inflector::foreignKey() to detect foreign key names */
-	protected static $foreingMask; # i.e. '%table%Id', '%table%_id', '%table%_%primary%', '%primary%'
+	protected static $foreing; // i.e. '%table%Id', '%table%_id', '%table%_%primary%', '%primary%'
 
 	/** @var string  used connection name */
 	protected static $connection = Mapper::DEFAULT_CONNECTION;
 
+	/** @var string  used mapper class */
+	protected static $mapper = self::DEFAULT_MAPPER;
+
 	/** @var array  detected primary key name and table name cache */
-	private static $cache = array();
-
-	/** @var Events */
-	protected static $events;
-
-	/** @var IMapper */
-	protected static $mapper;
+	private static $register = array();
 
 	/** @var IValidator */
 	protected static $validator;
 
+	/** @var Storage  internal data storage */
+	private $values;
+
+	/** @var Storage  internal dirty data storage */
+	private $dirty;
+
+	/** @var bool  record state sign */
+	private $state;
+
+	/**#@+ Configuration options */
+	const DEFAULT_MAPPER = 'ActiveMapper';
+	/**#@-*/
+
+	/**#@+ state */
+	const STATE_INICIALIZING = '%I';
+	const STATE_EXISTING = '%E';
+	const STATE_NEW = '%N';
+	const STATE_DELETED = '%D';
+	/**#@-*/
+
 
 	/**
-	 * ActiveRecord constructor.
+	 * Object constructor.
+	 *
 	 * @param ArrayObject|array $input
 	 * @param int $state  does data physically exists in database?
 	 */
 	public function __construct($input = array(), $state = NULL) {
-		if ($this->getMapper() === NULL)
-			$this->setMapper(new Mapper($this)); //new Mapper($this->getClass(), $this->getTableName(), $this->getPrimaryName(), $this->getConnectionName());
+		if (!is_array($input) && !$input instanceof ArrayObject)
+			throw new InvalidArgumentException("Provided input is not array or ArrayObject, '" . gettype($input) . "' given.");
 
 		if ($state === NULL)
 			$state = $this->detectState((array) $input);
 
-		parent::__construct($input, $state);
-		unset($this->columns, $this->defaults, $this->types);
-	}
+		if ($state !== self::STATE_NEW && $state !== self::STATE_EXISTING)
+			throw new InvalidArgumentException("Unknow record state '$state' given.");
 
+		$this->state = $state;
+		$this->values = new Storage;
+		$this->dirty = new Storage;
 
-	public function  __destruct() {
-		// TODO: rollback všech nedokončených transakcí
+		$values = (array) $input + $this->getDefaults();
+		$this->setValues($values);
+
+		$this->values = $this->dirty;
+		if ($this->isExistingRecord())
+			$this->dirty = new Storage;
 	}
 
 
 	/**
-	 * Detects record's state.
+	 * Object destructor.
+	 */
+	public function  __destruct() {
+		// TODO: rollback all incomplete transactions
+	}
+
+
+
+	/********************* state stuff *********************/
+
+
+
+	/**
+	 * Try to detects state of this object.
+	 *
 	 * @param array $input
 	 * @return int
 	 */
-	protected function detectState(array $input) {
-		$state = parent::detectState($input);
+	private function detectState(array $input) {
+		$state = count(self::getColumnNames()) !== count($input) || count($input) == 0 ? self::STATE_NEW : self::STATE_EXISTING;
 
 		if ($state == self::STATE_EXISTING) {
-			$primary = is_array($this->getPrimaryName()) ? $this->getPrimaryName() : array($this->getPrimaryName());
+			$primary = is_array(self::getPrimaryKey()) ? self::getPrimaryKey() : array(self::getPrimaryKey());
 			foreach ($primary as $key) {
 				if (isset($input[$key])) {
 					if ($input[$key] === NULL)
@@ -78,296 +116,544 @@ abstract class ActiveRecord extends Record {
 			}
 		}
 
+		if ($state !== self::STATE_NEW && $state !== self::STATE_EXISTING)
+			throw new InvalidArgumentException("Unable to detect record state.");
+
 		return $state;
 	}
 
 
 	/**
-	 * Gets record's connection name
+	 * Returns true if this object has been saved yet — that is, a record for the object exists in repository.
+	 *
+	 * @return bool
+	 */
+	public function isExistingRecord() {
+		return $this->state === self::STATE_EXISTING;
+	}
+
+
+	/**
+	 * Returns true if this object hasn't been saved yet — that is, a record for the object doesn't exist yet.
+	 *
+	 * @return bool
+	 */
+	public function isNewRecord() {
+		return $this->state === self::STATE_NEW;
+	}
+
+
+	/**
+	 * Returns true if this object has been deleted yet — that is, a record for the object was deleted from repository.
+	 *
+	 * @return bool
+	 */
+	public function isDeletedRecord() {
+		return $this->state === self::STATE_DELETED;
+	}
+
+
+
+	/********************* connection stuff *********************/
+
+
+
+	/**
+	 * Returns the connection associated with the class.
+	 *
+	 * @return DibiConnection
+	 */
+	public static function getConnection() {
+		return ActiveMapper::getConnection(self::getConnectionName());
+	}
+
+
+	/**
+	 * Returns the connection name associated with the class.
+	 *
 	 * @return string
 	 */
-	protected function getConnectionName() {
+	private static function getConnectionName() {
 		return static::$connection;
 	}
 
 
 	/**
-	 * Gets record's table name
+	 * Returns the mapper class name associated with the class.
+	 *
 	 * @return string
 	 */
-	public function getTableName() {
-		if (isset(static::$table) && static::$table !== NULL) {
+	private static function getMapper() {
+		return static::$mapper;
+	}
+
+
+	/**
+	 * Returns the data source object associated with the class.
+	 *
+	 * @return DibiDataSource
+	 */
+	public static function getDataSource() {
+		return self::getConnection()->dataSource(self::getTableName());
+	}
+
+
+
+	/********************* database stuff *********************/
+
+
+
+	/**
+	 * Defines table name associated with this class — can be overridden in subclasses.
+	 *
+	 * @return string
+	 */
+	public static function getTableName() {
+		if (isset(static::$table) && !empty(static::$table)) {
 			return static::$table;
 
 		} else {
-			if (!isset(self::$cache[$this->class]['table']))
-				self::$cache[$this->class]['table'] = Inflector::tableize($this->class);
-			return self::$cache[$this->class]['table'];
+			$class = self::getClass();
+			if (!isset(self::$register[$class]['table']))
+				self::$register[$class]['table'] = Inflector::tableize($class);
+			return self::$register[$class]['table'];
 		}
 	}
 
 
 	/**
-	 * Gets record's foreign key mask
-	 * @return string
+	 * Returns the table reflection object associated with the class.
+	 *
+	 * @return DibiTableInfo
 	 */
-	public function getForeignMask() {
-		if (isset(static::$foreingMask) && static::$foreingMask !== NULL) {
-			return str_replace(
-				array('%table%', '%primary%'),
-				array($this->getTableName(), $this->getPrimaryName()),
-				static::$foreingMask
-			);
-
-		} else {
-			if (!isset(self::$cache[$this->class]['foreign']))
-				self::$cache[$this->class]['foreign'] = Inflector::foreignKey($this->class);
-			return self::$cache[$this->class]['foreign'];
-		}
+	public static function getTableInfo() {
+		return TableHelper::getTableInfo(self::getClass());
 	}
 
 
 	/**
-	 * Gets record's primary key column(s) name
+	 * Indicates whether the table associated with this class exists.
+	 *
+	 * @return bool
+	 */
+	public static function tableExists() {
+		return self::getConnection()->getDatabaseInfo()->hasTable(self::getTableName());
+	}
+
+
+	/**
+	 * Defines the primary key field — can be overridden in subclasses.
+	 *
 	 * @return string|array
 	 */
-	public function getPrimaryName() {
-		if (isset(static::$primary) && static::$primary !== NULL) {
+	public static function getPrimaryKey() {
+		if (isset(static::$primary) && !empty(static::$primary)) {
 			return static::$primary;
 
 		} else {
-			if (!isset(self::$cache[$this->class]['primary'])) {
-				$primary = array();
-				$info = $this->getPrimaryInfo();
-				foreach ($info->getColumns() as $column)
-					$primary[] = $column->getName();
-
-				self::$cache[$this->class]['primary'] = count($primary) == 1 ? $primary[0] : $primary;
-			}
-			return self::$cache[$this->class]['primary'];
+			$class = self::getClass();
+			if (!isset(self::$register[$class]['primary']))
+				self::$register[$class]['primary'] = TableHelper::getPrimaryKey(TableHelper::getPrimaryInfo($class));
+			return self::$register[$class]['primary'];
 		}
 	}
 
-	protected function detectPrimaryName() {
-		$primary = array();
-		$pk = Mapper::getPrimaryInfo($this->getTableName(), $this->getConnectionName()); // intentionally from Mapper
-
-		if (!$pk instanceof DibiIndexInfo)
-			throw new InvalidStateException("Table '$this->tableName' has not defined primay key index" .
-				" or unable to detect it. You cau try manually define it to $this->class::\$primary variable.");
-
-		foreach ($pk->getColumns() as $column)
-			$primary[] = $column->getName();
-
-		return count($primary) == 1 ? $primary[0] : $primary;
-	}
-
 
 	/**
-	 * DibiDataSource finder factory.
-	 * @return DibiDataSource
-	 */
-	public function getDataSource() {
-		return $this->getConnection()->dataSource($this->getTableName());
-	}
-
-
-	/**
-	 * Gets record's primary key column(s) value(s)
-	 * @return string|array
-	 */
-	public function getPrimaryValue() {
-		if (!is_array($this->getPrimaryName()))
-			return $this->originalValues[$this->getPrimaryName()];
-
-		$values = array();
-		foreach	($this->getPrimaryName() as $field)
-			$values[$field] = $this->originalValues[$field];
-
-		return $values;
-	}
-
-
-	/**
-	 * Gets current primary key(s) formated for use in array-style-condition.
-	 * @return array
-	 */
-	public function getPrimaryCondition() {
-		$condition = array();
-		foreach	($this->getPrimaryInfo()->columns as $column)
-			$condition[$column->name . '%' . $column->type] = $this->originalValues[$column->name]; // $this->getStorage()->original[$column->name];
-
-		return $condition;
-	}
-
-
-	/**
-	 * Gets current primary key(s) formated for use in array-style-condition.
-	 * @return array
-	 */
-	public function getForeignCondition() {
-		if (is_array($this->getPrimaryName()))
-			throw new InvalidStateException("You cannot use this format of conditions when table has primary key composed from more then one column.");
-
-		$column = $this->getPrimaryInfo()->columns[0];
-		$condition = array();
-		$condition[$this->getForeignMask() . '%' . $column->type] = $this->getPrimaryValue(); // $this->getStorage()->original[$column->name];
-		return $condition;
-	}
-
-
-	/**
-	 * Gets record's modified values in array(column%type => value)
-	 * @return array
-	 */
-	public function getModifiedValues() {
-		$modified = parent::getModifiedValues();
-
-		if ($this->isRecordNew()) {
-			foreach ($this->getPrimaryInfo()->getColumns() as $column) {
-				if ($column->isAutoIncrement() && array_key_exists($column->getName(), $modified)) {
-					unset($modified[$column->getName()]);
-				}
-			}
-		}
-
-		$types = $this->getTypes();
-		$result = array();
-
-		foreach ($modified as $column => $value)
-			$result[$column . '%' . $types[$column]] = $value;
-
-		return $result;
-	}
-
-
-	/**
-	 * Gets record's original values in array(column => value)
-	 * @return array
-	 */
-	public function getOriginalValues() {
-		return parent::getOriginalValues();
-	}
-
-
-	/**
-	 * Gets record's columns default values in array(column => defaultValue)
-	 * @retrun array
-	 */
-	protected function getDefaultValues() {
-		return Mapper::getColumnDefaults($this->getTableName(), $this->getConnectionName());
-	}
-
-
-	/**
-	 * Gets record's columns names
-	 * @retrun array
-	 */
-	public function getColumnNames() {
-		return Mapper::getColumnNames($this->getTableName(), $this->getConnectionName());
-	}
-
-
-	/**
-	 * Gets table's reflection meta object
-	 * @return DibiTableInfo
-	 */
-	public function getTableInfo() {
-		return Mapper::getTableInfo($this->getTableName(), $this->getConnectionName());
-	}
-
-
-	/**
-	 * Gets table's primary key index reflection meta object
+	 * Returns the primary key index reflection object associated with the class.
+	 *
 	 * @return DibiIndexInfo
 	 */
-	public function getPrimaryInfo() {
-		// hook for database which do not support index reflection (in specific DibiDriver)
-		if (isset(static::$primary) && static::$primary !== NULL) {
-			$primary = $this->getPrimaryName();
-			$info = array(
-				'name' => $this->getTableName() . '_primary',
-				'columns' => is_array($primary) ? $primary : array($primary),
-				'unique' => FALSE,
-				'primary' => TRUE,
+	public static function getPrimaryInfo() {
+		if (isset(static::$primary) && !empty(static::$primary)) {
+			return self::generatePrimaryInfo();
+		} else {
+			return TableHelper::getPrimaryInfo(self::getClass());
+		}
+	}
+
+
+	/**
+	 * Generates virtual primary key index reflection object.
+	 * Hook for database which do not support index reflection in specific DibiDriver.
+	 *
+	 * @return DibiIndexInfo
+	 */
+	private static function generatePrimaryInfo() {
+		$primary = self::getPrimaryKey();
+		$info = array(
+			'name' => self::getTableName() . '_primary',
+			'columns' => is_array($primary) ? $primary : array($primary),
+			'unique' => FALSE,
+			'primary' => TRUE,
+		);
+
+		foreach ($info['columns'] as $key => $name) {
+			$info['columns'][$key] = self::getTableInfo()->getColumn($name);
+			if ($info['columns'][$key]->isAutoIncrement())
+				$info['unique'] = TRUE;
+		}
+		return new DibiIndexInfo($info);
+	}
+
+
+	/**
+	 * Defines the foreign key field name — can be overridden in subclasses.
+	 *
+	 * @return string
+	 */
+	public static function getForeignKey() {
+		if (isset(static::$foreing) && !empty(static::$foreing)) {
+			return str_replace(
+				array('%table%', '%primary%'),
+				array(self::getTableName(), self::getPrimaryKey()),
+				static::$foreing
 			);
 
-			foreach ($info['columns'] as $key => $name) {
-				$info['columns'][$key] = $this->getTableInfo()->getColumn($name);
-				if ($info['columns'][$key]->isAutoIncrement())
-					$info['unique'] = TRUE;
-			}
-			return new DibiIndexInfo($info);
+		} else {
+			$class = self::getClass();
+			if (!isset(self::$register[$class]['foreign']))
+				self::$register[$class]['foreign'] = Inflector::foreignKey($class);
+			return self::$register[$class]['foreign'];
 		}
-
-		// detect
-		$primary = Mapper::getPrimaryInfo($this->getTableName(), $this->getConnectionName());
-
-		if ($primary instanceof  DibiIndexInfo)
-			return $primary;
-		else
-			throw new InvalidStateException("Table '$this->tableName' has not defined primay key index" .
-				" or dibi was unable to detect it. You can try manually define primary key column(s) to $this->class::\$primary variable.");
 	}
 
 
 	/**
-	 * Gets table's column types in array(column => type)
+	 * Returns an array of column reflection objects for the table associated with this class.
+	 *
 	 * @return array
 	 */
-	public function getTypes() {
-		return Mapper::getColumnTypes($this->getTableName(), $this->getConnectionName());
+	public static function getColumns() {
+		return self::getTableInfo()->getColumns();
 	}
 
 
 	/**
-	 * Gets record's assotiations.
+	 * Does table associated with this class has given column?
+	 *
+	 * @param string $name
 	 * @return array
 	 */
-	public function getAssotiations($type = NULL) {
-		$asc = Association::getAssotiations($this->getReflection(), $this->getClass());
-		return $type === NULL ? $asc : (isset($asc[$type]) ? $asc[$type] : array());
+	public function hasColumn($name) {
+		return self::getTableInfo()->hasColumn($name);
 	}
 
 
 	/**
-	 * Gets database connection
-	 * @return DibiConnection
+	 * Returns an array of column names as strings.
+	 *
+	 * @return array
 	 */
-	public function getConnection() {
-		return Mapper::getConnection($this->getConnectionName());
+	public static function getColumnNames() {
+		return TableHelper::getColumnNames(self::getClass());
+	}
+
+
+
+	/********************* association handling *********************/
+
+
+
+	/**
+	 * Returns an array of association objects for the associations of with this class.
+	 *
+	 * @param string|array $filter
+	 * @return array
+	 */
+	public static function getAssociations($filter = NULL) {
+		$asc = RecordHelper::getAssociations(self::getClass());
+		if ($filter === NULL)
+			return $asc;
+
+		if (is_string($filter))
+			$filter = array($filter);
+
+		$arr = array();
+		foreach ($asc as $name => $association)
+			if (in_array($association->getType(), $filter))
+				$arr[] = $association;
+		return $arr;
 	}
 
 
 	/**
-	 * Gets record's mapper.
-	 * @return Mapper
+	 * Does specified class or attribute has association to this class?
+	 *
+	 * @param string $name  name of called attribute / related class name
+	 * @return bool|Association
 	 */
-	public function getMapper() {
-		return isset(self::$cache[$this->class]['mapper']) ? self::$cache[$this->class]['mapper'] : NULL;
+	public function hasAssociation($name) {
+		$asc = self::getAssociations();
+		$exists = array_key_exists($name, $asc);
+		if ($exists || $this->state === self::STATE_INICIALIZING)
+			return $exists;
+
+		foreach ($asc as $association)
+			if ($association->isInRelation(Inflector::classify($name)))
+				return TRUE;
+		return FALSE;
 	}
 
 
 	/**
-	 * Gets record's mapper.
-	 * @param Mapper $mapper
+	 * Returns association object to specified class.
+	 *
+	 * @param string $name  name of called attribute / related class name
+	 * @return Association
 	 */
-	protected function setMapper(Mapper $mapper) {
-		self::$cache[$this->class]['mapper'] = $mapper;
+	public function getAssociation($name) {
+		$asc = self::getAssociations();
+		if ($this->hasAssociation($name)) {
+			if (array_key_exists($name, $asc)) {
+				return $asc[$name];
+			} else {
+				foreach ($asc as $association)
+					if ($association->isInRelation(Inflector::classify($name)))
+						return $association;
+			}
+		} else {
+			throw new ActiveRecordException("Asscociation to '" . Inflector::classify($name) . "' not founded.");
+		}
+	}
+
+
+
+	/********************* attributes handling *********************/
+
+
+
+	/**
+	 * Returns an array of names for the attributes available on this object.
+	 *
+	 * @return array
+	 */
+	public static function getAttributes() {
+		return array_merge(self::getColumnNames(), array_keys(self::getAssociations()));
 	}
 
 
 	/**
-	 * Gets record's events.
-	 * @return Events
+	 * Is the specified attribute defined on this object?
+	 *
+	 * @param string $name
+	 * @return bool
 	 */
-	protected function getEvents() {
-		throw new NotImplementedException;
+	public static function hasAttribute($name) {
+		return in_array($name, self::getAttributes());
+	}
 
-		if (static::$events === NULL)
-			static::$events = new Events;
 
-		return static::$events;
+	/**
+	 * Returns value of specified attribute.
+	 *
+	 * @param  string $name  attribute name
+	 * @throws MemberAccessException if the attribute is not defined.
+	 */
+	protected function getAttribute($name) {
+		if ($this->hasAssociation($name)) {
+			if (array_key_exists($name, $this->dirty))
+				return $this->dirty->$name;
+			else if (array_key_exists($name, $this->values))
+				return $this->values->$name;
+			else // lazy load
+				return $this->values->$name = $this->getAssociation($name)->retreiveReferenced($this);
+
+		} else if ($this->hasColumn($name)) {
+			if (array_key_exists($name, $this->dirty))
+				$value = $this->dirty->$name;
+			else if (array_key_exists($name, $this->values))
+				$value = $this->values->$name;
+			else // not inicialized yet
+				return NULL;
+			return $this->typeCast($name, $value);
+
+		} else {
+			throw MemberAccessException("Unknown record attribute $this->class::\$$name.");
+		}
+	}
+
+
+	/**
+	 * Assigns value to specified attribute.
+	 *
+	 * @param  string $name    attribute name
+	 * @param  mixed  $value   attribute value
+	 * @return void
+	 * @throws MemberAccessException if the attribute is not defined or is read-only
+	 */
+	protected function setAttribute($name, $value) {
+		if ($this->hasAssociation($name)) {
+			$current = $this->getAttribute($name);
+			$asc = $this->getAssociation($name);
+			if ($asc->typeCheck($value)) {
+				$this->dirty->$name = $asc->saveReferenced($this, $value);
+			} else {
+				$many = $asc->type == Association::HAS_MANY || $asc->type == Association::HAS_AND_BELONGS_TO_MANY;
+				$type = $many ? "collection of $asc->referenced objects" : "object of $asc->referenced";
+				$class = get_class($value);
+				throw new InvalidArgumentException("Cannot assign object of $class, $type expected.");
+			}
+
+		} else if ($this->hasColumn($name)) {
+			$current = $this->getAttribute($name);
+			if ($current != $value)
+				$this->dirty->$name = $this->typeCast($name, $value);
+
+		} else {
+			throw MemberAccessException("Unknown record attribute $this->class::\$$name.");
+		}
+	}
+
+
+	/**
+	 * Provides type casting of this class attributes.
+	 *
+	 * @param  string $name    attribute name
+	 * @param  mixed  $value   attribute value
+	 * @return void
+	 */
+	private function typeCast($name, $value) {
+		if ($value === NULL || $value instanceof ActiveRecord || $value instanceof ActiveCollection)
+			return $value;
+
+		switch ($this->types[$name]) {
+			case dibi::TEXT: $value = (string) $value; break;
+			case dibi::BOOL: $value = ((bool) $value) && $value !== 'f' && $value !== 'F'; break;
+			case dibi::INTEGER: $value = (int) $value; break;
+			case dibi::FLOAT: $value = (float) $value; break;
+			case dibi::DATE:
+			case dibi::TIME:
+			case dibi::DATETIME:
+				if ($value instanceof DateTime)
+					return $value;
+				else if ((int) $value === 0) // '', NULL, FALSE, '0000-00-00', ...
+					return NULL;
+				else
+					$value = new DateTime(is_numeric($value) ? date('Y-m-d H:i:s', $value) : $value);
+				break;
+
+			case dibi::BINARY:
+			default: break;
+		}
+		return $value;
+	}
+
+
+
+	/********************* values stuff *********************/
+
+
+
+	/**
+	 * Returns a hash of data types of this object associated table columns (column => type).
+	 *
+	 * @return array
+	 */
+	public static function getTypes() {
+		return TableHelper::getColumnTypes(self::getClass());
+	}
+
+
+	/**
+	 * Returns a hash of this object associated table columns values (column => value).
+	 *
+	 * @return array
+	 */
+	public function getValues() {
+		return RecordHelper::getValues($this, self::getColumnNames());
+	}
+
+
+	/**
+	 * Assigns values of this object associated table columns values.
+	 *
+	 * @param array $input  values in array(column => value)
+	 * @return void
+	 */
+	public function setValues(array $input) {
+		RecordHelper::setValues($this, $input);
+	}
+
+
+	/**
+	 * Returns a hash of all columns default values (column => default value)
+	 *
+	 * @return array
+	 */
+	private static function getDefaults() {
+		return TableHelper::getColumnDefaults(self::getClass());
+	}
+
+
+	/**
+	 * Returns a hash of all changed attributes (attr => new value)
+	 *
+	 * @return array
+	 */
+	public function getChanges() {
+		$dirty = array();
+		foreach ($this->originals as $attr => $orig)
+			if ($orig instanceof ActiveRecord || $orig instanceof ActiveCollection)
+				if ($orig->isDirty())
+					$dirty[$attr] = $orig;
+		return new Storage(array_merge((array) $this->dirty, $dirty));
+	}
+
+
+	/**
+	 * Returns a hash of all original attributes (attr => original value)
+	 *
+	 * @return array
+	 */
+	public function getOriginals() {
+		return clone $this->values;
+	}
+
+
+	/**
+	 * Returns value of specified attribute.
+	 *
+	 * @param string $attr
+	 * @return array
+	 */
+	public function getChange($attr) {
+		return $this->getChanges()->$attr;
+	}
+
+
+	/**
+	 * Returns original value of specified attribute.
+	 *
+	 * @param string $attr
+	 * @return array
+	 */
+	public function getOriginal($attr) {
+		return $this->getOriginals()->$attr;
+	}
+
+
+
+	/********************* events *********************/
+
+
+
+	/**
+	 * Calls public method if exists.
+	 * @param  string
+	 * @param  array
+	 * @return bool  does method exist?
+	 */
+	private function tryCall($method, array $params) {
+		$rc = $this->getReflection();
+		if ($rc->hasMethod($method)) {
+			$rm = $rc->getMethod($method);
+			if ($rm->isPublic() && !$rm->isAbstract() && $rm->isStatic()) {
+				$rm->invokeNamedArgs($this, $params);
+				return TRUE;
+			}
+		}
+		return FALSE;
 	}
 
 
@@ -377,12 +663,11 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets record's validator.
+	 * Returns validator object associated to this class.
+	 *
 	 * @return Validator
 	 */
 	protected function getValidator() {
-		throw new NotImplementedException;
-
 		if (static::$validator === NULL)
 			static::$validator = new Validator;
 
@@ -391,25 +676,28 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
+	 * Provides this object attributes validation.
+	 *
 	 * @return void
 	 */
 	public function validate() {
-		throw new NotImplementedException;
-		$this->getValidator()->validate($this);
+		$this->tryCall('beforeValidation', array('sender' => $this));
+		// $this->getValidator()->validate($this);
+		$this->tryCall('afterValidation', array('sender' => $this));
 	}
 
 
 	/**
+	 * Is all attributes of this object valid?
+	 *
 	 * @return bool
 	 */
 	public function isValid() {
-		throw new NotImplementedException;
-
 		try {
 			$this->validate();
 			return TRUE;
 
-		} catch (ValdationException $e) {
+		} catch (ValidationException $e) {
 			return FALSE;
 		}
 	}
@@ -421,63 +709,173 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Checks if the Record has unsaved changes.
+	 * Checks if this object has unsaved changes.
+	 *
 	 * @return bool
 	 */
-	public function isDirty() {
-		// TODO: zohlednit asociace
-		return parent::isDirty();
+	public function isDirty($attr = NULL) {
+		if ($attr == NULL)
+			return (bool) count($this->getChanges()) || $this->isNewRecord();
+
+		$attrs = is_array($attr) ? $attr : array($attr);
+		$changes = array_keys((array) $this->getChanges());
+		foreach ($attrs as $attr)
+			if (in_array($attr, $changes))
+				return TRUE;
+		return FALSE;
 	}
 
 
 	/**
-	 * Checks if the Record has no changes to save.
-	 * @return bool
-	 */
-	public function isClean() {
-		// TODO: zohlednit asociace
-		return parent::isClean();
-	}
-
-
-	/**
-	 * Makes all properties Record's non dirty.
+	 * Discards unsaved changes of this object to a similar state as was initialized (thus making all properties non dirty).
+	 *
 	 * @return void
 	 */
-	protected function clean() {
-		// TODO: zohlednit asociace
-		parent::clean();
+	public function discard() {
+		$this->updating();
+		$this->dirty = $this->isNewRecord() ? $this->values : new Storage;
+		foreach ($this->getChanges() as $unsaved)
+			if ($unsaved->isDirty())
+				$unsaved->discard();
 	}
 
 
 	/**
 	 * Save the instance and loaded, dirty associations to the repository.
+	 *
 	 * @return ActiveRecord
 	 */
 	public function save() {
-		$this->getMapper()->save($this);
-		parent::save();
-		return $this;
+		if ($this->isValid() && $this->isDirty()) {
+			try {
+				$this->updating();
+				$this->tryCall('beforeSave', array('sender' => $this));
+
+				foreach ($this->getChanges() as $attr => $unsaved)
+					if ($unsaved instanceof ActiveRecord || $unsaved instanceof ActiveCollection)
+						$this->getAssociation($attr)->saveReferenced($this, $unsaved)->save();
+
+				if ($this->isDirty(self::getColumnNames())) {
+					$mapper = self::getMapper();
+					$mapper::save($this);
+				}
+				$this->values = new Storage($this->getValues());
+				$this->dirty = new Storage;
+				$this->state = self::STATE_EXISTING;
+				$this->tryCall('afterSave', array('sender' => $this));
+
+			} catch (DibiException $e) {
+				throw new ActiveRecordException("Unable to save record.", 500, $e);
+			}
+		}
 	}
 
 
 	/**
-	 * Destroy the instance, remove it from the repository.
-	 * @return bool  true if Record was destroyed
+	 * Deletes the record in the database and freezes this instance to reflect
+	 * that no changes should be made (since they can‘t be persisted).
+	 *
+	 * @return bool  true if the record was destroyed
 	 */
 	public function destroy() {
-		$deleted = (bool) $this->getMapper()->delete($this);
-		parent::destroy();
-		return $deleted;
+		try {
+			$this->updating();
+			$this->tryCall('beforeDestroy', array('sender' => $this));
+
+			$mapper = self::getMapper();
+			$deleted = (bool) $mapper::delete($this);
+
+			$this->dirty = new Storage;
+			foreach ($this->values as & $v)
+				$v = NULL;
+			$this->state = self::STATE_DELETED;
+
+			$this->tryCall('afterDestroy', array('sender' => $this));
+			$this->freeze();
+			return $deleted;
+
+		} catch (DibiException $e) {
+				throw new ActiveRecordException("Unable to destroy record.", 500, $e);
+		}
 	}
 
 
 	/**
-	 * Active Record factory
+	 * Creates, saves and returns new record.
+	 *
+	 * @param array|ArrayObject $input
 	 * @return ActiveRecord
 	 */
-	public static function create($data = array()) {
-		return new static($data, Record::STATE_NEW);
+	public static function create($input = array()) {
+		$record = new static($input, self::STATE_NEW);
+		$record->save();
+		return $record;
+	}
+
+
+
+	/********************* counting *********************/
+
+
+
+	/**
+	 * Returns number of objects satisfactoring input conditions.
+	 *
+	 * @param array $where
+	 * @param array $limit
+	 * @param array $offset
+	 * @return int
+	 */
+	public static function count($where = array(), $limit = NULL, $offset = NULL) {
+		if (!is_array($where) && (is_numeric($where) || (is_string($where) && str_word_count($where) == 1)))
+			$where = array(RecordHelper::formatArguments(self::getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from helper
+
+		$mapper = self::getMapper();
+		return $mapper::find(self::getClass(), array('where' => $where, 'limit' => $limit, 'offset' => $offset), IMapper::ALL)->count();
+	}
+
+
+	/**
+	 * Returns avarage value of specified column of objects stored in repository.
+	 *
+	 * @param string $column
+	 * @return float|int
+	 */
+	public static function avarage($column) {
+		return self::getConnection()->query('SELECT AVG(%n) FROM (%sql)', $column, (string) self::getDataSource())->fetchSingle();
+	}
+
+
+	/**
+	 * Returns minimum value of specified column of objects stored in repository.
+	 *
+	 * @param string $column
+	 * @return float|int
+	 */
+	public static function minimum($column) {
+		return self::getConnection()->query('SELECT MIN(%n) FROM (%sql)', $column, (string) self::getDataSource())->fetchSingle();
+	}
+
+
+	/**
+	 * Returns maximum value of specified column of objects stored in repository.
+	 *
+	 * @param string $column
+	 * @return float|int
+	 */
+	public static function maximum($column) {
+		return self::getConnection()->query('SELECT MAX(%n) FROM (%sql)', $column, (string) self::getDataSource())->fetchSingle();
+	}
+
+
+	/**
+	 * Returns sum of specified column of objects stored in repository.
+	 *
+	 * @param string $column
+	 * @return float|int
+	 */
+	public static function sum($column) {
+		return self::getConnection()->query('SELECT SUM(%n) FROM (%sql)', $column, (string) self::getDataSource())->fetchSingle();
 	}
 
 
@@ -487,81 +885,88 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Counter.
-	 * @param array $conditions
-	 * @return int
-	 */
-	public static function count($conditions = array(), $limit = NULL, $offset = NULL) {
-		$record = self::create();
-
-		if (!is_array($conditions) && (is_numeric($conditions) || (is_string($conditions) && str_word_count($conditions) == 1)))
-			$conditions = array(Mapper::formatConditions($record->getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from Mapper
-
-		return $record->getMapper()->count($conditions, $limit, $offset);
-	}
-
-
-	/**
 	 * Django-like alias to find().
-	 * @param array $conditions
-	 * @return ActiveRecordCollection
+	 *
+	 * @return ActiveCollection
 	 */
 	public static function objects() {
-		return self::find();
+		return self::findAll();
 	}
 
 
 	/**
-	 * Finder.
-	 * @param array $conditions
-	 * @return ActiveRecordCollection|ActiveRecord
+	 * Static finder.
+	 *
+	 * @param array $where
+	 * @param array $order
+	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
-	public static function find($conditions = array(), $order = array(), $limit = NULL, $offset = NULL) {
-		$record = self::create();
+	public static function find($where = array(), $order = array()) {
+		$mapper = self::getMapper();
 
-		if (!is_array($conditions) && (is_numeric($conditions) || (is_string($conditions) && str_word_count($conditions) == 1))) {
+		if (!is_array($where) && (is_numeric($where) || (is_string($where) && str_word_count($where) == 1))) {
 			$params = func_get_args();
-			$conditions = Mapper::formatConditions($record->getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from Mapper
-
-			if (count($params) == 1)
-				return $record->getMapper()->find(array($conditions), array(), 1)->first(); // self::findOne(array($conditions));
-			else
-				return $record->getMapper()->find(array($conditions)); // self::find(array($conditions));
+			$where = RecordHelper::formatArguments(self::getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from helper
+			return $mapper::find(self::getClass(), array('where' => array($where)), count($params) == 1 ? IMapper::FIRST : IMapper::ALL);
 
 		} else {
-			return $record->getMapper()->find($conditions, $order, $limit, $offset);
+			return $mapper::find(self::getClass(), array('where' => $where, 'order' => $order), IMapper::FIRST);
 		}
 	}
 
 
 	/**
-	 * Finder.
-	 * @param array $conditions
-	 * @return ActiveRecord
+	 * Static finder.
+	 *
+	 * @param array $where
+	 * @param array $order
+	 * @param array $limit
+	 * @param array $offset
+	 * @return ActiveCollection|NULL
 	 */
-	public static function findOne($conditions = array(), $order = array()) {
-		return self::find($conditions, $order, 1)->first();
+	public static function findAll($where = array(), $order = array(), $limit = NULL, $offset = NULL) {
+		$mapper = self::getMapper();
+		return $mapper::find(self::getClass(), array('where' => $where, 'order' => $order, 'limit' => $limit, 'offset' => $offset), IMapper::ALL);
 	}
 
 
 	/**
-	 * Magic find.
-	 * - $rec = Page::findOneByUrl('about-us');
-	 * - $col = Page::findByCategoryIdAndVisibility(5, TRUE);
-	 * - $col = User::findByNameAndLogin('John', 'john007');
-	 * - $col = Product::findByCategory(3);
+	 * Internal finder.
+	 * 
+	 * @param array $where
+	 * @param string $scope
+	 * @return ActiveCollection|ActiveRecord|NULL
+	 */
+	private static function findBy($where = array(), $scope = IMapper::FIRST) {
+		foreach ($where as $key => $value)
+			if (is_array($value)) {
+				unset($where[$key]);
+				$where[] = array('%n IN %l', $key, $value);
+			}
+
+		$mapper = self::getMapper();
+		return $scope == IMapper::FIRST ? self::find($where) : self::findAll($where);
+	}
+
+
+	/**
+	 * Static Magic find.
+	 * - $col = Page::findAllByUrl('about-us');
+	 * - $rec = Page::findByCategoryIdAndVisibility(5, TRUE);
+	 * - $rec = User::findByNameAndLogin('John', 'john007');
+	 * - $rec = Product::findByCategory(3);
 	 *
 	 * @param string $name
 	 * @param array  $args
-	 * @return ActiveRecordCollection|ActiveRecord|NULL
+	 * @return ActiveCollection|ActiveRecord|NULL
 	 */
 	public static function __callStatic($name, $args) {
-		if (strncmp($name, 'findBy', 6) === 0) { // record collection
+		if (strncmp($name, 'findBy', 6) === 0) { // single record
 			$method = 'find';
 			$name = substr($name, 6);
 
-		} elseif (strncmp($name, 'findOneBy', 9) === 0) { // single record
-			$method = 'findOne';
+		} elseif (strncmp($name, 'findAllBy', 9) === 0) { // record collection
+			$method = 'findAll';
 			$name = substr($name, 9);
 
 		} else {
@@ -575,60 +980,26 @@ abstract class ActiveRecord extends Record {
 			throw new InvalidArgumentException("Magic find expects " . count($parts) . " parameters, but " . count($args) . " was given.");
 		}
 
-		$cond = array_combine($parts, $args);
-		$mapper = self::create()->getMapper();
-
-		return $method == 'findOne' ? $mapper->find($cond, array(), 1)->first() : $mapper->find($cond);
+		return self::findBy(array_combine($parts, $args), $method == 'find' ? IMapper::FIRST : IMapper::ALL);
 	}
-
-
-
-	/********************* assotiation handling *********************/
 
 
 
 	/**
-	 * Has record assotiation to another record?
-	 * @param string $name  researched records's class name
-	 * @return bool|Association
+	 * Call to undefined method.
+	 *
+	 * @param  string  method name
+	 * @param  array   arguments
+	 * @return mixed
+	 * @throws MemberAccessException
 	 */
-	protected function hasAssotiation($name) {
-		if (Inflector::isSingular($name)) {
-			$assotiations = array_merge($this->getAssotiations(Association::BELONGS_TO), $this->getAssotiations(Association::HAS_ONE));
-			$name = Inflector::pluralize($name);
-		} else {
-			$assotiations = array_merge($this->getAssotiations(Association::HAS_MANY), $this->getAssotiations(Association::HAS_AND_BELONGS_TO_MANY));
+	public function __call($name, $args) {
+		try {
+			return parent::__call($name, $args);
+
+		} catch (MemberAccessException $e) {
+			return self::__callStatic($name, $args);
 		}
-
-		foreach ($assotiations as $assotiation)
-			if ($assotiation->isInRelation(Inflector::classify($name)))
-				return $assotiation;
-
-		return FALSE;
-	}
-
-
-
-	/********************* attributes handling *********************/
-
-
-
-	protected function getAttributes() {
-		return $this->getStorage();
-	}
-
-	protected function hasAttribute($name) {
-		return isset($this->getAttributes()->$name);
-	}
-
-	protected function getAttribute($name) {
-		$value = $this->getAttributes()->$name;
-		return $this->cast($name, $value);
-	}
-
-	protected function setAttribute($name, $value) {
-		$value = $this->cast($name, $value);
-		$this->getAttributes()->$name = $value;
 	}
 
 
@@ -644,17 +1015,13 @@ abstract class ActiveRecord extends Record {
 	 * @return mixed   property value
 	 * @throws MemberAccessException if the property is not defined.
 	 */
-	public function &__get($name) {
+	final public function &__get($name) {
 		try {
 			$value = ObjectMixin::get($this, $name);
 			return $value;
 
 		} catch(MemberAccessException $e) {
-			if ($assotiation = $this->hasAssotiation($name)) {
-				$value = $assotiation->retreiveReferenced($this);
-				return $value;
-
-			} else if ($this->hasAttribute($name)) {
+			if (self::hasAttribute($name)) {
 				$value = $this->getAttribute($name);
 				return $value;
 
@@ -673,17 +1040,14 @@ abstract class ActiveRecord extends Record {
 	 * @return void
 	 * @throws MemberAccessException if the property is not defined or is read-only
 	 */
-	public function __set($name, $value) {
+	final public function __set($name, $value) {
 		$this->updating();
 
 		try {
 			ObjectMixin::set($this, $name, $value);
 
 		} catch(MemberAccessException $e) {
-			if ($assotiation = $this->hasAssotiation($name)) {
-				// TODO: implement
-
-			} else if ($this->hasAttribute($name)) {
+			if (self::hasAttribute($name)) {
 				$this->setAttribute($name, $value);
 
 			} else {
@@ -699,8 +1063,8 @@ abstract class ActiveRecord extends Record {
 	 * @param  string  property name
 	 * @return bool
 	 */
-	public function __isset($name) {
-		return ObjectMixin::has($this, $name) ? TRUE : ($this->hasAssotiation($name) || $this->hasAttribute($name) ? TRUE : FALSE);
+	final public function __isset($name) {
+		return ObjectMixin::has($this, $name) ? TRUE : self::hasAttribute($name);
 	}
 
 
@@ -711,7 +1075,7 @@ abstract class ActiveRecord extends Record {
 	 * @return void
 	 * @throws MemberAccessException
 	 */
-	public function __unset($name) {
+	final public function __unset($name) {
 		throw new NotSupportedException("Cannot unset the property $this->class::\$$name.");
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/BaseTestCase.php';
+require_once __DIR__ . '/ExampleBaseTestCase.php';
 
 /**
  * Test class for Person.
@@ -20,8 +20,8 @@ class PersonTest extends ExampleBaseTestCase {
 		$this->assertEquals('People', $this->record->tableName);
 	}
 
-	public function testGetPrimaryName() {
-		$this->assertEquals('id', $this->record->primaryName);
+	public function testGetPrimaryKey() {
+		$this->assertEquals('id', $this->record->primaryKey);
 	}
 
 }

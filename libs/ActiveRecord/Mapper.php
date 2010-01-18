@@ -8,433 +8,81 @@
  * @license    New BSD License
  * @example    http://wiki.github.com/romansklenar/dibi-activerecord
  */
-class Mapper extends Object implements IMapper {
+abstract class Mapper extends Object implements IMapper {
 
-	/** @var ActiveRecord */
-	private $record;
-
-	/** @var string */
-	private $collectionClass = 'ActiveRecordCollection';
+	const DEFAULT_CONNECTION = '#M';
 	
-	/** @var array of DibiConnection */
-	private static $connections = array();
-
-	const DEFAULT_CONNECTION = 'default';
-
-	/** @var array  record meta info */
-	//private $meta = array();
-
-
-	/**
-	 * Mapper's constructor.
-	 * @param ActiveRecord $record
-	 */
-	public function __construct(ActiveRecord $record) {
-		$this->record = clone $record;
-	}
-/*
-	public function __construct($class, $table, $primary, $connection) {
-		$this->meta['class'] = $class;
-		$this->meta['table'] = $table;
-		$this->meta['primary'] = $primary;
-		$this->meta['connection'] = $table;
-	}
-*/
-
-
-
-	/********************* Public getters *********************/
-
-
-
-	/**
-	 * Gets record row class.
-	 * @return string
-	 */
-	public function getRowClass() {
-		return $this->record->getClass();
-	}
-
-/*
-	public function getTable() {
-		return $this->record->getTableName();
-	}
-
-
-	public function getPrimary() {
-		return $this->record->getPrimaryName();
-	}
-*/
-
-	/**
-	 * Gets record column types in array(column => type)
-	 * @return array
-	 */
-	public function getTypes() {
-		return $this->record->getTypes();
-	}
-
-
 	
 	/**
-	 * Adds database connection.
-	 * @param  string $connection  connection object to be stored
-	 * @param  string $name        connection name
-	 * @return void
+	 * Static class - cannot be instantiated.
 	 */
-	public static function addConnection(DibiConnection $connection, $name = self::DEFAULT_CONNECTION) {
-		if (isset(self::$connections[$name]))
-			throw new InvalidArgumentException("Connection named '$name' already exists, please choose another name.");
-		
-		self::$connections[$name] = $connection;
+	final public function __construct() {
+		throw new LogicException("Cannot instantiate static class " . get_class($this));
 	}
 
 
 	/**
-	 * Gets database connection object.
-	 * @param  string $name  connection name
+	 * Creates a new DibiConnection object and connects it to specified database.
+	 * 
+	 * @param  array|string|ArrayObject $config  connection parameters
+	 * @param  string $name       connection name
 	 * @return DibiConnection
+	 * @throws DibiException
 	 */
-	public static function getConnection($name = self::DEFAULT_CONNECTION) {
-		if (!isset(self::$connections[$name]))
-			throw new InvalidArgumentException("Connection named '$name' does not exist.");
-
-		return self::$connections[$name];
+	public static function connect($config = array(), $name = self::DEFAULT_CONNECTION) {
+		return dibi::connect($config, $name);
 	}
 
 
 	/**
-	 * Disconnects and remove connection from mapper.
+	 * Disconnects from database (destroys DibiConnection object).
+	 *
 	 * @param  string $name  connection name
 	 * @return void
 	 */
 	public static function disconnect($name = self::DEFAULT_CONNECTION) {
-		self::getConnection($name)->disconnect();
-		unset(self::$connections[$name]);
-	}
-
-
-
-	/********************* database reflection *********************/
-
-
-
-	/**
-	 * Gets table reflection object
-	 * @param  string $table       table name
-	 * @param  string $connection  connection name
-	 * @return DibiTableInfo
-	 */
-	public static function getTableInfo($table, $connection = self::DEFAULT_CONNECTION) {
-		$cache = CacheHelper::getCache();
-		$key = $table . '.reflection';
-
-		if (isset($cache[$key]))
-			return $cache[$key];
-
-		$info = self::$connections[$connection]->getDatabaseInfo()->getTable($table);
-		$info->getColumns();
-		$info->getIndexes();
-		$info->getForeignKeys();
-		
-		$dp = array();
-		if (class_exists($table)) {
-			$r = new ReflectionClass($table);
-			$dp['files'] = $r->getFileName();
-		}
-
-		$cache->save($key, $info, $dp);
-		return $info;
+		$connection = self::getConnection($name);
+		$connection->disconnect();
+		unset($connection);
 	}
 
 
 	/**
-	 * Gets rimary key index reflection meta object
-	 * @param  string $table       table name
-	 * @param  string $connection  connection name
-	 * @return DibiIndexInfo
+	 * Returns TRUE when connection was established.
+	 *
+	 * @param  string $name  connection name
+	 * @return bool
 	 */
-	public static function getPrimaryInfo($table, $connection = self::DEFAULT_CONNECTION) {
-		return self::getTableInfo($table, $connection)->getPrimaryKey();
+	public static function isConnected($name = self::DEFAULT_CONNECTION) {
+		return self::getConnection($name)->isConnected();
 	}
 
 
 	/**
-	 * Gets table's column names.
-	 * @param  string $table       table name
-	 * @param  string $connection  connection name
-	 * @return array
+	 * Retrieve active connection.
+	 *
+	 * @param  string $name   connection registy name
+	 * @return DibiConnection
+	 * @throws DibiException
 	 */
-	public static function getColumnNames($table, $connection = self::DEFAULT_CONNECTION) {
-		$cache = CacheHelper::getCache();
-		$key = $table . '.columnNames';
-
-		if (isset($cache[$key]))
-			return $cache[$key];
-
-		$names = array();
-		foreach (self::getTableInfo($table, $connection)->getColumns() as $column)
-			$names[] = $column->name;
-
-		$dp = array();
-		if (class_exists($table)) {
-			$r = new ReflectionClass($table);
-			$dp['files'] = $r->getFileName();
-		}
-
-		$cache->save($key, $names, $dp);
-		return $names;
+	public static function getConnection($name = self::DEFAULT_CONNECTION) {
+		return dibi::getConnection($name);
 	}
 
 
-	/**
-	 * Gets record's columns default values in array(column => defaultValue).
-	 * @param  string $table       table name
-	 * @param  string $connection  connection name
-	 * @return array
-	 */
-	public static function getColumnDefaults($table, $connection = self::DEFAULT_CONNECTION) {
-		$cache = CacheHelper::getCache();
-		$key = $table . '.defaults';
-
-		if (isset($cache[$key]))
-			return $cache[$key];
-
-		$defaults = array();
-		foreach (self::getTableInfo($table, $connection)->getColumns() as $column)
-			$defaults[$column->name] = $column->default;
-
-		$dp = array();
-		if (class_exists($table)) {
-			$r = new ReflectionClass($table);
-			$dp['files'] = $r->getFileName();
-		}
-
-		$cache->save($key, $defaults, $dp);
-		return $defaults;
-	}
-
-
-	/**
-	 * Gets table's column types.
-	 * @param  string $table       table name
-	 * @param  string $connection  connection name
-	 * @return array
-	 */
-	public static function getColumnTypes($table, $connection = self::DEFAULT_CONNECTION) {
-		$cache = CacheHelper::getCache();
-		$key = $table . '.types';
-
-		if (isset($cache[$key]))
-			return $cache[$key];
-
-		$types = array();
-		foreach (self::getTableInfo($table, $connection)->getColumns() as $column)
-			$types[$column->name] = $column->type;
-
-		$dp = array();
-		if (class_exists($table)) {
-			$r = new ReflectionClass($table);
-			$dp['files'] = $r->getFileName();
-		}
-
-		$cache->save($key, $types, $dp);
-		return $types;
-	}
-
-
-
-	/********************* format helpers *********************/
-
-
-	/**
-	 * Conditions format helper.
-	 * @param  DibiIndexInfo $primary
-	 * @param  array $params
-	 * @return array
-	 */
-	public static function formatConditions(DibiIndexInfo $primary, array $params) {
-		foreach ($params as $k => $v)
-			if ($v === NULL)
-				unset($params[$k]);
-			
-		if (count($primary->columns) == 1) {
-			$conditions = array('%n IN %l', $primary->columns[0]->name, $params);
-			return $conditions;
-		} else {
-			throw new InvalidStateException("You cannot use this format of conditions when table has primary key composed from more then one column.");
-		}
-	}
 
 	/********************* IMapper interface *********************/
 
 
 
-	/**
-	 * Find occurrences matching conditions.
-	 * @return ActiveRecordCollection|ActiveRecord
-	 */
-	public function find($conditions = array(), $order = array(), $limit = NULL, $offset = NULL) {
-		if (!is_array($conditions) && !is_string($conditions)) {
-			$params = func_get_args();
-			$conditions = self::formatConditions($this->record->getPrimaryInfo(), $params);
-			$result = $this->find(array($conditions));
-			return (count($params) == 1) ? $result->first() : $result;
-		}
+	abstract public function find($class, $options = array());
 
-		if (!empty($order) && is_string($order)) {
-			$tmp = $order;
-			$order = array();
-			foreach(explode(',', $tmp) as $o) {
-				$o = explode(' ', trim($o));
-				$order[trim($o[0], '[]')] = trim($o[1]);
-			}
-		} else if ($order == NULL) {
-			$order = array();
-		}
+	abstract public function save(Record $record);
 
-		$ds = $this->record->getDataSource()->orderBy($order)->applyLimit($limit, $offset);
+	abstract public function update(Record $record);
 
-		if (!empty($conditions)) {
-			if (is_string($conditions))
-				$ds->where($conditions);
-			else
-				$ds->where('%and', $conditions);
-		}
+	abstract public function insert(Record $record);
 
-		$class = $this->collectionClass;
-		return new $class($ds, $this);
-	}
-
-
-	/**
-	 * Counter.
-	 * @return int
-	 */
-	public function count($conditions = array(), $limit = NULL, $offset = NULL) {
-		return count($this->find($conditions, NULL, $limit, $offset));
-	}
-
-
-	/**
-	 * Saves the instance and loaded, dirty associations to the database.
-	 * @param ActiveRecord $record
-	 * @return void
-	 */
-	public function save(ActiveRecord $record) {
-		// TODO: do transakce
-		if ($record->isDirty()) {
-			if ($record->isRecordNew()) {
-				$value = $this->insert($record);
-
-				$pk = $record->getPrimaryInfo();
-				if (count($pk->columns) == 1) {
-					if ($pk->columns[0]->isAutoincrement())
-						$record->{$record->getPrimaryName()} = $value;
-					else if ($value = $record->getMapper()->getConnection()->getDriver()->getInsertId(NULL))
-						$record = $this->find($value);
-					else
-						throw new InvalidStateException("Unable to refresh record's primary key value after INSERT.");
-
-				} else {
-					$cond = array();
-					foreach ($pk->columns as $column)
-						$cond[] = array("%n = {$column->type}", $column->name, $record->$column);
-					$record = $this->find($cond, array(), 1);
-				}
-
-			} else {
-				$record->getMapper()->update($record);
-			}
-		}
-		return $record;
-	}
-
-
-	/**
-	 * Updates database row(s).
-	 * @param ActiveRecord $record
-	 * @return int  number of updated rows
-	 */
-	public function update(ActiveRecord $record) {
-		if ($record->isRecordNew())
-			throw new InvalidStateException("Cannot update non-existing record.");
-		
-		$record->getConnection()
-			->update($record->getTableName(), $record->getModifiedValues())
-			->where('%and', $record->getPrimaryCondition())
-			->execute();
-		
-		return $record->getConnection()->affectedRows();
-	}
-
-
-	/**
-	 * Inserts data into table.
-	 * @param ActiveRecord $record
-	 * @return int  new primary key
-	 */
-	public function insert(ActiveRecord $record) {
-		if ($record->isRecordExisting())
-			throw new InvalidStateException("Cannot insert existing record.");
-		
-		$values = $record->getModifiedValues();
-		if ($record->getPrimaryInfo()->columns[0]->isAutoincrement()) {
-			unset($values[$record->getPrimaryInfo()->columns[0]->getName()]);
-		}
-		return $record->getConnection()->insert($record->getTableName(), $values)->execute(dibi::IDENTIFIER);
-	}
-
-
-	/**
-	 * Deletes row(s) matching primary key.
-	 * @param ActiveRecord $record
-	 * @return int  number of deleted rows
-	 */
-	public function delete(ActiveRecord $record) {
-		$record->getConnection()->delete($record->getTableName())
-			->where('%and', $record->getPrimaryCondition())->execute();
-		return $record->getConnection()->affectedRows();
-	}
-
-
-
-	/***** Additional mapper's API *****/
-
-
-
-	/**
-	 * Magic find.
-	 * - $row = $mapper->findOneByUrl('about-us');
-	 * - $arr = $mapper->findByCategoryIdAndVisibility(5, TRUE);
-	 * - $arr = $mapper->findByNameAndLogin('John', 'john007');
-	 * - $flu = $mapper->findByCategory(3);
-	 *
-	 * @param string $name
-	 * @param array  $args
-	 * @return ActiveRecordCollection|ActiveRecord|NULL
-	 */
-	public function __call($name, $args) {
-		if (strncmp($name, 'findBy', 6) === 0) { // row collection
-			$method = 'find';
-			$name = substr($name, 6);
-
-		} elseif (strncmp($name, 'findOneBy', 9) === 0) { // single row
-			$method = 'findOne';
-			$name = substr($name, 9);
-
-		} else {
-			return parent::__call($name, $args);
-		}
-
-		// ProductIdAndTitle -> array('productId', 'title')
-		$parts = array_map('lcfirst', explode('And', $name));
-
-		if (count($parts) !== count($args))
-			throw new InvalidArgumentException("Magic find expects " . count($parts) . " parameters, but " . count($args) . " was given.");
-
-		$cond = array_combine($parts, $args);
-		return $method == 'findOne' ? $this->find($cond, array(), 1)->first() : $this->find($cond);
-	}
+	abstract public function delete(Record $record);
 
 }

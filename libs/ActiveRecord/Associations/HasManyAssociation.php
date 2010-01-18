@@ -37,6 +37,7 @@ final class HasManyAssociation extends Association {
 
 	/**
 	 * Is association in relation with given object name?
+	 *
 	 * @param string $referenced  referenced object name
 	 * @return bool
 	 */
@@ -47,23 +48,74 @@ final class HasManyAssociation extends Association {
 
 	/**
 	 * Retreives referenced object(s).
+	 *
 	 * @param  ActiveRecord $record
-	 * @return ActiveRecord|ActiveRecordCollection|NULL
+	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
 		if ($this->through == NULL) {
-			$key = $record->foreignMask;
-			$referenced = new $this->referenced;
-			$type = '%' . $referenced->types[$key];
 			$class = $this->referenced;
-			return $class::objects()->filter("%n = {$type}", $key, $record[$record->primaryName]);
+			$key = $record->foreignKey;
+			$types = $class::getTypes();
+			return $class::objects()->filter("%n = %{$types[$key]}", $key, $record[$record->primaryKey]);
 			
 		} else {
-			$referenced = new $this->referenced;
-			$through = new $this->through;
-			$sub = $through->getDataSource()->select($referenced->foreignMask)->where('%and', $record->foreignCondition);
-			$ds = $referenced->getDataSource()->where('%n IN (%sql)', $referenced->primaryName, (string) $sub);
-			return new ActiveRecordCollection($ds, $referenced->getMapper());
+			$class = $this->referenced;
+			$through = $this->through;
+			$sub = $through::getDataSource()->select($class::getForeignKey())->where('%and', RecordHelper::formatForeignKey($record));
+			$ds = $class::getDataSource()->where('%n IN (%sql)', $class::getPrimaryKey(), (string) $sub);
+			return new ActiveCollection($ds, $class);
+		}
+	}
+
+
+	/**
+	 * Links referenced object to record.
+	 * 
+	 * @param  ActiveRecord $local
+	 * @param  ActiveRecord|ActiveCollection|NULL $referenced
+	 */
+	public function saveReferenced(ActiveRecord $local, $referenced) {
+		if ($this->through == NULL) {
+			try {
+				$old = $local->originals->{$this->getAttribute()};
+				if ($old instanceof ActiveCollection) {
+					$old->{$local->foreignKey} = NULL;
+					$old->save();
+				}
+
+			} catch (ActiveRecordException $e) {
+				if ($old instanceof ActiveCollection)
+					$old->destroy();
+			}
+
+			$referenced->{$local->foreignKey} = $local->{$local->primaryKey};
+			return $referenced;
+
+		} else {
+			$through = new HasManyAssociation($this->local, $this->through);
+			try {
+				$old = $through->retreiveReferenced($local);
+
+				if ($old instanceof ActiveCollection) {
+					$old->{$local->foreignKey} = NULL;
+					$old->save();
+				}
+
+			} catch (ActiveRecordException $e) {
+				if ($old instanceof ActiveCollection)
+					$old->destroy();
+			}
+
+			$through = new HasManyAssociation($this->referenced, $this->through);
+			foreach ($referenced as $ref) {
+				$new = $through->retreiveReferenced($ref);
+				$new->{$local->foreignKey} = $local->{$local->primaryKey};
+				$new->save();
+			}
+			
+			$class = $this->referenced;
+			return $class::findAll(array(array('%n IN %l', $class::getPrimaryKey(), $referenced->{$class::getPrimaryKey()})));
 		}
 	}
 }

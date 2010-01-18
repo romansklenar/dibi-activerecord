@@ -16,11 +16,10 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 	public function testBenchmarkActiveRecord() {
 
 		Debug::$showLocation = FALSE;
-		$connection = new DibiConnection($this->config);
+		$connection = ActiveMapper::connect($this->config);
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/consumers.data.sql');
-		Mapper::addConnection($connection);
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 
 		// kalibrace
 		ini_set('memory_limit', '10M'); // memory_get_peak_usage() ~ 8.5M
@@ -76,8 +75,8 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 		dump(self::formatTime($t));
 
 		// clean up
-		Mapper::disconnect();
-		CacheHelper::cleanCache();
+		ActiveMapper::disconnect();
+		RecordHelper::cleanCache();
 	}
 
 	public function testBenchmarkDibi() {
@@ -138,16 +137,15 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 	public function testGettingOneRecord() {
 
 		Debug::$showLocation = FALSE;
-		$connection = new DibiConnection($this->config);
+		$connection = ActiveMapper::connect($this->config);
 		$connection->loadFile(APP_DIR . '/models/consumers.structure.sql');
 		$connection->loadFile(APP_DIR . '/models/consumers.data.sql');
-		Mapper::addConnection($connection);
-		CacheHelper::cleanCache();
+		RecordHelper::cleanCache();
 
 		// kalibrace
 		dump('--- ActiveRecord: getting one record ---');
 		Consumer::find(1);
-		Consumer::findOne();
+		Consumer::findAll()->first();
 		Consumer::objects()->first();
 		Consumer::objects()->applyLimit(1)->first();
 		
@@ -162,7 +160,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 
 		timer('1.2');
 		memory('1.2');
-		$consumer = Consumer::findOne();
+		$consumer = Consumer::findAll()->first();
 		$m = memory('1.2');
 		$t = timer('1.2');
 		dump(self::formatMemory($m));
@@ -185,8 +183,8 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 		dump(self::formatTime($t));
 
 		// clean up
-		Mapper::disconnect();
-		CacheHelper::cleanCache();
+		ActiveMapper::disconnect();
+		RecordHelper::cleanCache();
 	}
 
 	public function testGettingOneRow() {

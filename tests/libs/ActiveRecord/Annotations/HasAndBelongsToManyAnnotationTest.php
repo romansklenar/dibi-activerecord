@@ -13,9 +13,9 @@ class HasAndBelongsToManyAnnotationTest extends PHPUnit_Framework_TestCase {
 		
 		$this->assertType('array', $ann);
 		$this->assertEquals(3, count($ann));
-		$this->assertTrue($ann[0] instanceof HasAndBelongsToManyAnnotation);
-		$this->assertTrue($ann[1] instanceof HasAndBelongsToManyAnnotation);
-		$this->assertTrue($ann[2] instanceof HasAndBelongsToManyAnnotation);
+		$this->assertType('HasAndBelongsToManyAnnotation', $ann[0]);
+		$this->assertType('HasAndBelongsToManyAnnotation', $ann[1]);
+		$this->assertType('HasAndBelongsToManyAnnotation', $ann[2]);
 
 		$this->assertEquals(array('Invoices'), $ann[0]->values);
 		$this->assertEquals(array('ClientsInvoices' => 'Clients'), $ann[1]->values);

@@ -9,5 +9,5 @@
  */
 class Employee extends ActiveRecord {
 
-	protected static $foreingMask = '%primary%';
+	protected static $foreing = '%primary%';
 }

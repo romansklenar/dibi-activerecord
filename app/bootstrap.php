@@ -37,16 +37,15 @@ if (!is_writable(Environment::getVariable('logDir'))) {
 }
 
 
-$connection = new DibiConnection(array(
+$connection = ActiveMapper::connect(array(
 	'driver' => 'sqlite3',
 	'database' => ':memory:',
 ));
 $connection->loadFile(APP_DIR . '/models/example/db.structure.sql');
 $connection->loadFile(APP_DIR . '/models/example/db.data.sql');
-Mapper::addConnection($connection);
 
 Debug::dump($connection->fetchAll('SELECT * FROM [People] WHERE [companyId] = 1'));
 Debug::dump(Person::objects()->filter('[companyId] = 1')->toArray());
 Debug::dump(strip(dibi::$sql));
 
-Mapper::disconnect();
+ActiveMapper::disconnect();

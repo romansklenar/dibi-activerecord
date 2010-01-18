@@ -1,0 +1,46 @@
+generovani modelu: viz http://lukebaker.org/svn/repos/activerecord/trunk/generate.php
+dokumentacni komentare k metodam: http://www.yardoc.org/docs/datamapper-dm-core/DataMapper/Resource
+phpDataMapper: http://wiki.github.com/vlucas/phpDataMapper
+
+
+
+struktura třídy:
+
+class ActiveRecord {
+
+	construct() {
+		// setup assotiations
+		// setup atributes
+		// setup records state
+	}
+	
+	public function &__get($name) {
+		try {
+			return parent::__get($name);
+
+		} catch(MemberAccessException $e) {
+			if (isset($this->storage[$name])) {
+				$value = $this->storage[$name];
+				return $value; // PHP work-around (Only variable references should be returned by reference)
+			} else
+				throw $e;
+		}
+	
+	
+		if (array_key_exists($name, $this->attributes))
+			return $this->attributes[$name];
+		else if (array_key_exists($name, $this->associations))
+			return $this->associations[$name]->get($this);
+		else if (in_array($name, $this->columns))
+			return null;
+		else if (preg_match('/^(.+?)_ids$/', $name, $matches)) {
+			/* allow for $p->comment_ids type gets on HasMany associations */
+			$assoc_name = ActiveRecordInflector::pluralize($matches[1]);
+			if ($this->associations[$assoc_name] instanceof HasMany)
+				return $this->associations[$assoc_name]->get_ids($this);
+		}
+		throw new ActiveRecordException("attribute called '$name' doesn't exist");
+	}
+
+}
+

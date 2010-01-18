@@ -13,10 +13,10 @@ class HasManyAnnotationTest extends PHPUnit_Framework_TestCase {
 
 		$this->assertType('array', $ann);
 		$this->assertEquals(4, count($ann));
-		$this->assertTrue($ann[0] instanceof HasManyAnnotation);
-		$this->assertTrue($ann[1] instanceof HasManyAnnotation);
-		$this->assertTrue($ann[2] instanceof HasManyAnnotation);
-		$this->assertTrue($ann[3] instanceof HasManyAnnotation);
+		$this->assertType('HasManyAnnotation', $ann[0]);
+		$this->assertType('HasManyAnnotation', $ann[1]);
+		$this->assertType('HasManyAnnotation', $ann[2]);
+		$this->assertType('HasManyAnnotation', $ann[3]);
 
 		$this->assertEquals(array('Employees'), $ann[0]->values);
 		$this->assertEquals(array('Orders', 'Invoices'), $ann[1]->values);

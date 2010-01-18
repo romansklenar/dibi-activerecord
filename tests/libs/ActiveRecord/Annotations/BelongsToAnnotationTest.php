@@ -13,9 +13,9 @@ class BelongsToAnnotationTest extends PHPUnit_Framework_TestCase {
 
 		$this->assertType('array', $ann);
 		$this->assertEquals(3, count($ann));
-		$this->assertTrue($ann[0] instanceof BelongsToAnnotation);
-		$this->assertTrue($ann[1] instanceof BelongsToAnnotation);
-		$this->assertTrue($ann[2] instanceof BelongsToAnnotation);
+		$this->assertType('BelongsToAnnotation', $ann[0]);
+		$this->assertType('BelongsToAnnotation', $ann[1]);
+		$this->assertType('BelongsToAnnotation', $ann[2]);
 
 		$this->assertEquals(array('Employee'), $ann[0]->values);
 		$this->assertEquals(array('clientOf' => 'Firm'), $ann[1]->values);

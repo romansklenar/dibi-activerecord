@@ -22,14 +22,38 @@ final class HasOneAssociation extends Association {
 
 	/**
 	 * Retreives referenced object(s).
+	 *
 	 * @param  ActiveRecord $record
-	 * @return ActiveRecord|ActiveRecordCollection|NULL
+	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
-		$key = $record->foreignMask;
-		$referenced = new $this->referenced;
-		$type = '%' . $referenced->types[$key];
 		$class = $this->referenced;
-		return $class::objects()->filter("%n = {$type}", $key, $record[$record->primaryName])->first();
+		$key = $record->foreignKey;
+		$types = $class::getTypes();
+		return $class::objects()->filter("%n = %{$types[$key]}", $key, $record[$record->primaryKey])->first();
+	}
+
+
+	/**
+	 * Links referenced object to record.
+	 * 
+	 * @param  ActiveRecord $local
+	 * @param  ActiveRecord|ActiveCollection|NULL $referenced
+	 */
+	public function saveReferenced(ActiveRecord $local, $referenced) {
+		try {
+			$old = $local->originals->{$this->getAttribute()};
+			if ($old instanceof ActiveRecord) {
+				$old->{$local->foreignKey} = NULL;
+				$old->save();
+			}
+
+		} catch (ActiveRecordException $e) {
+			if ($old instanceof ActiveRecord)
+				$old->destroy();
+		}
+
+		$referenced->{$local->foreignKey} = $local->{$local->primaryKey};
+		return $referenced;
 	}
 }

@@ -19,11 +19,11 @@ class OrderTest extends BirtBaseTestCase {
 
 	public function testRelationProducts() {
 		$order = Order::find(10100);
-		$this->assertTrue($order->products instanceof ActiveRecordCollection);
+		$this->assertType('ActiveCollection', $order->products);
 		$this->assertEquals(4, count($order->products));
-		$this->assertTrue(($product = $order->products->first()) instanceof Product);
+		$this->assertType('Product', $product = $order->products->first());
 		$this->assertEquals('S18_1749', $product->productCode);
-		$this->assertTrue(($product = $order->products->last()) instanceof Product);
+		$this->assertType('Product', $product = $order->products->last());
 		$this->assertEquals('S24_3969', $product->productCode);
 	}	
 }

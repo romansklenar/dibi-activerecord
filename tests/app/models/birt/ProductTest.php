@@ -16,14 +16,21 @@ class ProductTest extends BirtBaseTestCase {
 		$this->record = new Product;
 	}
 
+	public function testStaticFind() {
+		$products = Product::find('S10_1678', 'S24_2000');
+		$this->assertType('ActiveCollection', $products);
+		$this->assertEquals('S10_1678', $products->first()->productCode);
+		$this->assertEquals('S24_2000', $products->last()->productCode);
+	}
+
 
 	public function testRelationOrders() {
 		$product = Product::find('S10_1678');
-		$this->assertTrue($product->orders instanceof ActiveRecordCollection);
+		$this->assertType('ActiveCollection', $product->orders);
 		$this->assertEquals(28, count($product->orders));
-		$this->assertTrue(($order = $product->orders->first()) instanceof Order);
+		$this->assertType('Order', $order = $product->orders->first());
 		$this->assertEquals(10107, $order->orderNumber);
-		$this->assertTrue(($order = $product->orders->last()) instanceof Order);
+		$this->assertType('Order', $order = $product->orders->last());
 		$this->assertEquals(10417, $order->orderNumber);
 	}	
 }
