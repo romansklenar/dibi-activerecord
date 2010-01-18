@@ -11,6 +11,7 @@ interface IValidator
 {
 	/**
 	 * Proccess validation.
+	 *
 	 * @return void
 	 */
 	public function validate();
@@ -18,6 +19,7 @@ interface IValidator
 
 	/**
 	 * Adds error message to the list.
+	 *
 	 * @param  string  error message
 	 * @return void
 	 */
@@ -26,6 +28,7 @@ interface IValidator
 
 	/**
 	 * Returns validation errors.
+	 *
 	 * @return array
 	 */
 	public function getErrors();

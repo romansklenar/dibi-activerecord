@@ -24,6 +24,8 @@ class ActiveCollection extends LazyArrayList {
 
 
 	/**
+	 * Object constructor.
+	 * 
 	 * @param DibiDataSource $source
 	 * @param string         $class
 	 */
@@ -41,6 +43,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Loads the Collection from the repository.
+	 *
 	 * @return ActiveCollection  provides a fluent interface
 	 */
 	public function load() {
@@ -59,6 +62,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Public property getter.
+	 *
 	 * @return DibiDataSource
 	 */
 	public function getSource() {
@@ -68,6 +72,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Public property setter.
+	 *
 	 * @param  DibiDataSource $source
 	 */
 	public function setSource(DibiDataSource $source) {
@@ -77,6 +82,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Returns all records array like $key => $value pairs.
+	 *
 	 * @param  string  associative key
 	 * @param  string  value
 	 * @return array
@@ -101,6 +107,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Adds conditions to query.
+	 *
 	 * @param  mixed      conditions
 	 * @return ActiveCollection  provides a fluent interface
 	 */
@@ -118,6 +125,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Selects columns to order by.
+	 *
 	 * @param  string|array  column name or array of column names
 	 * @param  string  		 sorting direction
 	 * @return ActiveCollection     provides a fluent interface
@@ -146,6 +154,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Limits number of rows.
+	 *
 	 * @param  int limit
 	 * @param  int offset
 	 * @return ActiveCollection  provides a fluent interface
@@ -164,6 +173,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Checks if any Records have unsaved changes.
+	 *
 	 * @return bool
 	 */
 	public function isDirty() {
@@ -176,6 +186,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Save every Record in the Collection.
+	 *
 	 * @return ActiveCollection
 	 */
 	public function save() {
@@ -187,6 +198,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Remove every Record in the Collection from the repository.
+	 *
 	 * @return void
 	 */
 	public function destroy() {
@@ -198,6 +210,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Reset every Record unsaved changes to a similar state as a new Record (thus making all properties non dirty).
+	 *
 	 * @return ActiveCollection
 	 */
 	public function discard() {
@@ -209,6 +222,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Create a Record in the Collection. / Initializes a Record and appends it to the Collection.
+	 *
 	 * @return ActiveRecord
 	 */
 	public function create($input = array()) {
@@ -225,6 +239,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Return the first Record in the Collection.
+	 *
 	 * @return mixed
 	 */
 	public function first() {
@@ -243,6 +258,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Return the last Record in the Collection.
+	 *
 	 * @return mixed
 	 */
 	public function last() {
@@ -261,6 +277,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Return a copy of the Collection sorted in reverse.
+	 *
 	 * @return void  intentionally not fluent
 	 */
 	public function reverse() {
@@ -272,6 +289,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Removes and returns the first Record in the Collection.
+	 *
 	 * @return ActiveRecord
 	 */
 	public function shift() {
@@ -283,6 +301,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Removes and returns the last Record in the Collection.
+	 *
 	 * @return ActiveRecord
 	 */
 	public function pop() {
@@ -294,6 +313,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Append Record to the Collection.
+	 *
 	 * @return ActiveRecord
 	 */
 	public function push(ActiveRecord $item) {
@@ -308,6 +328,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Removes the first occurrence of the specified element.
+	 *
 	 * @param  mixed
 	 * @return bool  true if this collection changed as a result of the call
 	 * @throws NotSupportedException
@@ -327,6 +348,7 @@ class ActiveCollection extends LazyArrayList {
 	/**
 	 * Returns the index of the first occurrence of the specified element,.
 	 * or FALSE if this collection does not contain this element.
+	 *
 	 * @param  mixed
 	 * @return int|FALSE
 	 */
@@ -341,6 +363,8 @@ class ActiveCollection extends LazyArrayList {
 
 
 	/**
+	 * Provides object type check.
+	 *
 	 * @param  mixed
 	 * @return void
 	 * @throws InvalidArgumentException
@@ -357,7 +381,8 @@ class ActiveCollection extends LazyArrayList {
 
 
 	/**
-	 * Get the number of public properties in the ArrayObject
+	 * Get the number of public properties in the ArrayObject.
+	 *
 	 * @return int
 	 */
 	public function count() {
@@ -367,6 +392,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Returns the number of rows in a given data source.
+	 *
 	 * @return int
 	 */
 	public function getTotalCount() {
@@ -381,6 +407,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Removes the element at the specified position in this list.
+	 *
 	 * @param  int index
 	 * @return void
 	 * @throws NotSupportedException, ArgumentOutOfRangeException
@@ -401,6 +428,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Returns property value. Do not call directly.
+	 *
 	 * @throws MemberAccessException if the property is not defined.
 	 */
 	public function &__get($name) {
@@ -418,6 +446,7 @@ class ActiveCollection extends LazyArrayList {
 
 	/**
 	 * Sets value of a property. Do not call directly.
+	 * 
 	 * @throws MemberAccessException if the property is not defined or is read-only
 	 */
 	public function __set($name, $value) {

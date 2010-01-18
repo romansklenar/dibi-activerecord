@@ -96,7 +96,7 @@ final class ActiveMapper extends Mapper {
 	}
 
 	public function save(Record $record) {
-		// TODO: do transakce
+		// TODO: transaction
 		if ($record->isDirty()) {
 			if ($record->isNewRecord()) {
 				$value = self::insert($record);

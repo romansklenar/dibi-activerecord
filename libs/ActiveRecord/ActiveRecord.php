@@ -32,10 +32,10 @@ abstract class ActiveRecord extends Record {
 	/** @var IValidator */
 	private static $validator;
 
-	/** @var Storage */
+	/** @var Storage  internal data storage */
 	private $values;
 
-	/** @var Storage */
+	/** @var Storage  internal dirty data storage */
 	private $dirty;
 
 	/** @var bool  record state sign */
@@ -54,7 +54,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * ActiveRecord constructor.
+	 * Object constructor.
+	 *
 	 * @param ArrayObject|array $input
 	 * @param int $state  does data physically exists in database?
 	 */
@@ -81,8 +82,11 @@ abstract class ActiveRecord extends Record {
 	}
 
 
+	/**
+	 * Object destructor.
+	 */
 	public function  __destruct() {
-		// TODO: rollback všech nedokončených transakcí
+		// TODO: rollback all incomplete transactions
 	}
 
 
@@ -92,7 +96,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Detects record's state.
+	 * Try to detects state of this object.
+	 *
 	 * @param array $input
 	 * @return int
 	 */
@@ -119,7 +124,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Is record existing?
+	 * Returns true if this object has been saved yet — that is, a record for the object exists in repository.
+	 *
 	 * @return bool
 	 */
 	public function isExistingRecord() {
@@ -128,7 +134,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Is record new?
+	 * Returns true if this object hasn't been saved yet — that is, a record for the object doesn't exist yet.
+	 *
 	 * @return bool
 	 */
 	public function isNewRecord() {
@@ -137,7 +144,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Is record deleted?
+	 * Returns true if this object has been deleted yet — that is, a record for the object was deleted from repository.
+	 *
 	 * @return bool
 	 */
 	public function isDeletedRecord() {
@@ -151,7 +159,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets database connection
+	 * Returns the connection associated with the class.
+	 *
 	 * @return DibiConnection
 	 */
 	public static function getConnection() {
@@ -160,7 +169,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets record's connection name
+	 * Returns the connection name associated with the class.
+	 *
 	 * @return string
 	 */
 	private static function getConnectionName() {
@@ -169,7 +179,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets mapper class name.
+	 * Returns the mapper class name associated with the class.
+	 *
 	 * @return string
 	 */
 	private static function getMapper() {
@@ -178,7 +189,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * DibiDataSource finder factory.
+	 * Returns the data source object associated with the class.
+	 *
 	 * @return DibiDataSource
 	 */
 	public static function getDataSource() {
@@ -192,7 +204,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets record's table name
+	 * Defines table name associated with this class — can be overridden in subclasses.
+	 *
 	 * @return string
 	 */
 	public static function getTableName() {
@@ -209,7 +222,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets table's reflection object
+	 * Returns the table reflection object associated with the class.
+	 *
 	 * @return DibiTableInfo
 	 */
 	public static function getTableInfo() {
@@ -218,7 +232,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Does record's table exists in database?
+	 * Indicates whether the table associated with this class exists.
+	 *
 	 * @return bool
 	 */
 	public static function tableExists() {
@@ -227,7 +242,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets record's primary key column(s) name
+	 * Defines the primary key field — can be overridden in subclasses.
+	 *
 	 * @return string|array
 	 */
 	public static function getPrimaryKey() {
@@ -244,7 +260,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets table's primary key index reflection object
+	 * Returns the primary key index reflection object associated with the class.
+	 *
 	 * @return DibiIndexInfo
 	 */
 	public static function getPrimaryInfo() {
@@ -257,8 +274,9 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Generates virtual DibiIndexInfo object.
-	 * Hook for database which do not support index reflection in specific DibiDriver
+	 * Generates virtual primary key index reflection object.
+	 * Hook for database which do not support index reflection in specific DibiDriver.
+	 *
 	 * @return DibiIndexInfo
 	 */
 	private static function generatePrimaryInfo() {
@@ -280,7 +298,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets record's foreign key.
+	 * Defines the foreign key field name — can be overridden in subclasses.
+	 *
 	 * @return string
 	 */
 	public static function getForeignKey() {
@@ -301,8 +320,9 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Returns record's columns reflection objects
-	 * @retrun array
+	 * Returns an array of column reflection objects for the table associated with this class.
+	 *
+	 * @return array
 	 */
 	public static function getColumns() {
 		return self::getTableInfo()->getColumns();
@@ -310,8 +330,10 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Has record's table given column?
-	 * @retrun array
+	 * Does table associated with this class has given column?
+	 *
+	 * @param string $name
+	 * @return array
 	 */
 	public function hasColumn($name) {
 		return self::getTableInfo()->hasColumn($name);
@@ -319,8 +341,9 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Returns record's columns names
-	 * @retrun array
+	 * Returns an array of column names as strings.
+	 *
+	 * @return array
 	 */
 	public static function getColumnNames() {
 		return TableHelper::getColumnNames(self::getClass());
@@ -333,7 +356,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets record's associations.
+	 * Returns an array of association objects for the associations of with this class.
+	 *
 	 * @param string|array $filter
 	 * @return array
 	 */
@@ -354,7 +378,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Has record association to another record?
+	 * Does specified class or attribute has association to this class?
+	 *
 	 * @param string $name  name of called attribute / related class name
 	 * @return bool|Association
 	 */
@@ -372,7 +397,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets association to another record
+	 * Returns association object to specified class.
+	 *
 	 * @param string $name  name of called attribute / related class name
 	 * @return Association
 	 */
@@ -398,7 +424,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Returns list of attributes.
+	 * Returns an array of names for the attributes available on this object.
+	 *
 	 * @return array
 	 */
 	public static function getAttributes() {
@@ -407,8 +434,10 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Is attribute defined?
-	 * @bool
+	 * Is the specified attribute defined on this object?
+	 *
+	 * @param string $name
+	 * @return bool
 	 */
 	public static function hasAttribute($name) {
 		return in_array($name, self::getAttributes());
@@ -416,9 +445,9 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Returns attribute value.
-	 * @param  string $offset  attribute name
-	 * @return mixed           attribute value
+	 * Returns value of specified attribute.
+	 *
+	 * @param  string $name  attribute name
 	 * @throws MemberAccessException if the attribute is not defined.
 	 */
 	protected function getAttribute($name) {
@@ -446,8 +475,9 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Sets value of a attribute.
-	 * @param  string $name  attribute name
+	 * Assigns value to specified attribute.
+	 *
+	 * @param  string $name    attribute name
 	 * @param  mixed  $value   attribute value
 	 * @return void
 	 * @throws MemberAccessException if the attribute is not defined or is read-only
@@ -476,6 +506,13 @@ abstract class ActiveRecord extends Record {
 	}
 
 
+	/**
+	 * Provides type casting of this class attributes.
+	 *
+	 * @param  string $name    attribute name
+	 * @param  mixed  $value   attribute value
+	 * @return void
+	 */
 	private function typeCast($name, $value) {
 		if ($value === NULL || $value instanceof ActiveRecord || $value instanceof ActiveCollection)
 			return $value;
@@ -509,7 +546,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets table's column types in array(column => type)
+	 * Returns a hash of data types of this object associated table columns (column => type).
+	 *
 	 * @return array
 	 */
 	public static function getTypes() {
@@ -518,8 +556,9 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets record's columns values in array(column => value)
-	 * @retrun array
+	 * Returns a hash of this object associated table columns values (column => value).
+	 *
+	 * @return array
 	 */
 	public function getValues() {
 		return RecordHelper::getValues($this, self::getColumnNames());
@@ -527,8 +566,10 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Sets record's columns values in array(column => value)
-	 * @param array $input
+	 * Assigns values of this object associated table columns values.
+	 *
+	 * @param array $input  values in array(column => value)
+	 * @return void
 	 */
 	public function setValues(array $input) {
 		RecordHelper::setValues($this, $input);
@@ -536,8 +577,9 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Returns map of columns default values (column => default value)
-	 * @retrun array
+	 * Returns a hash of all columns default values (column => default value)
+	 *
+	 * @return array
 	 */
 	private static function getDefaults() {
 		return TableHelper::getColumnDefaults(self::getClass());
@@ -545,7 +587,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Returns map of changed attributes (attr => new value)
+	 * Returns a hash of all changed attributes (attr => new value)
+	 *
 	 * @return array
 	 */
 	public function getChanges() {
@@ -559,7 +602,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Returns map of original attributes (attr => original value)
+	 * Returns a hash of all original attributes (attr => original value)
+	 *
 	 * @return array
 	 */
 	public function getOriginals() {
@@ -568,7 +612,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Returns value of changed attribute
+	 * Returns value of specified attribute.
+	 *
 	 * @param string $attr
 	 * @return array
 	 */
@@ -578,7 +623,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Returns value of original attribute
+	 * Returns original value of specified attribute.
+	 *
 	 * @param string $attr
 	 * @return array
 	 */
@@ -593,7 +639,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Gets record's validator.
+	 * Returns validator object associated to this class.
+	 *
 	 * @return Validator
 	 */
 	protected function getValidator() {
@@ -605,6 +652,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
+	 * Provides this object attributes validation.
+	 *
 	 * @return void
 	 */
 	public function validate() {
@@ -613,6 +662,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
+	 * Is all attributes of this object valid?
+	 *
 	 * @return bool
 	 */
 	public function isValid() {
@@ -632,7 +683,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Checks if the Record has unsaved changes.
+	 * Checks if this object has unsaved changes.
+	 *
 	 * @return bool
 	 */
 	public function isDirty($attr = NULL) {
@@ -649,7 +701,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Discards Record's unsaved changes to a similar state as was initialized (thus making all properties non dirty).
+	 * Discards unsaved changes of this object to a similar state as was initialized (thus making all properties non dirty).
+	 *
 	 * @return void
 	 */
 	public function discard() {
@@ -663,6 +716,7 @@ abstract class ActiveRecord extends Record {
 
 	/**
 	 * Save the instance and loaded, dirty associations to the repository.
+	 *
 	 * @return ActiveRecord
 	 */
 	public function save() {
@@ -678,7 +732,7 @@ abstract class ActiveRecord extends Record {
 					$mapper::save($this);
 				}
 				$this->values = new Storage($this->getValues());
-				$this->dirty = new Storage();
+				$this->dirty = new Storage;
 				$this->state = self::STATE_EXISTING;
 
 			} catch (DibiException $e) {
@@ -689,8 +743,10 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Destroy the instance, remove it from the repository.
-	 * @return bool  true if Record was destroyed
+	 * Deletes the record in the database and freezes this instance to reflect
+	 * that no changes should be made (since they can‘t be persisted).
+	 *
+	 * @return bool  true if the record was destroyed
 	 */
 	public function destroy() {
 		try {
@@ -698,7 +754,7 @@ abstract class ActiveRecord extends Record {
 			$mapper = self::getMapper();
 			$deleted = (bool) $mapper::delete($this);
 
-			$this->dirty = new Storage();
+			$this->dirty = new Storage;
 			foreach ($this->values as & $v)
 				$v = NULL;
 			$this->state = self::STATE_DELETED;
@@ -713,7 +769,9 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Active Record factory
+	 * Creates, saves and returns new record.
+	 *
+	 * @param array|ArrayObject $input
 	 * @return ActiveRecord
 	 */
 	public static function create($input = array()) {
@@ -729,7 +787,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Counter.
+	 * Returns number of objects satisfactoring input conditions.
+	 *
 	 * @param array $where
 	 * @param array $limit
 	 * @param array $offset
@@ -745,17 +804,19 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Counter.
+	 * Returns avarage value of specified column of objects stored in repository.
+	 *
 	 * @param string $column
 	 * @return float|int
 	 */
 	public static function avarage($column) {
-		return self::getConnection()->query('SELECT A(%n) FROM (%sql)', $column, (string) self::getDataSource())->fetchSingle();
+		return self::getConnection()->query('SELECT AVG(%n) FROM (%sql)', $column, (string) self::getDataSource())->fetchSingle();
 	}
 
 
 	/**
-	 * Counter.
+	 * Returns minimum value of specified column of objects stored in repository.
+	 *
 	 * @param string $column
 	 * @return float|int
 	 */
@@ -765,7 +826,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Counter.
+	 * Returns maximum value of specified column of objects stored in repository.
+	 *
 	 * @param string $column
 	 * @return float|int
 	 */
@@ -775,7 +837,8 @@ abstract class ActiveRecord extends Record {
 
 
 	/**
-	 * Counter.
+	 * Returns sum of specified column of objects stored in repository.
+	 *
 	 * @param string $column
 	 * @return float|int
 	 */
@@ -791,6 +854,7 @@ abstract class ActiveRecord extends Record {
 
 	/**
 	 * Django-like alias to find().
+	 *
 	 * @return ActiveCollection
 	 */
 	public static function objects() {
@@ -800,6 +864,7 @@ abstract class ActiveRecord extends Record {
 
 	/**
 	 * Static finder.
+	 *
 	 * @param array $where
 	 * @param array $order
 	 * @return ActiveRecord|ActiveCollection|NULL
@@ -820,6 +885,7 @@ abstract class ActiveRecord extends Record {
 
 	/**
 	 * Static finder.
+	 *
 	 * @param array $where
 	 * @param array $order
 	 * @param array $limit
@@ -832,6 +898,13 @@ abstract class ActiveRecord extends Record {
 	}
 
 
+	/**
+	 * Internal finder.
+	 * 
+	 * @param array $where
+	 * @param string $scope
+	 * @return ActiveCollection|ActiveRecord|NULL
+	 */
 	private static function findBy($where = array(), $scope = IMapper::FIRST) {
 		foreach ($where as $key => $value)
 			if (is_array($value)) {

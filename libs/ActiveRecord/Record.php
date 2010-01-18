@@ -24,6 +24,7 @@ abstract class Record implements ArrayAccess {
 
 	/**
 	 * Makes the object unmodifiable.
+	 * 
 	 * @return void
 	 */
 	public function freeze() {
@@ -33,6 +34,7 @@ abstract class Record implements ArrayAccess {
 
 	/**
 	 * Is the object unmodifiable?
+	 *
 	 * @return bool
 	 */
 	final public function isFrozen() {
@@ -42,6 +44,7 @@ abstract class Record implements ArrayAccess {
 
 	/**
 	 * Creates a modifiable clone of the object.
+	 *
 	 * @return void
 	 */
 	public function __clone() {
@@ -66,6 +69,7 @@ abstract class Record implements ArrayAccess {
 
 	/**
 	 * Returns the name of the class of this object.
+	 *
 	 * @return string
 	 */
 	public static function getClass() {
@@ -75,6 +79,7 @@ abstract class Record implements ArrayAccess {
 
 	/**
 	 * Access to reflection.
+	 *
 	 * @return ClassReflection
 	 */
 	public static function getReflection() {
@@ -187,6 +192,7 @@ abstract class Record implements ArrayAccess {
 
 	/**
 	 * Is attribute defined?
+	 *
 	 * @bool
 	 */
 	abstract public static function hasAttribute($name);
@@ -194,6 +200,7 @@ abstract class Record implements ArrayAccess {
 
 	/**
 	 * Returns attribute value.
+	 *
 	 * @param  string $offset  attribute name
 	 * @return mixed           attribute value
 	 * @throws MemberAccessException if the attribute is not defined.
@@ -203,6 +210,7 @@ abstract class Record implements ArrayAccess {
 
 	/**
 	 * Sets value of a attribute.
+	 *
 	 * @param  string $name  attribute name
 	 * @param  mixed  $value   attribute value
 	 * @return void

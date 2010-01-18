@@ -63,6 +63,7 @@ abstract class Association extends Object {
 
 	/**
 	 * Is association in relation with given object name?
+	 *
 	 * @param string $class  referenced class name
 	 * @return bool
 	 */
@@ -73,6 +74,7 @@ abstract class Association extends Object {
 
 	/**
 	 * Returns intersectional attribute name.
+	 *
 	 * @return string
 	 */
 	public function getAttribute() {
@@ -82,6 +84,7 @@ abstract class Association extends Object {
 
 	/**
 	 * Retreives referenced object(s).
+	 *
 	 * @param  ActiveRecord $record
 	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
@@ -90,6 +93,7 @@ abstract class Association extends Object {
 
 	/**
 	 * Links referenced object to record.
+	 *
 	 * @param  ActiveRecord $record
 	 * @param  ActiveRecord|ActiveCollection|NULL $new
 	 */
@@ -97,6 +101,8 @@ abstract class Association extends Object {
 
 
 	/**
+	 * Property getter.
+	 * 
 	 * @return string
 	 */
 	public function getType() {
@@ -105,6 +111,8 @@ abstract class Association extends Object {
 
 
 	/**
+	 * Provides objects data type check.
+	 *
 	 * @return bool
 	 */
 	public function typeCheck($entry) {

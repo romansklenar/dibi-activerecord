@@ -22,7 +22,8 @@ class TableHelper {
 
 
 	/**
-	 * Gets record's table reflection object
+	 * Gets record's table reflection object.
+	 *
 	 * @param string $class
 	 * @return DibiTableInfo
 	 */
@@ -48,7 +49,8 @@ class TableHelper {
 
 
 	/**
-	 * Gets record's primary key index reflection object
+	 * Gets record's primary key index reflection object.
+	 *
 	 * @param string $class
 	 * @return DibiIndexInfo
 	 */
@@ -66,6 +68,7 @@ class TableHelper {
 
 	/**
 	 * Gets record's table column names.
+	 *
 	 * @param string $class
 	 * @return array
 	 */
@@ -90,7 +93,8 @@ class TableHelper {
 
 
 	/**
-	 * Gets record's table columns default values in array(column => defaultValue).
+	 * Gets record's table columns default values in array(column => default value).
+	 *
 	 * @param string $class
 	 * @return array
 	 */
@@ -116,6 +120,7 @@ class TableHelper {
 
 	/**
 	 * Gets record's table column types.
+	 *
 	 * @param string $class
 	 * @return array
 	 */
@@ -141,6 +146,7 @@ class TableHelper {
 
 	/**
 	 * Is primary key index AI?
+	 *
 	 * @param DibiIndexInfo $index
 	 * @return bool
 	 */
@@ -151,6 +157,7 @@ class TableHelper {
 
 	/**
 	 * Is primary key index composed from one column?
+	 *
 	 * @param DibiIndexInfo $index
 	 * @return bool
 	 */
@@ -161,6 +168,7 @@ class TableHelper {
 
 	/**
 	 * Gets name of primary key column(s).
+	 * 
 	 * @param DibiIndexInfo $index
 	 * @return array|string
 	 */

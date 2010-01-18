@@ -12,4 +12,5 @@ interface IMapper {
 	const ALL = 'all';
 	const FIRST = 'first';
 	const LAST = 'last';
+
 }

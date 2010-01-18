@@ -88,6 +88,7 @@ class Inflector {
 
 	/**
 	 * The reverse of pluralize, returns the singular form of a word.
+	 *
 	 * @param string $word
 	 * @return string
 	 */
@@ -115,6 +116,7 @@ class Inflector {
 
 	/**
 	 * Returns the plural form of the word.
+	 *
 	 * @param string $word
 	 * @return string
 	 */
@@ -140,6 +142,7 @@ class Inflector {
 
 	/**
 	 * Is given string singular noun?
+	 *
 	 * @param string $word
 	 * @return bool
 	 */
@@ -153,6 +156,7 @@ class Inflector {
 
 	/**
 	 * Is given string plural noun?
+	 *
 	 * @param string $word
 	 * @return bool
 	 */
@@ -175,6 +179,7 @@ class Inflector {
 
 	/**
 	 * Is given string countable noun?
+	 *
 	 * @param string $word
 	 * @return bool
 	 */
@@ -186,6 +191,7 @@ class Inflector {
 
 	/**
 	 * Is given string irregular noun?
+	 *
 	 * @param string $word
 	 * @return bool
 	 */
@@ -198,6 +204,7 @@ class Inflector {
 	/**
 	 * Ordinalize turns a number into an ordinal string used to denote
 	 * the position in an ordered sequence such as 1st, 2nd, 3rd, 4th.
+	 *
 	 * @param int $number
 	 * @return string
 	 */
@@ -333,6 +340,7 @@ class Inflector {
 
 	/**
 	 * Create a name of intersect entity of M:N relation of given tables.
+	 * 
 	 * @param string $local
 	 * @param string $referenced
 	 * @return string

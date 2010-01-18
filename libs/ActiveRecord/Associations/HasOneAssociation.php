@@ -22,6 +22,7 @@ final class HasOneAssociation extends Association {
 
 	/**
 	 * Retreives referenced object(s).
+	 *
 	 * @param  ActiveRecord $record
 	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
@@ -35,6 +36,7 @@ final class HasOneAssociation extends Association {
 
 	/**
 	 * Links referenced object to record.
+	 * 
 	 * @param  ActiveRecord $local
 	 * @param  ActiveRecord|ActiveCollection|NULL $referenced
 	 */

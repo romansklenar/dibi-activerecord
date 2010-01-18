@@ -23,6 +23,8 @@ class RecordHelper {
 
 
 	/**
+	 * Values expander.
+	 *
 	 * @param  Record $record
 	 * @param  array  $attrs  filtered attributes
 	 * @return array
@@ -37,6 +39,8 @@ class RecordHelper {
 
 
 	/**
+	 * Values expander.
+	 * 
 	 * @param Record $record
 	 * @param array  $values
 	 */
@@ -52,6 +56,7 @@ class RecordHelper {
 
 	/**
 	 * Conditions formater.
+	 *
 	 * @param  DibiIndexInfo $primary
 	 * @param  array $params
 	 * @return array
@@ -70,6 +75,7 @@ class RecordHelper {
 
 	/**
 	 * Returns formated condition for record's primary key(s).
+	 *
 	 * @return array
 	 */
 	public static function formatPrimaryKey(Record $record) { // getPrimaryCondition
@@ -83,6 +89,7 @@ class RecordHelper {
 
 	/**
 	 * Returns formated condition for record's foreign key.
+	 *
 	 * @return array
 	 */
 	public static function formatForeignKey(Record $record) {
@@ -98,6 +105,7 @@ class RecordHelper {
 
 	/**
 	 * Returns formated condition for record's changed attributes.
+	 *
 	 * @return array
 	 */
 	public static function formatChanges(Record $record) {
@@ -123,6 +131,7 @@ class RecordHelper {
 
 	/**
 	 * Gets name of primary key.
+	 *
 	 * @param DibiIndexInfo|array|string $primary
 	 * @return array|string
 	 */
@@ -140,6 +149,7 @@ class RecordHelper {
 	
 	/**
 	 * Is record's primary key composed from one column?
+	 *
 	 * @param string|array|DibiIndexInfo $primary
 	 * @return bool
 	 */
@@ -162,6 +172,7 @@ class RecordHelper {
 
 	/**
 	 * Gets record's associations.
+	 * 
 	 * @param  string $class
 	 * @return array of Association
 	 */

@@ -37,6 +37,7 @@ final class HasManyAssociation extends Association {
 
 	/**
 	 * Is association in relation with given object name?
+	 *
 	 * @param string $referenced  referenced object name
 	 * @return bool
 	 */
@@ -47,6 +48,7 @@ final class HasManyAssociation extends Association {
 
 	/**
 	 * Retreives referenced object(s).
+	 *
 	 * @param  ActiveRecord $record
 	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
@@ -69,6 +71,7 @@ final class HasManyAssociation extends Association {
 
 	/**
 	 * Links referenced object to record.
+	 * 
 	 * @param  ActiveRecord $local
 	 * @param  ActiveRecord|ActiveCollection|NULL $referenced
 	 */

@@ -23,6 +23,7 @@ abstract class Mapper extends Object implements IMapper {
 
 	/**
 	 * Creates a new DibiConnection object and connects it to specified database.
+	 * 
 	 * @param  array|string|ArrayObject $config  connection parameters
 	 * @param  string $name       connection name
 	 * @return DibiConnection
@@ -35,6 +36,7 @@ abstract class Mapper extends Object implements IMapper {
 
 	/**
 	 * Disconnects from database (destroys DibiConnection object).
+	 *
 	 * @param  string $name  connection name
 	 * @return void
 	 */
@@ -47,6 +49,7 @@ abstract class Mapper extends Object implements IMapper {
 
 	/**
 	 * Returns TRUE when connection was established.
+	 *
 	 * @param  string $name  connection name
 	 * @return bool
 	 */
@@ -57,6 +60,7 @@ abstract class Mapper extends Object implements IMapper {
 
 	/**
 	 * Retrieve active connection.
+	 *
 	 * @param  string $name   connection registy name
 	 * @return DibiConnection
 	 * @throws DibiException
@@ -71,7 +75,7 @@ abstract class Mapper extends Object implements IMapper {
 
 
 
-	abstract public function find($object, $options = array());
+	abstract public function find($class, $options = array());
 
 	abstract public function save(Record $record);
 

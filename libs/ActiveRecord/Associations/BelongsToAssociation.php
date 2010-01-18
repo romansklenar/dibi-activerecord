@@ -33,6 +33,7 @@ final class BelongsToAssociation extends Association {
 
 	/**
 	 * Retreives referenced object(s).
+	 *
 	 * @param  ActiveRecord $record
 	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
@@ -45,6 +46,7 @@ final class BelongsToAssociation extends Association {
 
 	/**
 	 * Links referenced object to record.
+	 * 
 	 * @param  ActiveRecord $local
 	 * @param  ActiveRecord|ActiveCollection|NULL $referenced
 	 */

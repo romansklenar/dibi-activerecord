@@ -63,6 +63,7 @@ class HasAndBelongsToManyAssociation extends Association {
 
 	/**
 	 * Links referenced object to record.
+	 * 
 	 * @param  ActiveRecord $local
 	 * @param  ActiveRecord|ActiveCollection|NULL $referenced
 	 */
