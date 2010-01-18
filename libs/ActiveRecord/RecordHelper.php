@@ -198,6 +198,34 @@ class RecordHelper {
 
 
 
+	/********************* record validation *********************/
+
+
+
+	/**
+	 * Gets record's rules.
+	 *
+	 * @param  string $class
+	 * @return Form
+	 */
+	public static function getRules($class) {
+		throw new NotImplementedException;
+	}
+
+
+	/**
+	 * Form rules generator.
+	 *
+	 * @param ActiveRecord $record
+	 * @param Form $form
+	 * @return Form
+	 */
+	public static function generateRules(ActiveRecord $record, Form $form) {
+		throw new NotImplementedException;
+	}
+
+
+
 	/********************* cache behaviour *********************/
 
 
