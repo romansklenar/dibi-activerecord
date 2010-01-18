@@ -245,7 +245,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals($origin, (array) $author->originals);
 	}
 
-	function testWritabilityGetChangesAndGetOriginals() {
+	function testWritabilityOfGetChangesAndGetOriginals() {
 		$author = Author::findById(2);
 		$this->assertEquals(0, count($author->changes));
 		$author->changes->id = 5; // nesmi ovlivnit hodnotu
@@ -262,7 +262,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	/********************* Read association tests *********************/
 
 
-/*
+
 	public function testReadAssociationHasOne() {
 		ActiveRecordCollection::$loadImmediately = TRUE;
 
@@ -440,7 +440,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertType('Album', $album = $song->albums->last());
 		$this->assertEquals(3, $album->id);
 	}
-*/
+
 
 
 	/********************* Write association tests *********************/
@@ -448,56 +448,172 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 
 	public function testWriteAssociationHasOne() {
+		// read & save
+		$student = Student::find(1);
+		$this->assertEquals(1, $student->assignment->id);
+		$student->assignment = Assignment::find(2);
+		$this->assertEquals(2, $student->assignment->id);
+		$student->save();
+
+		// read updated & check
+		$student = Student::find(1);
+		$this->assertEquals(2, $student->assignment->id);
+		$assignment = Assignment::find(2);
+		$this->assertEquals(1, $assignment->student->id);
+
+		// write wrong type
 		$student = Student::find(1);
 		$this->assertType('Assignment', $student->assignment);
 		$this->setExpectedException('InvalidArgumentException');
 		$student->assignment = new Student;
-
-		$this->markTestIncomplete();
-		// TODO: test na zapsani a ulozeni do db
 	}
 
 	public function testWriteAssociationBelongsTo() {
+		// read & save
+		$assignment = Assignment::find(2);
+		$this->assertEquals(2, $assignment->student->id);
+		$assignment->student = Student::find(1);
+		$this->assertEquals(1, $assignment->student->id);
+		$assignment->save();
+
+		// read updated & check
+		$assignment = Assignment::find(2);
+		$this->assertEquals(1, $assignment->student->id);
+		$student = Student::find(1);
+		$this->assertEquals(2, $student->assignment->id);
+
+		// write wrong type
 		$assignment = Assignment::find(2);
 		$this->assertType('Student', $assignment->student);
 		$this->setExpectedException('InvalidArgumentException');
 		$assignment->student = new Assignment;
-
-		$this->markTestIncomplete();
-		// TODO: test na zapsani a ulozeni do db
 	}
 
 	public function testWriteAssociationHasMany() {
+		// read & save
+		$programmer = Programmer::find(4);
+		$this->assertEquals(2, count($programmer->tasks));
+		$this->assertEquals(array(1003, 1009), $programmer->tasks->id);
+		$programmer->tasks = Programmer::find(7)->tasks;
+		$programmer->save();
+
+		// read updated & check
+		$programmer = Programmer::find(4);
+		$this->assertEquals(3, count($programmer->tasks));
+		$this->assertEquals(array(1004, 1006, 1010), $programmer->tasks->id);
+		$task = Task::find(1006);
+		$this->assertEquals(4, $task->programmer->id);
+
+		// write wrong type
 		$programmer = Programmer::find(4);
 		$this->assertType('ActiveRecordCollection', $programmer->tasks);
 		$this->assertEquals('Task', $programmer->tasks->getItemType());
 		$this->setExpectedException('InvalidArgumentException');
 		$programmer->tasks = new Task;
+	}
 
-		$this->markTestIncomplete();
-		// TODO: test na zapsani a ulozeni do db
+	public function testWriteAssociationHasManyAppend() {
+		$this->markTestSkipped('NotImplemented');
+		// read & save
+		$programmer = Programmer::find(4);
+		$this->assertEquals(2, count($programmer->tasks));
+		$this->assertEquals(array(1003, 1009), $programmer->tasks->id);
+		$programmer->tasks[] = Task::create(array('id' => 1011, 'name' => 'Task #1011'));
+		$this->assertTrue($programmer->tasks->isDirty());
+		$programmer->save();
+
+		// read updated & check
+		$programmer = Programmer::find(4);
+		$this->assertEquals(3, count($programmer->tasks));
+		$this->assertEquals(array(1003, 1009,1011), $programmer->tasks->id);
+		$task = Task::find(1011);
+		$this->assertEquals(4, $task->programmer);
+		$this->assertEquals(NULL, $task->project);
 	}
 
 	public function testWriteAssociationHasManyViaThrough() {
+		// read & save
+		$programmer = Programmer::find(4);
+		$this->assertEquals(2, count($programmer->projects));
+		$this->assertEquals(array(1,3), $programmer->projects->id);
+		// asserts projects 2 and 3 to programmer 4
+		// (with all theirs tasks, existing programmer's projects [and tasks] will be unused or removed)
+		$programmer->projects = Project::findAll(array(array('%n IN %l', 'id', array(2,3))));
+		$programmer->save();
+
+		// read updated & check
+		$programmer = Programmer::find(4);
+		$this->assertEquals(2, count($programmer->projects));
+		$this->assertEquals(array(2,3), $programmer->projects->id);
+		$project = Project::find(3);
+		$this->assertEquals(array(4), $project->programmers->id);
+		$this->assertEquals(array(4,4,4,4), $project->tasks->programmerId);
+
+		// write wrong type
 		$programmer = Programmer::find(4);
 		$this->assertType('ActiveRecordCollection', $programmer->projects);
 		$this->assertEquals('Project', $programmer->projects->getItemType());
 		$this->setExpectedException('InvalidArgumentException');
 		$programmer->projects = new Project;
-
-		$this->markTestIncomplete();
-		// TODO: test na zapsani a ulozeni do db
 	}
 
-	public function testReadAssociationHasManyAndBelongsTo() {
+	public function testWriteAssociationHasManyAppendViaThrough() {
+		$this->markTestSkipped('NotImplemented');
+		// read & save
+		$programmer = Programmer::find(4);
+		$this->assertEquals(2, count($programmer->projects));
+		$this->assertEquals(array(1,3), $programmer->projects->id);
+		$programmer->projects[] = Project::create(array('id' => 4, 'name' => 'Project #4'));
+		$programmer->save();
+
+		// read updated & check
+		$programmer = Programmer::find(4);
+		$this->assertEquals(3, count($programmer->projects));
+		$this->assertEquals(array(1,3,4), $programmer->projects->id);
+		$project = Project::find(4);
+		$this->assertEquals(array(4), $project->programmer->id);
+	}
+
+	public function testWriteAssociationHasManyAndBelongsToMany() {
+		// read & save
+		$post = Post::find(4);
+		$this->assertEquals(2, count($post->tags));
+		$this->assertEquals(array(1,3), $post->tags->id);
+		$post->tags = Tag::findAll(array(array('%n IN %l', 'id', array(2,3))));
+		$post->save();
+
+		// read updated & check
+		$post = Post::find(4);
+		$this->assertEquals(2, count($post->tags));
+		$this->assertEquals(array(2,3), $post->tags->id);
+		$tag = Tag::find(3);
+		$this->assertEquals(1, count($tag->posts));
+		$this->assertEquals(array(4), $tag->posts->id);
+
+		// write wrong type
 		$post = Post::find(4);
 		$this->assertType('ActiveRecordCollection', $post->tags);
 		$this->assertEquals('Tag', $post->tags->getItemType());
 		$this->setExpectedException('InvalidArgumentException');
 		$post->tags = new Tag;
+	}
 
-		$this->markTestIncomplete();
-		// TODO: test na zapsani a ulozeni do db
+	public function testWriteAssociationHasManyAndBelongsToManyAppend() {
+		$this->markTestSkipped('NotImplemented');
+		// read & save
+		$post = Post::find(4);
+		$this->assertEquals(2, count($post->tags));
+		$this->assertEquals(array(1,3), $post->tags->id);
+		$post->tags[] = Tag::create(array('id' => 4, 'name' => 'Tag #4'));
+		$post->save();
+
+		// read updated & check
+		$post = Post::find(4);
+		$this->assertEquals(3, count($post->tags));
+		$this->assertEquals(array(1,3,4), $post->tags->id);
+		$tag = Tag::find(4);
+		$this->assertEquals(1, count($tag->posts));
+		$this->assertEquals(array(4), $tag->posts->id);
 	}
 
 
@@ -582,6 +698,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 			'id' => 4,		// generated by autoincrement
 			'credit' => 0,	// database default value
 		);
+		//$this->assertEquals("INSERT INTO [Authors] ([login], [email], [firstname], [lastname], [credit]) VALUES ('johny007', 'johny.doe@example.com', 'Johny', 'Doe', 0)", strip(dibi::$sql));
 		$this->assertType('Author', $author);
 		$this->assertFalse($author->isDirty());
 		$this->assertTrue($author->isExistingRecord());
@@ -590,13 +707,17 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 
 		$author->id = 55;
 		$author->save();
+		//$this->assertEquals("UPDATE [Authors] SET [id]=55 WHERE ([id] = 4)", strip(dibi::$sql));
 		$this->assertEquals(55, $author->id);
 		$this->assertFalse($author->isDirty());
 		$this->assertTrue($author->isExistingRecord());
+		
+		$this->assertEquals(1, Author::count(55));
 
-		$this->assertEquals(1, Author::count(array('[id] = 55')));
-		$tmp = Author::find(array('[id] = 55'));
-		$this->assertType('Author', $tmp);
+		$author = Author::find(55);
+		$this->assertType('Author', $author);
+		$this->assertFalse($author->isDirty());
+		$this->assertTrue($author->isExistingRecord());
 	}
 
 	public function testCreateWithEmptyMandatoryField() {

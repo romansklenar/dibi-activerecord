@@ -313,7 +313,7 @@ abstract class ActiveRecord extends Record {
 	 * Has record's table given column?
 	 * @retrun array
 	 */
-	private function hasColumn($name) {
+	public function hasColumn($name) {
 		return self::getTableInfo()->hasColumn($name);
 	}
 
@@ -322,7 +322,7 @@ abstract class ActiveRecord extends Record {
 	 * Returns record's columns names
 	 * @retrun array
 	 */
-	private static function getColumnNames() {
+	public static function getColumnNames() {
 		return TableHelper::getColumnNames(self::getClass());
 	}
 
@@ -358,7 +358,7 @@ abstract class ActiveRecord extends Record {
 	 * @param string $name  name of called attribute / related class name
 	 * @return bool|Association
 	 */
-	private function hasAssociation($name) {
+	public function hasAssociation($name) {
 		$asc = self::getAssociations();
 		$exists = array_key_exists($name, $asc);
 		if ($exists || $this->state === self::STATE_INICIALIZING)
@@ -376,20 +376,19 @@ abstract class ActiveRecord extends Record {
 	 * @param string $name  name of called attribute / related class name
 	 * @return Association
 	 */
-	private function getAssociation($name) {
+	public function getAssociation($name) {
 		$asc = self::getAssociations();
-		if ($this->hasAssociation($name))
-			return $asc[$name];
-		else
+		if ($this->hasAssociation($name)) {
+			if (array_key_exists($name, $asc)) {
+				return $asc[$name];
+			} else {
+				foreach ($asc as $association)
+					if ($association->isInRelation(Inflector::classify($name)))
+						return $association;
+			}
+		} else {
 			throw new ActiveRecordException("Asscociation to '" . Inflector::classify($name) . "' not founded.");
-/*
-		// deprecated
-		$asc = $this->hasAssociation($name);
-		if ($asc instanceof Association)
-			return $asc;
-		else
-			throw new ActiveRecordException("Asscociation to '$name' not founded.");
-*/
+		}
 	}
 
 
@@ -458,7 +457,7 @@ abstract class ActiveRecord extends Record {
 			$current = $this->getAttribute($name);
 			$asc = $this->getAssociation($name);
 			if ($asc->typeCheck($value)) {
-				$this->dirty->$name = $asc->linkWithReferenced($this, $value);
+				$this->dirty->$name = $asc->saveReferenced($this, $value);
 			} else {
 				$many = $asc->type == Association::HAS_MANY || $asc->type == Association::HAS_AND_BELONGS_TO_MANY;
 				$type = $many ? "collection of $asc->referenced objects" : "object of $asc->referenced";
@@ -550,7 +549,12 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	public function getChanges() {
-		return clone $this->dirty;
+		$dirty = array();
+		foreach ($this->originals as $attr => $orig)
+			if ($orig instanceof ActiveRecord || $orig instanceof ActiveRecordCollection)
+				if ($orig->isDirty())
+					$dirty[$attr] = $orig;
+		return new Storage(array_merge((array) $this->dirty, $dirty));
 	}
 
 
@@ -569,7 +573,7 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	public function getChange($attr) {
-		return $this->dirty->$attr;
+		return $this->getChanges()->$attr;
 	}
 
 
@@ -579,7 +583,7 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	public function getOriginal($attr) {
-		return $this->values->$attr;
+		return $this->getOriginals()->$attr;
 	}
 
 
@@ -593,8 +597,6 @@ abstract class ActiveRecord extends Record {
 	 * @return Validator
 	 */
 	protected function getValidator() {
-		throw new NotImplementedException;
-
 		if (static::$validator === NULL)
 			static::$validator = new Validator;
 
@@ -606,7 +608,6 @@ abstract class ActiveRecord extends Record {
 	 * @return void
 	 */
 	public function validate() {
-		throw new NotImplementedException;
 		$this->getValidator()->validate($this);
 	}
 
@@ -615,13 +616,11 @@ abstract class ActiveRecord extends Record {
 	 * @return bool
 	 */
 	public function isValid() {
-		throw new NotImplementedException;
-
 		try {
 			$this->validate();
 			return TRUE;
 
-		} catch (ValdationException $e) {
+		} catch (ValidationException $e) {
 			return FALSE;
 		}
 	}
@@ -636,8 +635,16 @@ abstract class ActiveRecord extends Record {
 	 * Checks if the Record has unsaved changes.
 	 * @return bool
 	 */
-	public function isDirty() {
-		return (bool) count($this->dirty) || $this->isNewRecord();
+	public function isDirty($attr = NULL) {
+		if ($attr == NULL)
+			return (bool) count($this->getChanges()) || $this->isNewRecord();
+
+		$attrs = is_array($attr) ? $attr : array($attr);
+		$changes = array_keys((array) $this->getChanges());
+		foreach ($attrs as $attr)
+			if (in_array($attr, $changes))
+				return TRUE;
+		return FALSE;
 	}
 
 
@@ -648,7 +655,7 @@ abstract class ActiveRecord extends Record {
 	public function discard() {
 		$this->updating();
 		$this->dirty = $this->isNewRecord() ? $this->values : new Storage;
-		foreach ($this->dirty as $unsaved)
+		foreach ($this->getChanges() as $unsaved)
 			if ($unsaved->isDirty())
 				$unsaved->discard();
 	}
@@ -661,14 +668,15 @@ abstract class ActiveRecord extends Record {
 	public function save() {
 		if ($this->isDirty()) {
 			try {
-				$mapper = self::getMapper();
-				$mapper::save($this);
-				
-				foreach ($this->dirty as $unsaved)
-					if ($unsaved instanceof ActiveRecord || $unsaved instanceof ActiveRecordCollection)
-						$unsaved->save();
-
 				$this->updating();
+				foreach ($this->getChanges() as $attr => $unsaved)
+					if ($unsaved instanceof ActiveRecord || $unsaved instanceof ActiveRecordCollection)
+						$this->getAssociation($attr)->saveReferenced($this, $unsaved)->save();
+
+				if ($this->isDirty(self::getColumnNames())) {
+					$mapper = self::getMapper();
+					$mapper::save($this);
+				}
 				$this->values = new Storage($this->getValues());
 				$this->dirty = new Storage();
 				$this->state = self::STATE_EXISTING;
@@ -686,10 +694,10 @@ abstract class ActiveRecord extends Record {
 	 */
 	public function destroy() {
 		try {
+			$this->updating();
 			$mapper = self::getMapper();
 			$deleted = (bool) $mapper::delete($this);
 
-			$this->updating();
 			$this->dirty = new Storage();
 			foreach ($this->values as & $v)
 				$v = NULL;
@@ -708,8 +716,8 @@ abstract class ActiveRecord extends Record {
 	 * Active Record factory
 	 * @return ActiveRecord
 	 */
-	public static function create($data = array()) {
-		$record = new static($data, self::STATE_NEW);
+	public static function create($input = array()) {
+		$record = new static($input, self::STATE_NEW);
 		$record->save();
 		return $record;
 	}

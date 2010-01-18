@@ -100,20 +100,25 @@ final class ActiveMapper extends Mapper {
 		if ($record->isDirty()) {
 			if ($record->isNewRecord()) {
 				$value = self::insert($record);
+				$class = $record->class;
 
 				$primary = $record->primaryInfo;
 				if (TableHelper::isPrimarySingle($primary)) {
 					if (TableHelper::isPrimaryAutoIncrement($primary))
 						$record->{$record->primaryKey} = $value;
 					else if ($value = $record->connection->getDriver()->getInsertId(NULL))
-						$record = self::find($record, $value);
+						$record->{$record->primaryKey} = $value;
 					else
 						throw new InvalidStateException("Unable to refresh record's primary key value after INSERT.");
+
+					$column = $record->primaryInfo->columns[0];
+					$cond = array('%n = %' . $column->type, $column->name, $record->{$column->name});
+					$record = self::find($record, array('where' => array($cond)))->first();
 
 				} else {
 					$cond = array();
 					foreach ($primary->columns as $column)
-						$cond[] = array("%n = {$column->type}", $column->name, $record->$column);
+						$cond[] = array('%n = %' . $column->type, $column->name, $record->{$column->name});
 					$record = self::find($record, array('where' => $cond))->first();
 				}
 
@@ -130,7 +135,7 @@ final class ActiveMapper extends Mapper {
 
 		$record->connection
 			->update($record->tableName, RecordHelper::formatChanges($record))
-			->where('%and', RecordHelper::formatPrimary($record))
+			->where('%and', RecordHelper::formatPrimaryKey($record))
 			->execute();
 
 		return $record->connection->affectedRows();
@@ -147,7 +152,7 @@ final class ActiveMapper extends Mapper {
 
 	public function delete(Record $record) {
 		$record->connection->delete($record->tableName)
-			->where('%and', RecordHelper::formatPrimary($record))->execute();
+			->where('%and', RecordHelper::formatPrimaryKey($record))->execute();
 		return $record->connection->affectedRows();
 	}
 

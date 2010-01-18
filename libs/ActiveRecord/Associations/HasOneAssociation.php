@@ -26,20 +26,32 @@ final class HasOneAssociation extends Association {
 	 * @return ActiveRecord|ActiveRecordCollection|NULL
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
-		$key = $record->foreignKey;
-		$referenced = new $this->referenced;
-		$type = '%' . $referenced->types[$key];
 		$class = $this->referenced;
-		return $class::objects()->filter("%n = {$type}", $key, $record[$record->primaryKey])->first();
+		$key = $record->foreignKey;
+		$types = $class::getTypes();
+		return $class::objects()->filter("%n = %{$types[$key]}", $key, $record[$record->primaryKey])->first();
 	}
 
 
 	/**
 	 * Links referenced object to record.
-	 * @param  ActiveRecord $record
-	 * @param  ActiveRecord|ActiveRecordCollection|NULL $new
+	 * @param  ActiveRecord $local
+	 * @param  ActiveRecord|ActiveRecordCollection|NULL $referenced
 	 */
-	public function linkWithReferenced(ActiveRecord $record, $new) {
-		return $new;
+	public function saveReferenced(ActiveRecord $local, $referenced) {
+		try {
+			$old = $local->originals->{$this->getAttribute()};
+			if ($old instanceof ActiveRecord) {
+				$old->{$local->foreignKey} = NULL;
+				$old->save();
+			}
+
+		} catch (ActiveRecordException $e) {
+			if ($old instanceof ActiveRecord)
+				$old->destroy();
+		}
+
+		$referenced->{$local->foreignKey} = $local->{$local->primaryKey};
+		return $referenced;
 	}
 }

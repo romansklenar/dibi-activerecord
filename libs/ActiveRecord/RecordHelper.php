@@ -72,7 +72,7 @@ class RecordHelper {
 	 * Returns formated condition for record's primary key(s).
 	 * @return array
 	 */
-	public static function formatPrimary(Record $record) { // getPrimaryCondition
+	public static function formatPrimaryKey(Record $record) { // getPrimaryCondition
 		$cond = array();
 		foreach	($record->primaryInfo->columns as $column)
 			$cond[$column->name . '%' . $column->type] = $record->originals[$column->name];
@@ -101,18 +101,17 @@ class RecordHelper {
 	 * @return array
 	 */
 	public static function formatChanges(Record $record) {
-		$changes = $record->changes;
+		$class = $record->class;
+		$attrs = array_keys((array) $record->changes);
 
-		if ($record->isNewRecord()) {
-			$info = $record->primaryInfo;
-			if (TableHelper::isPrimaryAutoIncrement($info))
-				if (array_key_exists($record->primaryKey, $changes))
-					unset($changes[$record->primaryKey]);
-		}
+		if ($record->isNewRecord() && TableHelper::isPrimaryAutoIncrement($record->primaryInfo))
+			if (in_array($record->primaryKey, $attrs))
+				unset($attrs[array_search($record->primaryKey, $attrs)]);
 
 		$cond = array();
-		foreach ($changes as $column => $value)
-			$cond[$column . '%' . $record->types[$column]] = $value;
+		foreach ($attrs as $attr)
+			if ($record->hasColumn($attr))
+				$cond[$attr . '%' . $record->types[$attr]] = $record->$attr;
 		return $cond;
 	}
 

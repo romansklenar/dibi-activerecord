@@ -45,10 +45,24 @@ final class BelongsToAssociation extends Association {
 
 	/**
 	 * Links referenced object to record.
-	 * @param  ActiveRecord $record
-	 * @param  ActiveRecord|ActiveRecordCollection|NULL $new
+	 * @param  ActiveRecord $local
+	 * @param  ActiveRecord|ActiveRecordCollection|NULL $referenced
 	 */
-	public function linkWithReferenced(ActiveRecord $record, $new) {
-		return $new;
+	public function saveReferenced(ActiveRecord $local, $referenced) {
+		try {
+			$old = $referenced->{$referenced->getAssociation($this->local)->getAttribute()};
+			if ($old instanceof ActiveRecord) {
+				$old->{$referenced->foreignKey} = NULL;
+				$old->save();
+			}
+
+		} catch (ActiveRecordException $e) {
+			if ($old instanceof ActiveRecord)
+				$old->destroy();
+		}
+
+		if ($referenced instanceof ActiveRecord)
+			$local->{$referenced->foreignKey} = $referenced->{$referenced->primaryKey};
+		return $referenced;
 	}
 }

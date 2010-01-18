@@ -33,21 +33,22 @@ class HasAndBelongsToManyAssociation extends Association {
 	 * @return ActiveRecord|ActiveRecordCollection|NULL
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
-		$referenced = new $this->referenced;
-		$entity = $this->getIntersectEntity($record->connection->getDatabaseInfo());
-		$sub = $record->connection->dataSource($entity)->select($referenced->foreignKey)->where('%and', RecordHelper::formatForeignKey($record));
-		$ds = $referenced->dataSource->where('%n IN (%sql)', $referenced->primaryKey, (string) $sub);
-		return new ActiveRecordCollection($ds, $this->referenced);
+		$class = $this->referenced;
+		$entity = $this->getIntersectEntity();
+		$sub = $record->connection->dataSource($entity)->select($class::getForeignKey())->where('%and', RecordHelper::formatForeignKey($record));
+		$ds = $class::getDataSource()->where('%n IN (%sql)', $class::getPrimaryKey(), (string) $sub);
+		return new ActiveRecordCollection($ds, $class);
 	}
 
 
 	/**
 	 * Intersect entity name lazy getter.
 	 * 
-	 * @param DibiDatabaseInfo $database
 	 * @return string  intersect entity table name
 	 */
-	public function getIntersectEntity(DibiDatabaseInfo $database) {
+	public function getIntersectEntity() {
+		$class = $this->local;
+		$database = $class::getConnection()->getDatabaseInfo();
 		if ($this->intersectEntity == NULL) {
 			if ($database->hasTable($name = Inflector::intersectEntity($this->local, $this->referenced)))
 				return $this->intersectEntity = $name;
@@ -62,10 +63,30 @@ class HasAndBelongsToManyAssociation extends Association {
 
 	/**
 	 * Links referenced object to record.
-	 * @param  ActiveRecord $record
-	 * @param  ActiveRecord|ActiveRecordCollection|NULL $new
+	 * @param  ActiveRecord $local
+	 * @param  ActiveRecord|ActiveRecordCollection|NULL $referenced
 	 */
-	public function linkWithReferenced(ActiveRecord $record, $new) {
-		return $new;
+	public function saveReferenced(ActiveRecord $local, $referenced) {
+		$class = $this->referenced;
+		$entity = $this->getIntersectEntity();
+		$connection = $local->connection;
+		try {
+			$connection->update($entity, array($local->foreignKey => NULL))
+				->where(array(array('%n IN %l', $local->foreignKey, array($local->{$local->primaryKey}))))
+				->execute();
+
+		} catch (DibiException $e) {
+			$connection->delete($entity)
+				->where(array(array('%n IN %l', $local->foreignKey, array($local->{$local->primaryKey}))))
+				->execute();
+		}
+
+		$class = $this->referenced;
+		$connection->update($entity, array($local->foreignKey => $local->{$local->primaryKey}))
+			->where(array(array('%n IN %l', $class::getForeignKey(), $referenced->{$class::getPrimaryKey()})))
+			->execute();
+
+		$class = $this->referenced;
+		return $class::findAll(array(array('%n IN %l', $class::getPrimaryKey(), $referenced->{$class::getPrimaryKey()})));
 	}
 }

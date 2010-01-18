@@ -93,7 +93,7 @@ abstract class Association extends Object {
 	 * @param  ActiveRecord $record
 	 * @param  ActiveRecord|ActiveRecordCollection|NULL $new
 	 */
-	abstract public function linkWithReferenced(ActiveRecord $record, $new);
+	abstract public function saveReferenced(ActiveRecord $record, $new);
 
 
 	/**
