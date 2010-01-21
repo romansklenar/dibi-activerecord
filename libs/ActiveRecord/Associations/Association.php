@@ -44,10 +44,14 @@ abstract class Association extends Object {
 		else
 			throw new InvalidArgumentException("Unknown association type '$type' given.");
 
+		if (Inflector::isPlural($referenced))
+			$referenced = Inflector::singularize($referenced);
+		
+		if (Inflector::isPlural($local))
+			$local = Inflector::singularize($local);
+
 		if ($type == self::HAS_MANY || $type == self::HAS_AND_BELONGS_TO_MANY) {
 			$this->attribute = lcfirst(Inflector::pluralize($referenced));
-			if (Inflector::isPlural($referenced))
-				$referenced = Inflector::singularize($referenced);
 		} else {
 			$this->attribute = lcfirst(Inflector::singularize($referenced));
 		}
