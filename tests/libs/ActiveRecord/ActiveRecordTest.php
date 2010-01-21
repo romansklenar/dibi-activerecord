@@ -513,7 +513,6 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 	}
 
 	public function testWriteAssociationHasManyAppend() {
-		$this->markTestSkipped('NotImplemented');
 		// read & save
 		$programmer = Programmer::find(4);
 		$this->assertEquals(2, count($programmer->tasks));
@@ -527,7 +526,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals(3, count($programmer->tasks));
 		$this->assertEquals(array(1003, 1009,1011), $programmer->tasks->id);
 		$task = Task::find(1011);
-		$this->assertEquals(4, $task->programmer);
+		$this->assertEquals(4, $task->programmer->id);
 		$this->assertEquals(NULL, $task->project);
 	}
 
@@ -571,7 +570,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertEquals(3, count($programmer->projects));
 		$this->assertEquals(array(1,3,4), $programmer->projects->id);
 		$project = Project::find(4);
-		$this->assertEquals(array(4), $project->programmer->id);
+		$this->assertEquals(array(4), $project->programmers->id);
 	}
 
 	public function testWriteAssociationHasManyAndBelongsToMany() {

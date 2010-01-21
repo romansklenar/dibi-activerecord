@@ -753,7 +753,7 @@ abstract class ActiveRecord extends Record {
 
 				foreach ($this->getChanges() as $attr => $unsaved)
 					if ($unsaved instanceof ActiveRecord || $unsaved instanceof ActiveCollection)
-						$this->getAssociation($attr)->saveReferenced($this, $unsaved)->save();
+						$unsaved->save();
 
 				if ($this->isDirty(self::getColumnNames())) {
 					$mapper = self::getMapper();

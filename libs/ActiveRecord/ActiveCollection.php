@@ -413,7 +413,6 @@ class ActiveCollection extends LazyArrayList {
 	 * @throws NotSupportedException, ArgumentOutOfRangeException
 	 */
 	public function offsetUnset($index) {
-		$this->loadCheck();
 		if ($this->offsetExists($index))
 			$this->offsetGet($index)->destroy();
 		
@@ -432,7 +431,6 @@ class ActiveCollection extends LazyArrayList {
 	 * @throws MemberAccessException if the property is not defined.
 	 */
 	public function &__get($name) {
-		$this->loadCheck();
 		$class = $this->getItemType();
 		if ($class::hasAttribute($name)) {
 			$arr = array();
@@ -450,7 +448,6 @@ class ActiveCollection extends LazyArrayList {
 	 * @throws MemberAccessException if the property is not defined or is read-only
 	 */
 	public function __set($name, $value) {
-		$this->loadCheck();
 		$class = $this->getItemType();
 		if ($class::hasAttribute($name)) {
 			foreach ($this->getIterator() as $item)

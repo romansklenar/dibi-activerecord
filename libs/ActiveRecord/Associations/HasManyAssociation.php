@@ -57,14 +57,15 @@ final class HasManyAssociation extends Association {
 			$class = $this->referenced;
 			$key = $record->foreignKey;
 			$types = $class::getTypes();
-			return $class::objects()->filter("%n = %{$types[$key]}", $key, $record[$record->primaryKey]);
+			$ds = $class::getDataSource()->where("%n = %{$types[$key]}", $key, $record[$record->primaryKey]);
+			return new AssociatedCollection($ds, $class, $record);
 			
 		} else {
 			$class = $this->referenced;
 			$through = $this->through;
 			$sub = $through::getDataSource()->select($class::getForeignKey())->where('%and', RecordHelper::formatForeignKey($record));
 			$ds = $class::getDataSource()->where('%n IN (%sql)', $class::getPrimaryKey(), (string) $sub);
-			return new ActiveCollection($ds, $class);
+			return new AssociatedCollection($ds, $class, $record);
 		}
 	}
 
@@ -76,6 +77,25 @@ final class HasManyAssociation extends Association {
 	 * @param  ActiveRecord|ActiveCollection|NULL $referenced
 	 */
 	public function saveReferenced(ActiveRecord $local, $referenced) {
+		if ($referenced instanceof ActiveRecord)
+			return $this->saveReferencedRecord($local, $referenced);
+		else
+			return $this->saveReferencedCollection($local, $referenced);
+	}
+
+
+	private function saveReferencedRecord(ActiveRecord $local, ActiveRecord $referenced) {
+		if ($this->through == NULL) {
+			$referenced->{$local->foreignKey} = $local->{$local->primaryKey};
+			return $referenced;
+		} else {
+			// TODO: implement
+			return $referenced;
+		}
+	}
+
+
+	private function saveReferencedCollection(ActiveRecord $local, ActiveCollection $referenced) {
 		if ($this->through == NULL) {
 			try {
 				$old = $local->originals->{$this->getAttribute()};
@@ -113,7 +133,7 @@ final class HasManyAssociation extends Association {
 				$new->{$local->foreignKey} = $local->{$local->primaryKey};
 				$new->save();
 			}
-			
+
 			$class = $this->referenced;
 			return $class::findAll(array(array('%n IN %l', $class::getPrimaryKey(), $referenced->{$class::getPrimaryKey()})));
 		}

@@ -38,9 +38,13 @@ final class BelongsToAssociation extends Association {
 	 * @return ActiveRecord|ActiveCollection|NULL
 	 */
 	public function retreiveReferenced(ActiveRecord $record) {
-		$key = $this->referringAttribute;
 		$class = $this->referenced;
-		return $class::find($record->$key);
+		$identifier = $record->{$this->referringAttribute};
+		
+		if ($identifier === NULL)
+			return NULL;
+		else
+			return $class::find($identifier);
 	}
 
 
@@ -52,7 +56,7 @@ final class BelongsToAssociation extends Association {
 	 */
 	public function saveReferenced(ActiveRecord $local, $referenced) {
 		try {
-			$old = $referenced->{$referenced->getAssociation($this->local)->getAttribute()};
+			$old = $referenced->{$referenced->getAssociation($local->class)->getAttribute()};
 			if ($old instanceof ActiveRecord) {
 				$old->{$referenced->foreignKey} = NULL;
 				$old->save();
@@ -62,7 +66,6 @@ final class BelongsToAssociation extends Association {
 			if ($old instanceof ActiveRecord)
 				$old->destroy();
 		}
-
 		if ($referenced instanceof ActiveRecord)
 			$local->{$referenced->foreignKey} = $referenced->{$referenced->primaryKey};
 		return $referenced;

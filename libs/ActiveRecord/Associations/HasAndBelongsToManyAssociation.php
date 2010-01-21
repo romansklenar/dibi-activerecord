@@ -37,7 +37,7 @@ class HasAndBelongsToManyAssociation extends Association {
 		$entity = $this->getIntersectEntity();
 		$sub = $record->connection->dataSource($entity)->select($class::getForeignKey())->where('%and', RecordHelper::formatForeignKey($record));
 		$ds = $class::getDataSource()->where('%n IN (%sql)', $class::getPrimaryKey(), (string) $sub);
-		return new ActiveCollection($ds, $class);
+		return new AssociatedCollection($ds, $class, $record);
 	}
 
 
@@ -68,6 +68,20 @@ class HasAndBelongsToManyAssociation extends Association {
 	 * @param  ActiveRecord|ActiveCollection|NULL $referenced
 	 */
 	public function saveReferenced(ActiveRecord $local, $referenced) {
+		if ($referenced instanceof ActiveRecord)
+			return $this->saveReferencedRecord($local, $referenced);
+		else
+			return $this->saveReferencedCollection($local, $referenced);
+	}
+
+
+	private function saveReferencedRecord(ActiveRecord $local, ActiveRecord $referenced) {
+		// TODO: implement
+		return $referenced;
+	}
+
+	
+	private function saveReferencedCollection(ActiveRecord $local, ActiveCollection $referenced) {
 		$class = $this->referenced;
 		$entity = $this->getIntersectEntity();
 		$connection = $local->connection;
