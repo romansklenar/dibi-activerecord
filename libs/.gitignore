@@ -1,6 +1,1 @@
-dibi*
-dibi/**/*
-Nette*
-Nette/**/*
-!Nette.zip
-!dibi.zip
+!*.zip

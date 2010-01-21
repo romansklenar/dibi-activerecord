@@ -38,7 +38,7 @@ class TableHelper {
 		$info = $class::getConnection()->getDatabaseInfo()->getTable($table);
 		$info->getColumns();
 		$info->getIndexes();
-		$info->getForeignKeys();
+		//$info->getForeignKeys(); // not supported by dibi yet
 
 		$rc = new ReflectionClass($class);
 		$cache->save($key, $info, array(

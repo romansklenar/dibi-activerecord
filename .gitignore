@@ -1,5 +1,6 @@
 nbproject*
 nbproject/**/*
 !.gitignore
+!.gitmodules
 !readme.txt
 !.ht*
