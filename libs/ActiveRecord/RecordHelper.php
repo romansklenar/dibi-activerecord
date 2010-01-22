@@ -245,7 +245,7 @@ class RecordHelper {
 	 * @return Cache
 	 */
 	final public static function getCache() {
-		return Environment::getCache('Dibi.ActiveRecod');
+		return Environment::getCache('Dibi.ActiveRecord');
 	}
 
 

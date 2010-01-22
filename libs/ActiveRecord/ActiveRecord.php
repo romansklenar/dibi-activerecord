@@ -46,7 +46,7 @@ abstract class ActiveRecord extends Record {
 	/**#@-*/
 
 	/**#@+ state */
-	const STATE_INICIALIZING = '%I';
+	const STATE_INITIALISING = '%I';
 	const STATE_EXISTING = '%E';
 	const STATE_NEW = '%N';
 	const STATE_DELETED = '%D';
@@ -386,7 +386,7 @@ abstract class ActiveRecord extends Record {
 	public function hasAssociation($name) {
 		$asc = self::getAssociations();
 		$exists = array_key_exists($name, $asc);
-		if ($exists || $this->state === self::STATE_INICIALIZING)
+		if ($exists || $this->state === self::STATE_INITIALISING)
 			return $exists;
 
 		foreach ($asc as $association)
