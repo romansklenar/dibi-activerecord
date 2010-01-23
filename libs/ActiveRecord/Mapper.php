@@ -69,20 +69,4 @@ abstract class Mapper extends Object implements IMapper {
 		return dibi::getConnection($name);
 	}
 
-
-
-	/********************* IMapper interface *********************/
-
-
-
-	abstract public function find($class, $options = array());
-
-	abstract public function save(Record $record);
-
-	abstract public function update(Record $record);
-
-	abstract public function insert(Record $record);
-
-	abstract public function delete(Record $record);
-
 }

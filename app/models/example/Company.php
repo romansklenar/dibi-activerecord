@@ -11,7 +11,7 @@
  *
  * @hasMany(People)
  */
-abstract class Company extends ActiveRecord {
+class Company extends ActiveRecord {
 
 	/** @var string  table name */
 	protected static $table = 'Companies';

@@ -926,7 +926,8 @@ abstract class ActiveRecord extends Record {
 	 */
 	public static function findAll($where = array(), $order = array(), $limit = NULL, $offset = NULL) {
 		$mapper = self::getMapper();
-		return $mapper::find(self::getClass(), array('where' => $where, 'order' => $order, 'limit' => $limit, 'offset' => $offset), IMapper::ALL);
+		$options = array('where' => $where, 'order' => $order, 'limit' => $limit, 'offset' => $offset);
+		return $mapper::find(self::getClass(), $options, IMapper::ALL);
 	}
 
 

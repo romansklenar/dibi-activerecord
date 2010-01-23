@@ -277,7 +277,7 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$guest = Guest::find(1);
 		$this->assertTrue(isset($guest->car));
 		$this->assertType('Car', $guest->car);
-		$this->assertEquals(1, $guest->car->id);
+		$this->assertEquals(3, $guest->car->id);
 	}
 
 	public function testReadAssociationBelongsTo() {
@@ -305,14 +305,14 @@ class ActiveRecordTest extends ActiveRecordDatabaseTestCase {
 		$this->assertFalse(isset($car->car_id));
 		$this->assertTrue(isset($car->guest));
 		$this->assertType('Guest', $car->guest);
-		$this->assertEquals(1, $car->guest->id);
+		$this->assertEquals(2, $car->guest->id);
 
 		// referenced by attribute
 		$guest = Guest::find(1);
 		$this->assertTrue(isset($guest->belongs_to));
 		$this->assertTrue(isset($guest->guide));
 		$this->assertType('Guide', $guest->guide);
-		$this->assertEquals(1, $guest->guide->id);
+		$this->assertEquals(2, $guest->guide->id);
 	}
 
 	public function testReadAssociationHasMany() {

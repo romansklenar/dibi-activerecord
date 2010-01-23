@@ -35,7 +35,7 @@ final class ActiveMapper extends Mapper {
 	}
 
 	private static function applyOptions(DibiDataSource $ds, array $options) {
-		if (isset($options['where'])) {
+		if (isset($options['where']) && !empty($options['where'])) {
 			$cond = $options['where'];
 			if (is_string($cond))
 				$ds->where($cond);
@@ -43,10 +43,10 @@ final class ActiveMapper extends Mapper {
 				$ds->where('%and', $cond);
 		}
 
-		if (isset($options['order']))
+		if (isset($options['order']) && !empty($options['order']))
 			$ds->orderBy($options['order']);
 
-		if (isset($options['limit']))
+		if (isset($options['limit']) && !empty($options['limit']))
 			$ds->applyLimit($options['limit'], $options['offset']);
 	}
 
@@ -62,7 +62,7 @@ final class ActiveMapper extends Mapper {
 	 * @param string $scope
 	 * @return ActiveCollection|ActiveRecord
 	 */
-	public function find($class, $options = array(), $scope = IMapper::ALL) {
+	public static function find($class, $options = array(), $scope = IMapper::ALL) {
 		static $scopes = array(IMapper::ALL, IMapper::FIRST, IMapper::LAST);
 		if (!in_array($scope, $scopes))
 			throw new InvalidArgumentException("Invalid scope given, one of values " . implode(', ', $scopes) . " expected, '$scope' given.");
@@ -95,7 +95,7 @@ final class ActiveMapper extends Mapper {
 		}
 	}
 
-	public function save(Record $record) {
+	public static function save(Record $record) {
 		// TODO: transaction
 		if ($record->isDirty()) {
 			if ($record->isNewRecord()) {
@@ -129,7 +129,7 @@ final class ActiveMapper extends Mapper {
 		return $record;
 	}
 
-	public function update(Record $record) {
+	public static function update(Record $record) {
 		if ($record->isNewRecord())
 			throw new LogicException("Cannot update non-existing record.");
 
@@ -141,7 +141,7 @@ final class ActiveMapper extends Mapper {
 		return $record->connection->affectedRows();
 	}
 
-	public function insert(Record $record) {
+	public static function insert(Record $record) {
 		if ($record->isExistingRecord())
 			throw new LogicException("Cannot insert existing record.");
 		
@@ -150,7 +150,7 @@ final class ActiveMapper extends Mapper {
 			->execute(dibi::IDENTIFIER);
 	}
 
-	public function delete(Record $record) {
+	public static function delete(Record $record) {
 		$record->connection->delete($record->tableName)
 			->where('%and', RecordHelper::formatPrimaryKey($record))->execute();
 		return $record->connection->affectedRows();

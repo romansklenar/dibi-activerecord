@@ -191,14 +191,6 @@ abstract class Record implements ArrayAccess {
 
 
 	/**
-	 * Is attribute defined?
-	 *
-	 * @bool
-	 */
-	abstract public static function hasAttribute($name);
-
-
-	/**
 	 * Returns attribute value.
 	 *
 	 * @param  string $offset  attribute name
