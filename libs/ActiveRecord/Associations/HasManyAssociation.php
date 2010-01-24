@@ -109,6 +109,9 @@ final class HasManyAssociation extends Association {
 					$old->destroy();
 			}
 
+			// reload
+			$class = $this->referenced;
+			$referenced = $class::findAll(array(array('%n IN %l', $class::getPrimaryKey(), $referenced->{$class::getPrimaryKey()})));
 			$referenced->{$local->foreignKey} = $local->{$local->primaryKey};
 			return $referenced;
 
@@ -134,6 +137,7 @@ final class HasManyAssociation extends Association {
 				$new->save();
 			}
 
+			// reload
 			$class = $this->referenced;
 			return $class::findAll(array(array('%n IN %l', $class::getPrimaryKey(), $referenced->{$class::getPrimaryKey()})));
 		}

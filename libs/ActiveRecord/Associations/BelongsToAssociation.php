@@ -68,6 +68,9 @@ final class BelongsToAssociation extends Association {
 		}
 		if ($referenced instanceof ActiveRecord)
 			$local->{$referenced->foreignKey} = $referenced->{$referenced->primaryKey};
-		return $referenced;
+
+		// reload
+		$class = $this->referenced;
+		return $class::find($referenced->{$referenced->primaryKey});
 	}
 }

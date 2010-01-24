@@ -53,6 +53,9 @@ final class HasOneAssociation extends Association {
 				$old->destroy();
 		}
 
+		// reload
+		$class = $this->referenced;
+		$referenced = $class::find($referenced->{$referenced->primaryKey});
 		$referenced->{$local->foreignKey} = $local->{$local->primaryKey};
 		return $referenced;
 	}

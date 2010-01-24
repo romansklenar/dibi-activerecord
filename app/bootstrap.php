@@ -81,6 +81,8 @@ Debug::dump(strip(dibi::$sql));
 Debug::dump($car->guest->car);
 Debug::dump(strip(dibi::$sql));
 
+$car->guest->destroy(); // don't use: $car->guest = NULL !
+
 
 
 $album = Album::find(1);
@@ -95,5 +97,9 @@ Debug::dump($album->songs->getPairs('id', 'name')); // something like fetchPairs
 $ids = $album->songs->id;
 $album->destroy();
 Debug::dump(Album::count(1) == 0);
+
+
+$album = Album::find(2);
+$album->songs->destroy(); // don't use: $album->songs = NULL !
 
 ActiveMapper::disconnect();

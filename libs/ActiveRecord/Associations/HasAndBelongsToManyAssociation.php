@@ -101,6 +101,7 @@ class HasAndBelongsToManyAssociation extends Association {
 			->where(array(array('%n IN %l', $class::getForeignKey(), $referenced->{$class::getPrimaryKey()})))
 			->execute();
 
+		// reload
 		$class = $this->referenced;
 		return $class::findAll(array(array('%n IN %l', $class::getPrimaryKey(), $referenced->{$class::getPrimaryKey()})));
 	}
