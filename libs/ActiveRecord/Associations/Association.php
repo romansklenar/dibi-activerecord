@@ -7,7 +7,7 @@
  * @license    New BSD License
  * @example    http://wiki.github.com/romansklenar/dibi-activerecord
  */
-abstract class Association extends Object {
+abstract class Association extends /*Nette\*/Object {
 
 	/**#@+ association type */
 	const BELONGS_TO = 'belongsTo'; // N:1
@@ -56,7 +56,7 @@ abstract class Association extends Object {
 			$this->attribute = lcfirst(Inflector::singularize($referenced));
 		}
 
-		$rc = new ClassReflection($referenced);
+		$rc = new /*Nette\Reflection\*/ClassReflection($referenced);
 		if (!$rc->isInstantiable())
 			throw new InvalidArgumentException("Invalid class name '$referenced' of referenced object given.");
 

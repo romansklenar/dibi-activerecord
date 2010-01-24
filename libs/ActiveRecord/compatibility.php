@@ -44,7 +44,7 @@ if (!function_exists('timer')) {
 	 * @return float   elapsed seconds
 	 */
 	function timer($name = NULL) {
-		return /*\Nette\*/Debug::timer($name);
+		return /*Nette\*/Debug::timer($name);
 	}
 }
 
@@ -59,7 +59,7 @@ if (!function_exists('dump')) {
 	 */
 	function dump($var) {
 		foreach ($args = func_get_args() as $arg)
-			Debug::dump($arg);
+			/*Nette\*/Debug::dump($arg);
 		return $var;
 	}
 }

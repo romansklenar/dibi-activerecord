@@ -7,7 +7,7 @@
  * @license    New BSD License
  * @example    http://wiki.github.com/romansklenar/dibi-activerecord
  */
-abstract class AssociationAnnotation extends Annotation {
+abstract class AssociationAnnotation extends /*Nette\Reflection\*/Annotation {
 
 	/** @var array */
 	protected $values = array();

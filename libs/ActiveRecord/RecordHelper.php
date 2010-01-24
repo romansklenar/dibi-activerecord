@@ -177,7 +177,7 @@ class RecordHelper {
 	 * @return array of Association
 	 */
 	public static function getAssociations($class) {
-		$rc = new ClassReflection($class);
+		$rc = new /*Nette\Reflection\*/ClassReflection($class);
 		$cache = self::getCache();
 		$key = $class . '.associations';
 
@@ -245,7 +245,7 @@ class RecordHelper {
 	 * @return Cache
 	 */
 	final public static function getCache() {
-		return Environment::getCache('Dibi.ActiveRecord');
+		return /*Nette\*/Environment::getCache('Dibi.ActiveRecord');
 	}
 
 

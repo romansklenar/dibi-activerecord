@@ -1018,7 +1018,7 @@ abstract class ActiveRecord extends Record {
 	 */
 	final public function &__get($name) {
 		try {
-			$value = ObjectMixin::get($this, $name);
+			$value = /*Nette\*/ObjectMixin::get($this, $name);
 			return $value;
 
 		} catch(MemberAccessException $e) {
@@ -1045,7 +1045,7 @@ abstract class ActiveRecord extends Record {
 		$this->updating();
 
 		try {
-			ObjectMixin::set($this, $name, $value);
+			/*Nette\*/ObjectMixin::set($this, $name, $value);
 
 		} catch(MemberAccessException $e) {
 			if (self::hasAttribute($name)) {
@@ -1065,7 +1065,7 @@ abstract class ActiveRecord extends Record {
 	 * @return bool
 	 */
 	final public function __isset($name) {
-		return ObjectMixin::has($this, $name) ? TRUE : self::hasAttribute($name);
+		return /*Nette\*/ObjectMixin::has($this, $name) ? TRUE : self::hasAttribute($name);
 	}
 
 

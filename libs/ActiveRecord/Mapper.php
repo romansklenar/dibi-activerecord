@@ -8,7 +8,7 @@
  * @license    New BSD License
  * @example    http://wiki.github.com/romansklenar/dibi-activerecord
  */
-abstract class Mapper extends Object implements IMapper {
+abstract class Mapper extends /*Nette\*/Object implements IMapper {
 
 	const DEFAULT_CONNECTION = '#M';
 	

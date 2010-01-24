@@ -83,7 +83,7 @@ abstract class Record implements ArrayAccess {
 	 * @return ClassReflection
 	 */
 	public static function getReflection() {
-		return new ClassReflection(self::getClass());
+		return new /*Nette\Reflection\*/ClassReflection(self::getClass());
 	}
 
 
@@ -96,7 +96,7 @@ abstract class Record implements ArrayAccess {
 	 * @throws MemberAccessException
 	 */
 	public function __call($name, $args) {
-		return ObjectMixin::call($this, $name, $args);
+		return /*Nette\*/ObjectMixin::call($this, $name, $args);
 	}
 
 
@@ -127,7 +127,7 @@ abstract class Record implements ArrayAccess {
 		else
 			list($class, $name) = explode('::', $name);
 
-		$class = new ClassReflection($class);
+		$class = new /*Nette\Reflection\*/ClassReflection($class);
 		if ($callback === NULL)
 			return $class->getExtensionMethod($name);
 		else
@@ -143,7 +143,7 @@ abstract class Record implements ArrayAccess {
 	 * @throws MemberAccessException if the property is not defined.
 	 */
 	public function &__get($name) {
-		return ObjectMixin::get($this, $name);
+		return /*Nette\*/ObjectMixin::get($this, $name);
 	}
 
 
@@ -156,7 +156,7 @@ abstract class Record implements ArrayAccess {
 	 * @throws MemberAccessException if the property is not defined or is read-only
 	 */
 	public function __set($name, $value) {
-		return ObjectMixin::set($this, $name, $value);
+		return /*Nette\*/ObjectMixin::set($this, $name, $value);
 	}
 
 
@@ -168,7 +168,7 @@ abstract class Record implements ArrayAccess {
 	 * @return bool
 	 */
 	public function __isset($name) {
-		return ObjectMixin::has($this, $name);
+		return /*Nette\*/ObjectMixin::has($this, $name);
 	}
 
 

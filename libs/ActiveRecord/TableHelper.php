@@ -84,7 +84,7 @@ class TableHelper {
 		foreach ($class::getTableInfo()->getColumns() as $column)
 			$names[] = $column->name;
 
-		$rc = new ClassReflection($class);
+		$rc = new /*Nette\Reflection\*/ClassReflection($class);
 		$cache->save($key, $names, array(
 			'files' => $rc->getFileName()
 		));
@@ -110,7 +110,7 @@ class TableHelper {
 		foreach ($class::getTableInfo()->getColumns() as $column)
 			$defaults[$column->name] = $column->default;
 
-		$rc = new ClassReflection($class);
+		$rc = new /*Nette\Reflection\*/ClassReflection($class);
 		$cache->save($key, $defaults, array(
 			'files' => $rc->getFileName()
 		));
@@ -136,7 +136,7 @@ class TableHelper {
 		foreach ($class::getTableInfo()->getColumns() as $column)
 			$types[$column->name] = $column->type;
 
-		$rc = new ClassReflection($class);
+		$rc = new /*Nette\Reflection\*/ClassReflection($class);
 		$cache->save($key, $types, array(
 			'files' => $rc->getFileName()
 		));

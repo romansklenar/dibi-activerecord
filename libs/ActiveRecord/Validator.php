@@ -7,7 +7,7 @@
  * @license    New BSD License
  * @example    http://wiki.github.com/romansklenar/dibi-activerecord
  */
-class Validator extends Object
+class Validator extends /*Nette\*/Object
 {
 	/**#@+ operation name */
 	const EQUAL = ':equal';				// Form::EQUAL

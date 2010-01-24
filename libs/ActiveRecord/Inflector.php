@@ -93,7 +93,7 @@ class Inflector {
 	 * @return string
 	 */
 	public static function singularize($word) {
-		$lower = String::lower($word);
+		$lower = /*Nette\*/String::lower($word);
 
 		if (self::isSingular($word))
 			return $word;
@@ -121,7 +121,7 @@ class Inflector {
 	 * @return string
 	 */
 	public static function pluralize($word) {
-		$lower = String::lower($word);
+		$lower = /*Nette\*/String::lower($word);
 
 		if (self::isPlural($word))
 			return $word;
@@ -161,7 +161,7 @@ class Inflector {
 	 * @return bool
 	 */
 	public static function isPlural($word) {
-		$lower = String::lower($word);
+		$lower = /*Nette\*/String::lower($word);
 
 		if (!self::isCountable($word))
 			return TRUE;
@@ -184,7 +184,7 @@ class Inflector {
 	 * @return bool
 	 */
 	public static function isCountable($word) {
-		$lower = String::lower($word);
+		$lower = /*Nette\*/String::lower($word);
 		return (bool) !in_array($lower, self::$uncountable);
 	}
 
@@ -196,7 +196,7 @@ class Inflector {
 	 * @return bool
 	 */
 	public static function isIrregular($word) {
-		$lower = String::lower($word);
+		$lower = /*Nette\*/String::lower($word);
 		return (bool) in_array($lower, self::$irregular) || array_key_exists($lower, self::$irregular);
 	}
 

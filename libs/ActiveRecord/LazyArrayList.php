@@ -10,7 +10,7 @@
  * @license    MIT, New BSD License
  * @example    http://addons.nettephp.com/LazyArrayList
  */
-abstract class LazyArrayList extends ArrayList {
+abstract class LazyArrayList extends /*Nette\Collections\*/ArrayList {
 
 	/** @var bool */
 	private $loaded = FALSE;
