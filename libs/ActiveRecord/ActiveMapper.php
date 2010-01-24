@@ -67,17 +67,14 @@ final class ActiveMapper extends Mapper {
 		if (!in_array($scope, $scopes))
 			throw new InvalidArgumentException("Invalid scope given, one of values " . implode(', ', $scopes) . " expected, '$scope' given.");
 
-		if (is_string($class) && class_exists($class)) {
-			$record = new $class;
-		} else if ($class instanceof ActiveRecord) {
-			$record = $class;
-			$class = get_class($record);
-		} else {
+		if ($class instanceof ActiveRecord) {
+			$class = get_class($class);
+		} else if (!(is_string($class) && class_exists($class))) {
 			$type = is_object($class) ? get_class($class) : gettype($class);
 			throw new InvalidArgumentException("Invalid argument given, class name or 'ActiveRecord' instance expected, '$type' given.");
 		}
 
-		$ds = $record->dataSource;
+		$ds = $class::getDataSource();
 		self::applyOptions($ds, self::sanatizeOptions($options));
 
 		if ($scope == IMapper::FIRST || $scope == IMapper::LAST) {
