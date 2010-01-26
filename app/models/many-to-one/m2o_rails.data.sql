@@ -1,7 +1,9 @@
+DELETE FROM [foods];
 INSERT INTO [foods] VALUES (1, 'Foods #1');
 INSERT INTO [foods] VALUES (2, 'Foods #2');
 INSERT INTO [foods] VALUES (3, 'Foods #3');
 
+DELETE FROM [ingredients];
 INSERT INTO [ingredients] VALUES (1, 'Ingredient #1');
 INSERT INTO [ingredients] VALUES (2, 'Ingredient #2');
 INSERT INTO [ingredients] VALUES (3, 'Ingredient #3');
@@ -12,6 +14,7 @@ INSERT INTO [ingredients] VALUES (7, 'Ingredient #7');
 INSERT INTO [ingredients] VALUES (8, 'Ingredient #8');
 INSERT INTO [ingredients] VALUES (9, 'Ingredient #9');
 
+DELETE FROM [compositions];
 INSERT INTO [compositions] VALUES (101, '1kg', 1, 4);
 INSERT INTO [compositions] VALUES (102, '200g', 1, 7);
 INSERT INTO [compositions] VALUES (103, '300ml', 1, 2);
