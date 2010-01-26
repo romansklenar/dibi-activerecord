@@ -2,6 +2,16 @@
 
 
 if (!function_exists('get_called_class')) {
+
+	/**
+	 * The "Late Static Binding" class name.
+	 * Gets the name of the class the static method is called in.
+	 * @see http://cz.php.net/manual/en/function.get-called-class.php#93799
+	 *
+	 * @param array $bt  backtrace
+	 * @param int $l  depth
+	 * @return string  Returns FALSE if called from outside a class.
+	 */
 	function get_called_class($bt = FALSE, $l = 1) {
 		if (!$bt)
 			$bt = debug_backtrace();
