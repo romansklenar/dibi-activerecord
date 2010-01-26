@@ -29,8 +29,9 @@ final class HasOneAssociation extends Association {
 	public function retreiveReferenced(ActiveRecord $record) {
 		$class = $this->referenced;
 		$key = $record->foreignKey;
-		$types = $class::getTypes();
-		return $class::objects()->filter("%n = %{$types[$key]}", $key, $record[$record->primaryKey])->first();
+		$types = callback("$class::getTypes")->invoke(); //$class::getTypes();
+		$collection = callback("$class::objects")->invoke(); // $class::objects()
+		return $collection->filter("%n = %{$types[$key]}", $key, $record[$record->primaryKey])->first();
 	}
 
 
@@ -55,7 +56,7 @@ final class HasOneAssociation extends Association {
 
 		// reload
 		$class = $this->referenced;
-		$referenced = $class::find($referenced->{$referenced->primaryKey});
+		$referenced = callback("$class::find")->invokeArgs(array('where' => $referenced->{$referenced->primaryKey})); //$class::find($referenced->{$referenced->primaryKey});
 		$referenced->{$local->foreignKey} = $local->{$local->primaryKey};
 		return $referenced;
 	}

@@ -90,7 +90,7 @@ class ActiveCollection extends LazyArrayList {
 	public function getPairs($key = NULL, $value = NULL) {
 		$class = $this->getItemType();
 		if ($key === NULL)
-			$key = $class::getPrimaryKey();
+			$key = callback("$class::getPrimaryKey")->invoke();//$class::getPrimaryKey();
 
 		$pairs = array();
 		$this->loadCheck();
@@ -227,7 +227,7 @@ class ActiveCollection extends LazyArrayList {
 	 */
 	public function create($input = array()) {
 		$class = $this->getItemType();
-		$item = $class::create($input);
+		$item = callback("$class::create")->invokeArgs(array('input' => $input)); //$class::create($input);
 		$this->append($item);
 	}
 
@@ -354,7 +354,7 @@ class ActiveCollection extends LazyArrayList {
 	 */
 	public function search($item) {
 		$class = $this->getItemType();
-		$primary = $class::getPrimaryKey();
+		$primary = callback("$class::getPrimaryKey")->invoke();
 		foreach ($this->getIterator() as $key => $element)
 			if ($item instanceof ActiveRecord && $element->originals->$primary === $item->originals->$primary)
 				return $key;
@@ -432,7 +432,7 @@ class ActiveCollection extends LazyArrayList {
 	 */
 	public function &__get($name) {
 		$class = $this->getItemType();
-		if ($class::hasAttribute($name)) {
+		if (callback("$class::hasAttribute")->invokeArgs(array('name' => $name))) { // $class::hasAttribute($name)
 			$arr = array();
 			foreach ($this->getIterator() as $item)
 				$arr[] = $item->$name;
@@ -449,7 +449,7 @@ class ActiveCollection extends LazyArrayList {
 	 */
 	public function __set($name, $value) {
 		$class = $this->getItemType();
-		if ($class::hasAttribute($name)) {
+		if (callback("$class::hasAttribute")->invokeArgs(array('name' => $name))) { // $class::hasAttribute($name)
 			foreach ($this->getIterator() as $item)
 				$item->$name = $value;
 		} else

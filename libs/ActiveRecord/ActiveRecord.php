@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/compatibility.php';
+require_once dirname(__FILE__) . '/compatibility.php';
 
 
 /**
@@ -73,7 +73,7 @@ abstract class ActiveRecord extends Record {
 		$this->values = new Storage;
 		$this->dirty = new Storage;
 
-		$values = (array) $input + $this->getDefaults();
+		$values = (array) $input + self::getDefaults();
 		$this->setValues($values);
 
 		$this->values = $this->dirty;
@@ -174,7 +174,11 @@ abstract class ActiveRecord extends Record {
 	 * @return string
 	 */
 	private static function getConnectionName() {
-		return static::$connection;
+		try {
+			return self::getReflection()->getStaticPropertyValue('connection');
+		} catch (ReflectionException $e) {
+			return self::$connection;
+		}
 	}
 
 
@@ -184,7 +188,11 @@ abstract class ActiveRecord extends Record {
 	 * @return string
 	 */
 	private static function getMapper() {
-		return static::$mapper;
+		try {
+			return self::getReflection()->getStaticPropertyValue('mapper');
+		} catch (ReflectionException $e) {
+			return self::$mapper;
+		}
 	}
 
 
@@ -209,8 +217,14 @@ abstract class ActiveRecord extends Record {
 	 * @return string
 	 */
 	public static function getTableName() {
-		if (isset(static::$table) && !empty(static::$table)) {
-			return static::$table;
+		try {
+			$table = self::getReflection()->getStaticPropertyValue('table');
+		} catch (ReflectionException $e) {
+			$table = self::$table;
+		}
+
+		if (!empty($table)) {
+			return $table;
 
 		} else {
 			$class = self::getClass();
@@ -247,8 +261,14 @@ abstract class ActiveRecord extends Record {
 	 * @return string|array
 	 */
 	public static function getPrimaryKey() {
-		if (isset(static::$primary) && !empty(static::$primary)) {
-			return static::$primary;
+		try {
+			$primary = self::getReflection()->getStaticPropertyValue('primary');
+		} catch (ReflectionException $e) {
+			$primary = self::$primary;
+		}
+		
+		if (!empty($primary)) {
+			return $primary;
 
 		} else {
 			$class = self::getClass();
@@ -265,7 +285,13 @@ abstract class ActiveRecord extends Record {
 	 * @return DibiIndexInfo
 	 */
 	public static function getPrimaryInfo() {
-		if (isset(static::$primary) && !empty(static::$primary)) {
+		try {
+			$primary = self::getReflection()->getStaticPropertyValue('primary');
+		} catch (ReflectionException $e) {
+			$primary = self::$primary;
+		}
+		
+		if (!empty($primary)) {
 			return self::generatePrimaryInfo();
 		} else {
 			return TableHelper::getPrimaryInfo(self::getClass());
@@ -303,11 +329,17 @@ abstract class ActiveRecord extends Record {
 	 * @return string
 	 */
 	public static function getForeignKey() {
-		if (isset(static::$foreing) && !empty(static::$foreing)) {
+		try {
+			$foreing = self::getReflection()->getStaticPropertyValue('foreing');
+		} catch (ReflectionException $e) {
+			$foreing = self::$foreing;
+		}
+
+		if (!empty($foreing)) {
 			return str_replace(
 				array('%table%', '%primary%'),
 				array(self::getTableName(), self::getPrimaryKey()),
-				static::$foreing
+				$foreing
 			);
 
 		} else {
@@ -645,7 +677,7 @@ abstract class ActiveRecord extends Record {
 	 * @return bool  does method exist?
 	 */
 	private function tryCall($method, array $params) {
-		$rc = $this->getReflection();
+		$rc = self::getReflection();
 		if ($rc->hasMethod($method)) {
 			$rm = $rc->getMethod($method);
 			if ($rm->isPublic() && !$rm->isAbstract() && $rm->isStatic()) {
@@ -668,10 +700,10 @@ abstract class ActiveRecord extends Record {
 	 * @return Validator
 	 */
 	protected function getValidator() {
-		if (static::$validator === NULL)
-			static::$validator = new Validator;
-
-		return static::$validator;
+		$class = self::getClass();
+		if (!isset(self::$register[$class]['validator']))
+			self::$register[$class]['validator'] = new Validator;
+		return self::$register[$class]['validator'];
 	}
 
 
@@ -756,8 +788,7 @@ abstract class ActiveRecord extends Record {
 						$unsaved->save();
 
 				if ($this->isDirty(self::getColumnNames())) {
-					$mapper = self::getMapper();
-					$mapper::save($this);
+					callback(self::getMapper() . '::save')->invokeArgs(array('record' => $this));
 				}
 				$this->values = new Storage($this->getValues());
 				$this->dirty = new Storage;
@@ -781,9 +812,7 @@ abstract class ActiveRecord extends Record {
 		try {
 			$this->updating();
 			$this->tryCall('beforeDestroy', array('sender' => $this));
-
-			$mapper = self::getMapper();
-			$deleted = (bool) $mapper::delete($this);
+			$deleted = (bool) callback(self::getMapper() . '::delete')->invokeArgs(array('record' => $this));
 
 			$this->dirty = new Storage;
 			foreach ($this->values as & $v)
@@ -807,7 +836,8 @@ abstract class ActiveRecord extends Record {
 	 * @return ActiveRecord
 	 */
 	public static function create($input = array()) {
-		$record = new static($input, self::STATE_NEW);
+		$class = self::getClass();
+		$record = new $class($input, self::STATE_NEW);
 		$record->save();
 		return $record;
 	}
@@ -827,11 +857,15 @@ abstract class ActiveRecord extends Record {
 	 * @return int
 	 */
 	public static function count($where = array(), $limit = NULL, $offset = NULL) {
+		$params = func_get_args();
 		if (!is_array($where) && (is_numeric($where) || (is_string($where) && str_word_count($where) == 1)))
-			$where = array(RecordHelper::formatArguments(self::getPrimaryInfo(), func_get_args())); // intentionally not getPrimaryInfo() from helper
+			$where = array(RecordHelper::formatArguments(self::getPrimaryInfo(), $params)); // intentionally not getPrimaryInfo() from helper
 
-		$mapper = self::getMapper();
-		return $mapper::find(self::getClass(), array('where' => $where, 'limit' => $limit, 'offset' => $offset), IMapper::ALL)->count();
+		return callback(self::getMapper() . '::find')->invokeArgs(array(
+			'class' => self::getClass(),
+			'options' => array('where' => $where, 'limit' => $limit, 'offset' => $offset),
+			'scope' => IMapper::ALL
+		))->count();
 	}
 
 
@@ -907,10 +941,18 @@ abstract class ActiveRecord extends Record {
 		if (!is_array($where) && (is_numeric($where) || (is_string($where) && str_word_count($where) == 1))) {
 			$params = func_get_args();
 			$where = RecordHelper::formatArguments(self::getPrimaryInfo(), $params); // intentionally not getPrimaryInfo() from helper
-			return $mapper::find(self::getClass(), array('where' => array($where)), count($params) == 1 ? IMapper::FIRST : IMapper::ALL);
+			return callback(self::getMapper() . '::find')->invokeArgs(array(
+				'class' => self::getClass(),
+				'options' => array('where' => array($where)),
+				'scope' => count($params) == 1 ? IMapper::FIRST : IMapper::ALL,
+			));
 
 		} else {
-			return $mapper::find(self::getClass(), array('where' => $where, 'order' => $order), IMapper::FIRST);
+			return callback(self::getMapper() . '::find')->invokeArgs(array(
+				'class' => self::getClass(),
+				'options' => array('where' => $where, 'order' => $order),
+				'scope' => IMapper::FIRST,
+			));
 		}
 	}
 
@@ -925,9 +967,11 @@ abstract class ActiveRecord extends Record {
 	 * @return ActiveCollection|NULL
 	 */
 	public static function findAll($where = array(), $order = array(), $limit = NULL, $offset = NULL) {
-		$mapper = self::getMapper();
-		$options = array('where' => $where, 'order' => $order, 'limit' => $limit, 'offset' => $offset);
-		return $mapper::find(self::getClass(), $options, IMapper::ALL);
+		return callback(self::getMapper() . '::find')->invokeArgs(array(
+			'class' => self::getClass(),
+			'options' => array('where' => $where, 'order' => $order, 'limit' => $limit, 'offset' => $offset),
+			'scope' => IMapper::ALL,
+		));
 	}
 
 

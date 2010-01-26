@@ -74,7 +74,7 @@ final class ActiveMapper extends Mapper {
 			throw new InvalidArgumentException("Invalid argument given, class name or 'ActiveRecord' instance expected, '$type' given.");
 		}
 
-		$ds = $class::getDataSource();
+		$ds = callback("$class::getDataSource")->invoke();
 		self::applyOptions($ds, self::sanatizeOptions($options));
 
 		if ($scope == IMapper::FIRST || $scope == IMapper::LAST) {

@@ -28,14 +28,14 @@ class TableHelper {
 	 * @return DibiTableInfo
 	 */
 	public static function getTableInfo($class) {
-		$table = $class::getTableName();
+		$table = callback("$class::getTableName")->invoke();
 		$cache = self::getCache();
 		$key = $table . '.reflection';
 
 		if (isset($cache[$key]))
 			return $cache[$key];
 
-		$info = $class::getConnection()->getDatabaseInfo()->getTable($table);
+		$info = callback("$class::getConnection")->invoke()->getDatabaseInfo()->getTable($table);
 		$info->getColumns();
 		$info->getIndexes();
 		//$info->getForeignKeys(); // not supported by dibi yet
@@ -60,7 +60,7 @@ class TableHelper {
 		if ($primary instanceof DibiIndexInfo)
 			return $primary;
 		else
-			throw new InvalidStateException("Unable to detect primay key index of table '" . $class::getTableName()
+			throw new InvalidStateException("Unable to detect primay key index of table '" . callback("$class::getTableName")->invoke()
 				. "'. You can try manually define primary key column(s) to $class::\$primary static variable.");
 
 	}
@@ -73,7 +73,7 @@ class TableHelper {
 	 * @return array
 	 */
 	public static function getColumnNames($class) {
-		$table = $class::getTableName();
+		$table = callback("$class::getTableName")->invoke();
 		$cache = self::getCache();
 		$key = $table . '.columnNames';
 
@@ -81,7 +81,7 @@ class TableHelper {
 			return $cache[$key];
 
 		$names = array();
-		foreach ($class::getTableInfo()->getColumns() as $column)
+		foreach (callback("$class::getTableInfo")->invoke()->getColumns() as $column)
 			$names[] = $column->name;
 
 		$rc = new /*Nette\Reflection\*/ClassReflection($class);
@@ -99,7 +99,7 @@ class TableHelper {
 	 * @return array
 	 */
 	public static function getColumnDefaults($class) {
-		$table = $class::getTableName();
+		$table = callback("$class::getTableName")->invoke();
 		$cache = self::getCache();
 		$key = $table . '.defaults';
 
@@ -107,7 +107,7 @@ class TableHelper {
 			return $cache[$key];
 
 		$defaults = array();
-		foreach ($class::getTableInfo()->getColumns() as $column)
+		foreach (callback("$class::getTableInfo")->invoke()->getColumns() as $column)
 			$defaults[$column->name] = $column->default;
 
 		$rc = new /*Nette\Reflection\*/ClassReflection($class);
@@ -125,7 +125,7 @@ class TableHelper {
 	 * @return array
 	 */
 	public static function getColumnTypes($class) {
-		$table = $class::getTableName();
+		$table = callback("$class::getTableName")->invoke();
 		$cache = self::getCache();
 		$key = $table . '.types';
 
@@ -133,7 +133,7 @@ class TableHelper {
 			return $cache[$key];
 
 		$types = array();
-		foreach ($class::getTableInfo()->getColumns() as $column)
+		foreach (callback("$class::getTableInfo")->invoke()->getColumns() as $column)
 			$types[$column->name] = $column->type;
 
 		$rc = new /*Nette\Reflection\*/ClassReflection($class);

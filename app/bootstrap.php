@@ -11,8 +11,8 @@
 // Step 1: Load Nette Framework
 // this allows load Nette Framework classes automatically so that
 // you don't have to litter your code with 'require' statements
-require LIBS_DIR . '/Nette/loader.php';
-require LIBS_DIR . '/dibi/dibi.php';
+require LIBS_DIR . '/Nette/Nette/loader.php';
+require LIBS_DIR . '/dibi/dibi/dibi.php';
 
 
 // Step 2: Configure environment
@@ -37,24 +37,37 @@ if (!is_writable(Environment::getVariable('logDir'))) {
 	die("Make directory '" . realpath(Environment::getVariable('logDir')) . "' writable!");
 }
 
-$config = array(
-	'driver' => 'sqlite3',
-	'database' => ':memory:',
-);
-$connection = ActiveMapper::connect($config);
-$connection->loadFile(APP_DIR . '/models/birt/birt.structure.sql');
-$connection->loadFile(APP_DIR . '/models/birt/birt.data.sql');
+if (version_compare(PHP_VERSION, '5.3.0', '>=')) {
+	$config = array(
+		'driver' => 'sqlite3',
+		'database' => ':memory:',
+	);
+} else {
+	$config = array(
+		'charset' => 'utf8',
+		'driver' => 'mysql',
+		'host' => '127.0.0.1',
+		'username' => 'root',
+		'password' => NULL,
+		'database' => 'activerecord',
+	);
+}
 
-$connection->loadFile(APP_DIR . '/models/example/db.structure.sql');
-$connection->loadFile(APP_DIR . '/models/example/db.data.sql');
+
+$connection = ActiveMapper::connect($config);
+//$connection->loadFile(APP_DIR . '/models/birt/birt.structure.sql');
+//$connection->loadFile(APP_DIR . '/models/birt/birt.data.sql');
+
+//$connection->loadFile(APP_DIR . '/models/example/db.structure.sql');
+//$connection->loadFile(APP_DIR . '/models/example/db.data.sql');
 
 $connection = ActiveMapper::connect($config, '#rails_style');
-$connection->loadFile(APP_DIR . '/models/one-to-one/o2o_rails.structure.sql');
-$connection->loadFile(APP_DIR . '/models/one-to-one/o2o_rails.data.sql');
-$connection->loadFile(APP_DIR . '/models/many-to-one/m2o_rails.structure.sql');
-$connection->loadFile(APP_DIR . '/models/many-to-one/m2o_rails.data.sql');
-$connection->loadFile(APP_DIR . '/models/many-to-many/m2m_rails.structure.sql');
-$connection->loadFile(APP_DIR . '/models/many-to-many/m2m_rails.data.sql');
+//$connection->loadFile(APP_DIR . '/models/one-to-one/o2o_rails.structure.sql');
+//$connection->loadFile(APP_DIR . '/models/one-to-one/o2o_rails.data.sql');
+//$connection->loadFile(APP_DIR . '/models/many-to-one/m2o_rails.structure.sql');
+//$connection->loadFile(APP_DIR . '/models/many-to-one/m2o_rails.data.sql');
+//$connection->loadFile(APP_DIR . '/models/many-to-many/m2m_rails.structure.sql');
+//$connection->loadFile(APP_DIR . '/models/many-to-many/m2m_rails.data.sql');
 
 
 $people = Person::objects();
@@ -81,7 +94,7 @@ Debug::dump(strip(dibi::$sql));
 Debug::dump($car->guest->car);
 Debug::dump(strip(dibi::$sql));
 
-$car->guest->destroy(); // don't use: $car->guest = NULL !
+//$car->guest->destroy(); // don't use: $car->guest = NULL !
 
 
 
@@ -95,11 +108,11 @@ Debug::dump($album->songs->name);
 Debug::dump($album->songs->getPairs('id', 'name')); // something like fetchPairs
 
 $ids = $album->songs->id;
-$album->destroy();
+//$album->destroy();
 Debug::dump(Album::count(1) == 0);
 
 
 $album = Album::find(2);
-$album->songs->destroy(); // don't use: $album->songs = NULL !
+//$album->songs->destroy(); // don't use: $album->songs = NULL !
 
 ActiveMapper::disconnect();

@@ -24,7 +24,7 @@ final class BelongsToAssociation extends Association {
 		parent::__construct(self::BELONGS_TO, $local, $referenced);
 
 		if ($referringAttribute === NULL) {
-			$this->referringAttribute = $referenced::getForeignKey();
+			$this->referringAttribute = callback("$referenced::getForeignKey")->invoke(); //$referenced::getForeignKey();
 		} else {
 			$this->referringAttribute = $referringAttribute;
 		}
@@ -44,7 +44,7 @@ final class BelongsToAssociation extends Association {
 		if ($identifier === NULL)
 			return NULL;
 		else
-			return $class::find($identifier);
+			return callback("$class::find")->invokeArgs(array('where' => $identifier)); // $class::find($identifier);
 	}
 
 
@@ -71,6 +71,6 @@ final class BelongsToAssociation extends Association {
 
 		// reload
 		$class = $this->referenced;
-		return $class::find($referenced->{$referenced->primaryKey});
+		return callback("$class::find")->invokeArgs(array('where' => $referenced->{$referenced->primaryKey})); //$class::find($referenced->{$referenced->primaryKey});
 	}
 }

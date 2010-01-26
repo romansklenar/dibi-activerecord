@@ -56,15 +56,15 @@ final class HasManyAssociation extends Association {
 		if ($this->through == NULL) {
 			$class = $this->referenced;
 			$key = $record->foreignKey;
-			$types = $class::getTypes();
-			$ds = $class::getDataSource()->where("%n = %{$types[$key]}", $key, $record[$record->primaryKey]);
+			$types = callback("$class::getTypes")->invoke(); //$class::getTypes();
+			$ds = callback("$class::getDataSource")->invoke()->where("%n = %{$types[$key]}", $key, $record[$record->primaryKey]);
 			return new AssociatedCollection($ds, $class, $record);
 			
 		} else {
 			$class = $this->referenced;
 			$through = $this->through;
-			$sub = $through::getDataSource()->select($class::getForeignKey())->where('%and', RecordHelper::formatForeignKey($record));
-			$ds = $class::getDataSource()->where('%n IN (%sql)', $class::getPrimaryKey(), (string) $sub);
+			$sub = callback("$through::getDataSource")->invoke()->select(callback("$class::getForeignKey")->invoke())->where('%and', RecordHelper::formatForeignKey($record));
+			$ds = callback("$class::getDataSource")->invoke()->where('%n IN (%sql)', callback("$class::getPrimaryKey")->invoke(), (string) $sub);
 			return new AssociatedCollection($ds, $class, $record);
 		}
 	}
@@ -111,7 +111,9 @@ final class HasManyAssociation extends Association {
 
 			// reload
 			$class = $this->referenced;
-			$referenced = $class::findAll(array(array('%n IN %l', $class::getPrimaryKey(), $referenced->{$class::getPrimaryKey()})));
+			$pk = callback("$class::getPrimaryKey")->invoke();
+			$where = array(array('%n IN %l', $pk, $referenced->$pk));
+			$referenced = callback("$class::findAll")->invokeArgs(array('where' => $where));
 			$referenced->{$local->foreignKey} = $local->{$local->primaryKey};
 			return $referenced;
 
@@ -139,7 +141,9 @@ final class HasManyAssociation extends Association {
 
 			// reload
 			$class = $this->referenced;
-			return $class::findAll(array(array('%n IN %l', $class::getPrimaryKey(), $referenced->{$class::getPrimaryKey()})));
+			$pk = callback("$class::getPrimaryKey")->invoke();
+			$where = array(array('%n IN %l', $pk, $referenced->$pk));
+			return callback("$class::findAll")->invokeArgs(array('where' => $where));
 		}
 	}
 }
