@@ -73,7 +73,7 @@ abstract class ActiveRecord extends Record {
 		$this->values = new Storage;
 		$this->dirty = new Storage;
 
-		$values = (array) $input + $this->getDefaults();
+		$values = (array) $input + self::getDefaults();
 		$this->setValues($values);
 
 		$this->values = $this->dirty;
@@ -645,7 +645,7 @@ abstract class ActiveRecord extends Record {
 	 * @return bool  does method exist?
 	 */
 	private function tryCall($method, array $params) {
-		$rc = $this->getReflection();
+		$rc = self::getReflection();
 		if ($rc->hasMethod($method)) {
 			$rm = $rc->getMethod($method);
 			if ($rm->isPublic() && !$rm->isAbstract() && $rm->isStatic()) {

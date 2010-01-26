@@ -33,7 +33,7 @@ abstract class Association extends /*Nette\*/Object {
 
 	/**
 	 * Association constructor.
-	 * 
+	 *
 	 * @param string $type  association type constant
 	 * @param string $local  local class name
 	 * @param string $referenced  referenced class name
@@ -46,15 +46,16 @@ abstract class Association extends /*Nette\*/Object {
 
 		if (Inflector::isPlural($referenced))
 			$referenced = Inflector::singularize($referenced);
-		
+
 		if (Inflector::isPlural($local))
 			$local = Inflector::singularize($local);
 
 		if ($type == self::HAS_MANY || $type == self::HAS_AND_BELONGS_TO_MANY) {
-			$this->attribute = lcfirst(Inflector::pluralize($referenced));
+			$this->attribute = Inflector::pluralize($referenced);
 		} else {
-			$this->attribute = lcfirst(Inflector::singularize($referenced));
+			$this->attribute = Inflector::singularize($referenced);
 		}
+		$this->attribute = lcfirst(Inflector::demodulize($this->attribute));
 
 		$rc = new /*Nette\Reflection\*/ClassReflection($referenced);
 		if (!$rc->isInstantiable())
