@@ -241,7 +241,10 @@ abstract class ActiveRecord extends Record {
 	 * @return DibiTableInfo
 	 */
 	public static function getTableInfo() {
-		return TableHelper::getTableInfo(self::getClass());
+		$class = self::getClass();
+		if (!isset(self::$register[$class]['tableInfo']))
+			self::$register[$class]['tableInfo'] = TableHelper::getTableInfo($class);
+		return self::$register[$class]['tableInfo'];
 	}
 
 
@@ -291,11 +294,16 @@ abstract class ActiveRecord extends Record {
 			$primary = self::$primary;
 		}
 		
-		if (!empty($primary)) {
-			return self::generatePrimaryInfo();
-		} else {
-			return TableHelper::getPrimaryInfo(self::getClass());
-		}
+		$class = self::getClass();
+		if (!isset(self::$register[$class]['primaryInfo'])) {
+			if (isset($primary) && !empty($primary)) {
+				$info = self::generatePrimaryInfo();
+			} else {
+				$info = TableHelper::getPrimaryInfo($class);
+			}
+			self::$register[$class]['primaryInfo'] = $info;
+ 		}
+		return self::$register[$class]['primaryInfo'];
 	}
 
 
@@ -378,7 +386,10 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	public static function getColumnNames() {
-		return TableHelper::getColumnNames(self::getClass());
+		$class = self::getClass();
+		if (!isset(self::$register[$class]['columnNames']))
+			self::$register[$class]['columnNames'] = TableHelper::getColumnNames($class);
+		return self::$register[$class]['columnNames'];
 	}
 
 
@@ -394,7 +405,11 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	public static function getAssociations($filter = NULL) {
-		$asc = RecordHelper::getAssociations(self::getClass());
+		$class = self::getClass();
+		if (!isset(self::$register[$class]['associations']))
+			self::$register[$class]['associations'] = RecordHelper::getAssociations($class);
+		$asc = self::$register[$class]['associations'];
+
 		if ($filter === NULL)
 			return $asc;
 
@@ -583,7 +598,10 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	public static function getTypes() {
-		return TableHelper::getColumnTypes(self::getClass());
+		$class = self::getClass();
+		if (!isset(self::$register[$class]['types']))
+			self::$register[$class]['types'] = TableHelper::getColumnTypes($class);
+		return self::$register[$class]['types'];
 	}
 
 
@@ -614,7 +632,10 @@ abstract class ActiveRecord extends Record {
 	 * @return array
 	 */
 	private static function getDefaults() {
-		return TableHelper::getColumnDefaults(self::getClass());
+		$class = self::getClass();
+		if (!isset(self::$register[$class]['defaults']))
+			self::$register[$class]['defaults'] = TableHelper::getColumnDefaults($class);
+		return self::$register[$class]['defaults'];
 	}
 
 
