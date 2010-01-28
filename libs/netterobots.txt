@@ -1,0 +1,3 @@
+Disallow: /Nette
+Disallow: /dibi
+Disallow: /ActiveRecord
