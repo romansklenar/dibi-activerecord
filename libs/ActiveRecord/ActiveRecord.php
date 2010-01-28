@@ -1,6 +1,35 @@
 <?php
 
 require_once __DIR__ . '/compatibility.php';
+require_once __DIR__ . '/exceptions.php';
+
+require_once __DIR__ . '/IMapper.php';
+require_once __DIR__ . '/IValidator.php';
+
+require_once __DIR__ . '/LazyArrayList.php';
+require_once __DIR__ . '/Mapper.php';
+require_once __DIR__ . '/Storage.php';
+require_once __DIR__ . '/Validator.php';
+require_once __DIR__ . '/Inflector.php';
+require_once __DIR__ . '/Record.php';
+
+require_once __DIR__ . '/RecordHelper.php';
+require_once __DIR__ . '/TableHelper.php';
+require_once __DIR__ . '/ActiveCollection.php';
+require_once __DIR__ . '/ActiveMapper.php';
+require_once __DIR__ . '/AssociatedCollection.php';
+
+require_once __DIR__ . '/Annotations/AssociationAnnotation.php';
+require_once __DIR__ . '/Annotations/BelongsToAnnotation.php';
+require_once __DIR__ . '/Annotations/HasAndBelongsToManyAnnotation.php';
+require_once __DIR__ . '/Annotations/HasManyAnnotation.php';
+require_once __DIR__ . '/Annotations/HasOneAnnotation.php';
+
+require_once __DIR__ . '/Associations/Association.php';
+require_once __DIR__ . '/Associations/BelongsToAssociation.php';
+require_once __DIR__ . '/Associations/HasAndBelongsToManyAssociation.php';
+require_once __DIR__ . '/Associations/HasManyAssociation.php';
+require_once __DIR__ . '/Associations/HasOneAssociation.php';
 
 
 /**
