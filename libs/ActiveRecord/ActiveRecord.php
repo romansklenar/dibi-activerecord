@@ -1,6 +1,35 @@
 <?php
 
 require_once dirname(__FILE__) . '/compatibility.php';
+require_once dirname(__FILE__) . '/exceptions.php';
+
+require_once dirname(__FILE__) . '/IMapper.php';
+require_once dirname(__FILE__) . '/IValidator.php';
+
+require_once dirname(__FILE__) . '/LazyArrayList.php';
+require_once dirname(__FILE__) . '/Mapper.php';
+require_once dirname(__FILE__) . '/Storage.php';
+require_once dirname(__FILE__) . '/Validator.php';
+require_once dirname(__FILE__) . '/Inflector.php';
+require_once dirname(__FILE__) . '/Record.php';
+
+require_once dirname(__FILE__) . '/RecordHelper.php';
+require_once dirname(__FILE__) . '/TableHelper.php';
+require_once dirname(__FILE__) . '/ActiveCollection.php';
+require_once dirname(__FILE__) . '/ActiveMapper.php';
+require_once dirname(__FILE__) . '/AssociatedCollection.php';
+
+require_once dirname(__FILE__) . '/Annotations/AssociationAnnotation.php';
+require_once dirname(__FILE__) . '/Annotations/BelongsToAnnotation.php';
+require_once dirname(__FILE__) . '/Annotations/HasAndBelongsToManyAnnotation.php';
+require_once dirname(__FILE__) . '/Annotations/HasManyAnnotation.php';
+require_once dirname(__FILE__) . '/Annotations/HasOneAnnotation.php';
+
+require_once dirname(__FILE__) . '/Associations/Association.php';
+require_once dirname(__FILE__) . '/Associations/BelongsToAssociation.php';
+require_once dirname(__FILE__) . '/Associations/HasAndBelongsToManyAssociation.php';
+require_once dirname(__FILE__) . '/Associations/HasManyAssociation.php';
+require_once dirname(__FILE__) . '/Associations/HasOneAssociation.php';
 
 
 /**

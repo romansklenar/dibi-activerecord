@@ -13,6 +13,7 @@
 // you don't have to litter your code with 'require' statements
 require LIBS_DIR . '/Nette/Nette/loader.php';
 require LIBS_DIR . '/dibi/dibi/dibi.php';
+require LIBS_DIR . '/ActiveRecord/ActiveRecord.php';
 
 
 // Step 2: Configure environment

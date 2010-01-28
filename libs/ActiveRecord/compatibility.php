@@ -156,6 +156,34 @@ if (!$r->hasMethod('isMandatory')) {
 }
 
 
+if (!function_exists('formatMemory')) {
+
+	/**
+	 * Formats memory to human readable format.
+	 *
+	 * @param int $bytes
+	 * @return string
+	 */
+	function formatMemory($bytes) {
+		return number_format($bytes / 1024, 1, ',', ' ') . ' kB';
+	}
+}
+
+
+if (!function_exists('formatTime')) {
+
+	/**
+	 * Formats time to human readable format.
+	 *
+	 * @param int $seconds
+	 * @return string
+	 */
+	function formatTime($seconds) {
+		return number_format($seconds * 1000, 1, ',', ' ') . ' ms';
+	}
+}
+
+
 define('FIRST', 'first');
 define('LAST', 'last');
 define('ALL', 'all');

@@ -64,7 +64,7 @@ class BenchmarkTest extends PHPUnit_Framework_TestCase {
 		dump(self::formatMemory($m));
 		dump(self::formatTime($t));
 
-		ini_set('memory_limit', '128M');
+		ini_set('memory_limit', '256M');
 		timer('50000');
 		memory('50000');
 		$consumers = Consumer::objects()->applyLimit(50000);
